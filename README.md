@@ -23,14 +23,15 @@ Probably a lot.
 2. Go to `baseline/parameter.py` and change the paths at the required places (marked with a TODO sign) 
 3. Run `generate_audio_from_annotations.py`. This will give as output a lot of monophonic signals to start checking them.
 
+To run the baseline system:
+1. Run `baseline/batch_feature_extraction.py` in `dev` mode, so you can preprocess the data and create the spectrograms and stuff on the `/feat_label` folder.
+2. (optional) Run `baseline/seld.py` passing a 4 as parameter (this is the preset number, configurable in `parameter.py`). This will make a quick training of the baseline method on the foa dataset. 
 
-3. Run `baseline/batch_feature_extraction.py` in `dev` mode, so you can preprocess the data and create the spectrograms and stuff on the `/feat_label` folder.
-4. (optional) Run `baseline/seld.py` passing a 4 as parameter (this is the preset number, configurable in `parameter.py`). This will make a quick training of the baseline method on the foa dataset. 
 ## License
 Inside **seld-dcase2020** folder: 
 Except for the contents in the `metrics` folder that have [MIT License](seld-dcase2020/metrics/LICENSE.md). The rest of the repository is licensed under the [TAU License](seld-dcase2020/LICENSE.md).
 See 
 
-Otherwise: [Do What the Fuck You Want To Public License](LICENSE.md)
+Otherwise: [Do What the Fuck You Want To Public License](APRI/LICENSE.md)
 
 
