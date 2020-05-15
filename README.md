@@ -12,7 +12,7 @@ This is our contribution to [DCASE2020 Task 3 Challenge]((http://dcase.community
 ## Dependencies
 Probably a lot.
 * Ipython (why?)
-* soundfile
+* soundfile (pysoundfile)
 * librosa
 * keras (I'm using v2.3.1)
 * tensorflow (I'm currently using v2.0.0, since newest 2.1+ collides with that keras version)
