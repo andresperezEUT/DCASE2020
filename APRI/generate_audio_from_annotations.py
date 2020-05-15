@@ -53,7 +53,7 @@ def get_class_name_dict():
 
 
 params = parameter.get_params()
-data_folder_path = os.path.join(params['dataset_dir'], 'foa_dev') # path to audios
+data_folder_path = os.path.join(params['dataset_dir'], 'foa_dev/') # path to audios
 gt_folder_path = os.path.join(params['dataset_dir'], 'metadata_dev') # path to annotations
 fs = params['fs']
 class_name_dict = get_class_name_dict()

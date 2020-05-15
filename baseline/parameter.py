@@ -10,7 +10,7 @@ environ_user = os.environ.get('USER')
 user = None
 if environ_user == 'andres.perez':
     user = 'PANS'
-elif environ_user == 'rafa': # TODO: set proper name
+elif environ_user == 'ribanez': # TODO: set proper name
     user = 'FAIK'
 else:
     warnings.warn('user not known', UserWarning)
@@ -91,7 +91,7 @@ def get_params(argv='1'):
     if user == 'PANS':
         params['dataset_dir'] = '/Volumes/Dinge/datasets/DCASE2020_TASK3'
     elif user == 'FAIK':
-        params['dataset_dir'] = '/scratch/asignal/sharath/DCASE2020_SELD_dataset/'
+        params['dataset_dir'] = '/home/ribanez/movidas/dcase20/dcase20_dataset/'
     else:
         warnings.warn('user not known', UserWarning)
 
@@ -101,7 +101,7 @@ def get_params(argv='1'):
     if user == 'PANS':
         params['feat_label_dir'] ='/Volumes/Dinge/datasets/DCASE2020_TASK3/feat_label/'
     elif user == 'FAIK':
-        params['feat_label_dir'] = '/scratch/asignal/sharath/DCASE2020_SELD_dataset/feat_label'
+        params['feat_label_dir'] = '/home/ribanez/movidas/dcase20/dcase20_dataset/feat_label/'
     else:
         warnings.warn('user not known', UserWarning)
 
@@ -111,7 +111,7 @@ def get_params(argv='1'):
     if user == 'PANS':
         params['oracle_mono_signals'] ='/Volumes/Dinge/datasets/DCASE2020_TASK3/oracle_mono_signals/'
     elif user == 'FAIK':
-        params['oracle_mono_signals'] = '/scratch/asignal/sharath/DCASE2020_SELD_dataset/oracle_mono_signals'
+        params['oracle_mono_signals'] = '/home/ribanez/movidas/dcase20/dcase20_dataset/oracle_mono_signals'
     else:
         warnings.warn('user not known', UserWarning)
 
