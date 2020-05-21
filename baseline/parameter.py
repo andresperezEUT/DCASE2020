@@ -106,15 +106,6 @@ def get_params(argv='1'):
     else:
         warnings.warn('user not known', UserWarning)
 
-    # OUTPUT PATH
-    # Directory to dump oracle monophonic estimates
-    # TODO: set proper path. After restart the python interpreter
-    if user == 'PANS':
-        params['oracle_mono_signals'] ='/Volumes/Dinge/datasets/DCASE2020_TASK3/oracle_mono_signals/'
-    elif user == 'FAIK':
-        params['oracle_mono_signals'] = '/scratch/asignal/sharath/DCASE2020_SELD_dataset/oracle_mono_signals'
-    else:
-        warnings.warn('user not known', UserWarning)
 
     # MATPLOTLIB BACKEND
     if user == 'PANS':

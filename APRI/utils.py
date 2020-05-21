@@ -54,6 +54,46 @@ def diffuseness(stft, dt=5):
 
 
 
+# %% BEAMFORMING
+
+
+def get_ambisonic_gains(azi, ele):
+    """
+    ACN, N3D
+    :param azi: N vector
+    :param ele: N vector
+    :return:  4 x N matrix
+    """
+    N = azi.size
+    assert N == ele.size
+    return np.asarray([np.ones(N), np.sqrt(3)*np.sin(azi)*np.cos(ele), np.sqrt(3)*np.sin(ele), np.sqrt(3)*np.cos(azi)*np.cos(ele)])
+
+def mono_extractor(b_format, azis=None, eles=None, mode='beam'):
+    """
+    
+    :param b_format: (frames, channels)
+    :param mode: 'beamforming' or 'omni'
+    :return: 
+    """
+    frames, channels = b_format.shape
+
+    x = np.zeros(frames)
+
+    if mode == 'beam':
+        # MaxRE decoding
+
+        alpha = np.asarray([0.775, 0.4, 0.4, 0.4]) # MaxRE coefs
+        decoding_gains = get_ambisonic_gains(azis, eles)
+        w = decoding_gains*alpha[:,np.newaxis]
+        x = np.sum(b_format * w.T, axis=1)
+
+    elif mode == 'omni':
+        # Just take the W channel
+        x = b_format[:,0]
+
+    return x
+
+
 
 # %% PLOT
 
@@ -94,6 +134,47 @@ def plot_diffuseness(stft):
 
 
 # %% DATA MANAGEMENT
+
+
+class Event:
+    def __init__(self, classID, frames, azis, eles):
+        self._classID = classID
+        self._frames = frames
+        self._azis = azis
+        self._eles = eles
+
+    def get_classID(self):
+        return self._classID
+
+    def get_frames(self):
+        return self._frames
+
+    def get_azis(self):
+        return self._azis
+
+    def get_eles(self):
+        return self._eles
+
+
+
+def get_class_name_dict():
+    return {
+        0: 'alarm',
+        1: 'crying_baby',
+        2: 'crash',
+        3: 'barking_dog',
+        4: 'running_engine',
+        5: 'female_scream',
+        6: 'female_speech',
+        7: 'burning_fire',
+        8: 'footsteps',
+        9: 'knocking_on_door',
+        10:'male_scream',
+        11:'male_speech',
+        12:'ringing_phone',
+        13:'piano'
+    }
+
 
 def plot_metadata(metadata_file_name):
     # Based on visualize_SELD_output.py
