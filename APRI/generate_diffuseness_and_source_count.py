@@ -56,6 +56,7 @@ for audio_file_name in audio_files:
 
     # Compute diffuseness from audio file
     data, sr = sf.read(os.path.join(data_folder_path, audio_file_name))
+    data *= np.array([1, 1/np.sqrt(3), 1/np.sqrt(3), 1/np.sqrt(3)]) # N3D to SN3D
     t, f, stft = scipy.signal.stft(data.T, sr, window='boxcar', nperseg=window_size, noverlap=window_overlap, nfft=nfft)
     stft = stft[:,:-1,:-1] # round shape
     DOA = doa(stft) # Direction of arrival
