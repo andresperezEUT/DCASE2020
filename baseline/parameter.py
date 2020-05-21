@@ -6,6 +6,7 @@
 # set user
 import os
 import warnings
+import matplotlib.pyplot as plt
 environ_user = os.environ.get('USER')
 user = None
 if environ_user == 'andres.perez':
@@ -114,6 +115,12 @@ def get_params(argv='1'):
         params['oracle_mono_signals'] = '/home/ribanez/movidas/dcase20/dcase20_dataset/oracle_mono_signals'
     else:
         warnings.warn('user not known', UserWarning)
+
+    # MATPLOTLIB BACKEND
+    if user == 'PANS':
+        plt.switch_backend('MacOSX')
+    elif user == 'FAIK':
+        plt.switch_backend('agg')
 
 
 
