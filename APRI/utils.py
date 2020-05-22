@@ -137,14 +137,18 @@ def plot_diffuseness(stft):
 
 
 class Event:
-    def __init__(self, classID, frames, azis, eles):
+    def __init__(self, classID, instance, frames, azis, eles):
         self._classID = classID
+        self._instance = instance
         self._frames = frames
         self._azis = azis
         self._eles = eles
 
     def get_classID(self):
         return self._classID
+
+    def get_instance(self):
+        return self._instance
 
     def get_frames(self):
         return self._frames
@@ -155,6 +159,21 @@ class Event:
     def get_eles(self):
         return self._eles
 
+    def add_frame(self, frame):
+        self._frames.append(frame)
+
+    def add_azi(self, azi):
+        self._azis.append(azi)
+
+    def add_ele(self, ele):
+        self._eles.append(ele)
+
+    def print(self):
+        print(self._classID)
+        print(self._instance)
+        print(self._frames)
+        print(self._azis)
+        print(self._eles)
 
 
 def get_class_name_dict():
