@@ -4,6 +4,38 @@ from baseline import cls_feature_class, parameter
 import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
 from baseline.metrics.evaluation_metrics import cart2sph
+import scipy.stats
+
+
+
+
+# %% STUFF
+
+def circmedian(angs, unit='rad'):
+    # from https://github.com/scipy/scipy/issues/6644
+    # Radians!
+    pdists = angs[np.newaxis, :] - angs[:, np.newaxis]
+    if unit == 'rad':
+        pdists = (pdists + np.pi) % (2 * np.pi) - np.pi
+    elif unit == 'deg':
+        pdists = (pdists +180) % (360.) - 180.
+    pdists = np.abs(pdists).sum(1)
+
+    # If angs is odd, take the center value
+    if len(angs) % 2 != 0:
+        return angs[np.argmin(pdists)]
+    # If even, take the mean between the two minimum values
+    else:
+        index_of_min = np.argmin(pdists)
+        min1 = angs[index_of_min]
+        # Remove minimum element from array and recompute
+        new_pdists = np.delete(pdists, index_of_min)
+        new_angs = np.delete(angs, index_of_min)
+        min2 = new_angs[np.argmin(new_pdists)]
+        if unit == 'rad':
+            return scipy.stats.circmean([min1, min2], high=np.pi, low=-np.pi)
+        elif unit == 'deg':
+            return scipy.stats.circmean([min1, min2], high=180., low=-180.)
 
 
 
