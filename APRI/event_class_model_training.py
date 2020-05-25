@@ -14,10 +14,6 @@ import numpy as np
 import pandas as pd
 import sklearn
 from sklearn.preprocessing import StandardScaler
-from sklearn.preprocessing import MinMaxScaler
-from sklearn.preprocessing import MaxAbsScaler
-from sklearn.preprocessing import FunctionTransformer
-from sklearn import preprocessing
 from sklearn.metrics import accuracy_score,confusion_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import GridSearchCV
@@ -123,9 +119,7 @@ grid_dict = {0: 'random_forest',
 grids = [gs_svr]
 grid_dict = {0: 'svc'}
 
-
 # Split train and test
-
 train_x, test_x, train_y, test_y = train_test_split(df_x, df_y['target'], test_size=0.05, random_state=42)
 best_acc = 0
 best_cls = 0
