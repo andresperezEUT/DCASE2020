@@ -149,3 +149,7 @@ def plot_metadata(metadata_file_name):
         [-180, 180]), plt.title('Azimuth reference')
     ax5 = plt.subplot(gs[2, 0]), plot_func(ref_data, params['label_hop_len_s'], ind=3, plot_y_ax=True), plt.ylim(
         [-90, 90]), plt.title('Elevation reference')
+
+
+# %%
+
