@@ -71,3 +71,9 @@ fabric.properties
 
 # Android studio 3.1+ serialized cache file
 .idea/caches/build_file_checksums.ser
+DCASE2020.iml
+.idea
+CRNN_SELDT_DCASE2020.png
+4_1_foa_dev_split1.png
+4_1_foa_dev_split1_model.h5
+baseline/results
