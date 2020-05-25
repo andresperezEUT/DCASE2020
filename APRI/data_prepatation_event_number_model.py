@@ -44,8 +44,8 @@ for value in x[0]:
 dff_x = pd.DataFrame(data=framedata_x, columns=columns)
 dff_y = pd.DataFrame(data=framedata_y, columns=['target'])
 
-print("Features dataset size: ",dff_x.shape)
-print("Targets dataset size: ",dff_y.shape)
+print("Features dataset size : ",dff_x.shape)
+print("Targets dataset size : ",dff_y.shape)
 dff_x.to_pickle(os.path.join(data_output_path, 'training_x_event_number.pkl'))
 dff_y.to_pickle(os.path.join(data_output_path, 'training_y_event_number.pkl'))
 
