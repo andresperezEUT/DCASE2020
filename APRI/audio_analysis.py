@@ -1,12 +1,12 @@
 import numpy as np
 import soundfile as sf
 import matplotlib.pyplot as plt
-plt.switch_backend('MacOSX')
+#plt.switch_backend('MacOSX')
 import scipy.signal
 import librosa
 
 # open one of the mono audio files
-audio_file_path = '/Volumes/Dinge/datasets/DCASE2020_TASK3/oracle_mono_signals/alarm/0.wav'
+audio_file_path = '/home/ribanez/movidas/dcase20/dcase20_dataset/oracle_mono_signals/alarm/0.wav'
 data, sr = sf.read(audio_file_path)
 
 plt.plot(data)
@@ -22,10 +22,11 @@ plt.title('STFT')
 plt.pcolormesh(20*np.log10(np.abs(stft)))
 plt.colorbar()
 
-
+plt.show()
 # Maybe is better to use the mel-spectrogram, where the y-axis (frequency) information is more compressed and meaningful
 mel = librosa.feature.melspectrogram(y=data, sr=sr)
 plt.figure()
 plt.title('Mel-STFT')
 plt.pcolormesh(20*np.log10(np.abs(mel)))
 plt.colorbar()
+plt.show()
