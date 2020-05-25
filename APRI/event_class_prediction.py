@@ -8,16 +8,12 @@ The function:
 
 '''
 
-from baseline import parameter
-import os
 import numpy as np
-import pandas as pd
 import joblib
 import os
-model_input_path = os.path.dirname(os.path.realpath(__file__))+'/models/event_class/model.joblib'
 import essentia.standard as es
 
-
+model_input_path = os.path.dirname(os.path.realpath(__file__))+'/models/event_class/model.joblib'
 
 ### FUNCIONES PARA PREDICCIÓN DE EVENT_CLASS ###
 
@@ -84,7 +80,6 @@ def get_features_music_extractor(audio_path):
     audio_features = np.array(audio_features)
     return audio_features.tolist()
 
-
 def event_class_prediction(audio_path):
     variables=get_features_music_extractor(audio_path)
     model = joblib.load(model_input_path)
@@ -94,7 +89,7 @@ def event_class_prediction(audio_path):
 
 ### EJEMPLO DE PREDICCIÓN DE UN AUDIO ###
 
-audio_path='/home/ribanez/movidas/dcase20/dcase20_dataset/oracle_mono_signals/male_scream/4.wav'
+audio_path='/home/ribanez/movidas/dcase20/dcase20_dataset/oracle_mono_signals/male_scream/61.wav'
 print(event_class_prediction(audio_path))
 
 
