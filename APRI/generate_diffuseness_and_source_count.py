@@ -11,14 +11,11 @@ Inside it, a folder is created for each dataset entry, containing two files:
 """
 
 
-import numpy as np
 import soundfile as sf
 import matplotlib.pyplot as plt
 plt.switch_backend('MacOSX')
 import scipy.signal
-import librosa
 from baseline.cls_feature_class import create_folder
-import os
 from APRI.utils import *
 
 # %% Parameters
@@ -34,8 +31,10 @@ N = 600
 window_size = 2400
 window_overlap = 0
 nfft = window_size
+D = 10 # decimate factor
 
 plot = False
+decimate = True
 
 output_folder =  os.path.join(params['dataset_dir'], 'num_sources')
 create_folder(output_folder)
@@ -59,6 +58,14 @@ for audio_file_name in audio_files:
     data *= np.array([1, 1/np.sqrt(3), 1/np.sqrt(3), 1/np.sqrt(3)]) # N3D to SN3D
     t, f, stft = scipy.signal.stft(data.T, sr, window='boxcar', nperseg=window_size, noverlap=window_overlap, nfft=nfft)
     stft = stft[:,:-1,:-1] # round shape
+    M, K, N = stft.shape
+
+    if decimate:
+        dec_stft = np.empty((M, K//D, N), dtype=complex)
+        for k in range(K//D):
+            dec_stft[:,k,:] = stft[:,k*D,:] # decimate
+        stft = dec_stft
+
     DOA = doa(stft) # Direction of arrival
     diff = diffuseness(stft) # Diffuseness
 

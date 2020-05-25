@@ -21,7 +21,7 @@ Probably a lot.
 ## Getting started
 1. Download the dataset, and place it in a suitable path in your computer
 2. Go to `baseline/parameter.py` and change the paths at the required places (marked with a TODO sign) 
-3. Run `generate_audio_from_annotations.py`. This will give as output a lot of monophonic signals to start checking them.
+3. Run `generate_audio_from_annotations.py`. This will give as output a lot of monophonic signals to start playing with.
 
 To run the baseline system:
 1. Run `baseline/batch_feature_extraction.py` in `dev` mode, so you can preprocess the data and create the spectrograms and stuff on the `/feat_label` folder.
