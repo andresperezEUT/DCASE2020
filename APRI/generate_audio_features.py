@@ -104,8 +104,8 @@ for event in event_type:
                 y=x.tolist()
             audio_features=audio_features+y
         audio_features=np.array(audio_features)
-        # Save arrays
 
+        # Save arrays
         file_name = os.path.splitext(audio.name)[0]
         print("Saving file ",event+file_name+'.npy')
         np.save(os.path.join(audio_features_output_path, event, file_name+'.npy'), audio_features)
