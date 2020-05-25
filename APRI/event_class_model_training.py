@@ -1,5 +1,5 @@
 """
-event_class_model.py
+event_class_model_training.py
 
 This script is used to train a clasiffier aimed to identify audio events from a set of classes
 Several models are evaluated using a simple pipeline and unique gridsearch for each algorithm
