@@ -13,16 +13,13 @@ The trained model is stored as a joblib file in the folder ....
 
 from baseline import parameter
 import os
-import numpy as np
 import pandas as pd
 import sklearn
 from sklearn.preprocessing import StandardScaler
-
 from sklearn.metrics import accuracy_score,confusion_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import Pipeline
-
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.svm import SVC
@@ -57,8 +54,6 @@ dfaux=dfaux[lista]
 print(len(dfaux.columns))
 dff_x=dfaux
 
-
-
 # Defining some pipelines. GB, RF and SVC
 
 pipe_rf = Pipeline([('scl', StandardScaler()),('reg', RandomForestClassifier(random_state=42))])
@@ -82,7 +77,6 @@ grid_params_svr = [{'reg__kernel': ['rbf'],
                     'reg__gamma': [1e-8,0.9],
                     'reg__C': [1, 10000000]}]
 
-
 # Defining some grid searches
 jobs=-1
 
@@ -92,8 +86,6 @@ gs_gb = GridSearchCV(estimator=pipe_gb,param_grid=grid_params_gb,scoring='accura
 
 gs_svr = GridSearchCV(estimator=pipe_svr,param_grid=grid_params_svr,scoring='accuracy',cv=2,verbose=10,n_jobs=-1)
 
-
-
 grids = [gs_svr]
 
 grid_dict = {0: 'random_forest'}
@@ -101,6 +93,8 @@ grid_dict = {0: 'random_forest'}
 # Split train and test
 
 train_x, test_x, train_y, test_y = train_test_split(dff_x, dff_y['target'], test_size=0.50, random_state=42)
+
+# Train
 
 best_acc = 0
 best_cls = 0
@@ -125,6 +119,8 @@ for idx, gs in enumerate(grids):
         best_gs = gs
         best_cls = idx
 print('\n Classifier with best score: %s' % grid_dict[best_cls])
+
+# Save model (local)
 joblib.dump(best_gs.best_estimator_, model_output_path+'/model.joblib')
 joblib.dump(best_gs.best_params_, model_output_path+'/audio_features/params.joblib')
 
