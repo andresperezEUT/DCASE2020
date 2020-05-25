@@ -19,7 +19,6 @@ data_output_path =  os.path.join(params['dataset_dir'], 'models/event_number/inp
 # Import data and parse in pandas dataframes
 
 for subdir, dirs, files in os.walk(data_rootfolder_path):
-
     for file in files:
         os.chdir(subdir)
         if file == 'diffuseness.npy':
