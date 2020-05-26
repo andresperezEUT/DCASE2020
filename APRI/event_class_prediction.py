@@ -97,20 +97,5 @@ def event_class_prediction(audio_path):
     event_idx=get_key(event_class)
     return event_idx
 
-def event_class_prediction_random():
-    idx = random.randint(0,13)
-    dict = get_class_name_dict()
-    return dict[idx]
-
-
-
-
-### EJEMPLO DE PREDICCIÓN DE UN AUDIO ###
-
-audio_path='/home/ribanez/movidas/dcase20/dcase20_dataset/oracle_mono_signals/male_scream/61.wav'
-print(event_class_prediction(audio_path))
-
-
-
-
-
+def event_class_prediction_random(audio_path):
+    return random.randint(0,13)
