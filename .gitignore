@@ -1,5 +1,5 @@
 *.pyc
-
+*.joblib
 # Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm, CLion, Android Studio, WebStorm and Rider
 # Reference: https://intellij-support.jetbrains.com/hc/en-us/articles/206544839
 
@@ -77,3 +77,4 @@ CRNN_SELDT_DCASE2020.png
 4_1_foa_dev_split1.png
 4_1_foa_dev_split1_model.h5
 baseline/results
+APRI/results

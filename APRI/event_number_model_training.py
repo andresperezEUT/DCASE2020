@@ -24,6 +24,9 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.svm import SVC
 import joblib
+import xgboost as xgb
+import numpy as np
+import scipy
 
 params = parameter.get_params()
 data_input_path = os.path.join(params['dataset_dir'],'models/event_number/input_data' ) # path to folders
@@ -33,8 +36,44 @@ model_output_path =  os.path.join(params['dataset_dir'], 'models/event_number/')
 dff_x=pd.read_pickle(os.path.join(data_input_path,'training_x_event_number.pkl'))
 dff_y=pd.read_pickle(os.path.join(data_input_path,'training_y_event_number.pkl'))
 
-print(len(dff_x.columns))
+dff_y_binary=dff_y.astype(int)
+dff_y_binary=dff_y_binary.astype(str)
+dff_y_binary['target'] = pd.Categorical(dff_y_binary['target'])
+#dff_y_binary['target'].replace({'2': '1'}, inplace=True)
+print(dff_y_binary.describe())
+print(dff_y['target'].value_counts())
+#df=pd.DataFrame(columns=)
+array_dff_x=dff_x.values
+dff_x['mean']=np.mean(array_dff_x, axis=1)
+dff_x['min']=np.min(array_dff_x, axis=1)
+dff_x['max']=np.max(array_dff_x, axis=1)
+dff_x['mean']=np.mean(array_dff_x, axis=1)
+dff_x['median']=np.median(array_dff_x, axis=1)
+dff_x['mode']=np.percentile(array_dff_x,50,axis=1)
+dff_x['range']=np.ptp(array_dff_x, axis=1)
+dff_x['p10']=np.percentile(array_dff_x,10,axis=1)
+dff_x['p20']=np.percentile(array_dff_x,20,axis=1)
+dff_x['p25']=np.percentile(array_dff_x,25,axis=1)
+dff_x['p30']=np.percentile(array_dff_x,30,axis=1)
+dff_x['p40']=np.percentile(array_dff_x,40,axis=1)
+dff_x['p60']=np.percentile(array_dff_x,60,axis=1)
+dff_x['p70']=np.percentile(array_dff_x,70,axis=1)
+dff_x['p75']=np.percentile(array_dff_x,75,axis=1)
+dff_x['p80']=np.percentile(array_dff_x,80,axis=1)
+dff_x['p90']=np.percentile(array_dff_x,90,axis=1)
+dff_x['iqr']=scipy.stats.iqr(array_dff_x, axis=1,rng=(25,75),interpolation='lower')
+dff_x['std']=np.std(array_dff_x, axis=1)
+dff_x['var']=np.var(array_dff_x, axis=1)
+dff_x['skew']=scipy.stats.skew(array_dff_x, axis=1)
+dff_x['kurt']=scipy.stats.kurtosis(array_dff_x, axis=1)
 
+columns=['mean','min','max','median','mode','range','p10','p20','p25','p30','p40','p60','p70','p75','p80','p90','iqr','std','var','skew','kurt']
+dff_x=dff_x[columns]
+
+print("Dimensiones dataset  ")
+print(dff_x.shape)
+
+'''
 n=20
 i=0
 j=0
@@ -53,19 +92,21 @@ for column in range(len(dff_x.columns)):
 dfaux=dfaux[lista]
 print(len(dfaux.columns))
 dff_x=dfaux
-
+'''
 # Defining some pipelines. GB, RF and SVC
 
-pipe_rf = Pipeline([('scl', StandardScaler()),('reg', RandomForestClassifier(random_state=42))])
+pipe_rf = Pipeline([('reg', RandomForestClassifier(random_state=42))])
 
-pipe_gb = Pipeline([('scl', StandardScaler()),('reg', GradientBoostingClassifier(random_state=42))])
+pipe_gb = Pipeline([('reg', GradientBoostingClassifier(random_state=42))])
 
-pipe_svr = Pipeline([('scl', StandardScaler()),('reg', SVC())])
+pipe_svr = Pipeline([('reg', SVC())])
+
+pipe_XGB = Pipeline([('reg',xgb.XGBClassifier(random_state=42))])
 
 # Defining some Grids
 
 grid_params_rf = [{'reg__n_estimators': [100],
-                   'reg__max_depth': [8,16],
+                   'reg__max_depth': [8],
                    'reg__max_features': ["sqrt"],
                    'reg__min_samples_split': [4]}]
 
@@ -77,6 +118,11 @@ grid_params_svr = [{'reg__kernel': ['rbf'],
                     'reg__gamma': [1e-8,0.9],
                     'reg__C': [1, 10000000]}]
 
+grid_params_XGB = [{'reg__colsample_bytree': [0.1,0.9],
+                    "reg__learning_rate": [0.01,0.5], # default 0.1
+                    "reg__max_depth": [3], # default 3
+                    "reg__n_estimators": [100,200]}]
+
 # Defining some grid searches
 jobs=-1
 
@@ -86,13 +132,15 @@ gs_gb = GridSearchCV(estimator=pipe_gb,param_grid=grid_params_gb,scoring='accura
 
 gs_svr = GridSearchCV(estimator=pipe_svr,param_grid=grid_params_svr,scoring='accuracy',cv=2,verbose=10,n_jobs=-1)
 
-grids = [gs_svr]
+gs_XGB = GridSearchCV(estimator=pipe_XGB,param_grid=grid_params_XGB,scoring='accuracy',cv=4,verbose=10,n_jobs=-1)
 
-grid_dict = {0: 'random_forest'}
+grids = [gs_rf]
+
+grid_dict = {0: 'xgb'}
 
 # Split train and test
 
-train_x, test_x, train_y, test_y = train_test_split(dff_x, dff_y['target'], test_size=0.50, random_state=42)
+train_x, test_x, train_y, test_y = train_test_split(dff_x, dff_y_binary['target'], test_size=0.10, random_state=42)
 
 # Train
 
@@ -122,7 +170,7 @@ print('\n Classifier with best score: %s' % grid_dict[best_cls])
 
 # Save model (local)
 joblib.dump(best_gs.best_estimator_, model_output_path+'/model.joblib')
-joblib.dump(best_gs.best_params_, model_output_path+'/audio_features/params.joblib')
+joblib.dump(best_gs.best_params_, model_output_path+'/params.joblib')
 
 
 

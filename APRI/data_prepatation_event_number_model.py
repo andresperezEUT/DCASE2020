@@ -13,8 +13,8 @@ import numpy as np
 import pandas as pd
 
 params = parameter.get_params()
-data_rootfolder_path = os.path.join(params['dataset_dir'], 'num_sources/') # path to folders
-data_output_path =  os.path.join(params['dataset_dir'], 'models/event_number/input_data') # path to arrays
+data_rootfolder_path = os.path.join(params['dataset_dir'], 'num_sources_reduced/') # path to folders
+data_output_path =  os.path.join(params['dataset_dir'], 'models/event_number/input_data_reduced') # path to arrays
 
 # Import data and parse in pandas dataframes
 

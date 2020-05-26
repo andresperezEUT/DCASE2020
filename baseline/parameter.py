@@ -11,7 +11,7 @@ environ_user = os.environ.get('USER')
 user = None
 if environ_user == 'andres.perez':
     user = 'PANS'
-elif environ_user == 'rafa': # TODO: set proper name
+elif environ_user == 'ribanez': #
     user = 'FAIK'
 else:
     warnings.warn('user not known', UserWarning)
@@ -61,8 +61,18 @@ def get_params(argv='1'):
         doa_objective='masked_mse',     # supports: mse, masked_mse. mse- original seld approach; masked_mse - dcase 2020 approach
         
         #METRIC PARAMETERS
-        lad_doa_thresh=20
-       
+        lad_doa_thresh=20,
+
+        # APRI PARAMETERS
+
+        results_dir = 'results',
+
+        window = 'boxcar',
+        window_size = 2400,
+        window_overlap = 0,
+        nfft = 2400,
+        D = 10, # decimation
+
     )
     feature_label_resolution = int(params['label_hop_len_s'] // params['hop_len_s'])
     params['feature_sequence_length'] = params['label_sequence_length'] * feature_label_resolution
@@ -92,7 +102,7 @@ def get_params(argv='1'):
     if user == 'PANS':
         params['dataset_dir'] = '/Volumes/Dinge/datasets/DCASE2020_TASK3'
     elif user == 'FAIK':
-        params['dataset_dir'] = '/scratch/asignal/sharath/DCASE2020_SELD_dataset/'
+        params['dataset_dir'] = '/home/ribanez/movidas/dcase20/dcase20_dataset'
     else:
         warnings.warn('user not known', UserWarning)
 
@@ -102,7 +112,7 @@ def get_params(argv='1'):
     if user == 'PANS':
         params['feat_label_dir'] ='/Volumes/Dinge/datasets/DCASE2020_TASK3/feat_label/'
     elif user == 'FAIK':
-        params['feat_label_dir'] = '/scratch/asignal/sharath/DCASE2020_SELD_dataset/feat_label'
+        params['feat_label_dir'] = '/home/ribanez/movidas/dcase20/'
     else:
         warnings.warn('user not known', UserWarning)
 
@@ -115,30 +125,40 @@ def get_params(argv='1'):
 
 
 
+
+    # if argv == '1':
+    #     print("USING DEFAULT PARAMETERS\n")
+    #
+    # elif argv == '2':
+    #     params['mode'] = 'dev'
+    #     params['dataset'] = 'mic'
+    #
+    # elif argv == '3':
+    #     params['mode'] = 'eval'
+    #     params['dataset'] = 'mic'
+    #
+    # elif argv == '4':
+    #     params['mode'] = 'dev'
+    #     params['dataset'] = 'foa'
+    #
+    # elif argv == '5':
+    #     params['mode'] = 'eval'
+    #     params['dataset'] = 'foa'
+    #
+    # elif argv == '999':
+    #     print("QUICK TEST MODE\n")
+    #     params['quick_test'] = True
+    #     params['epochs_per_fit'] = 1
+
+
     # ########### User defined parameters ##############
-    if argv == '1':
-        print("USING DEFAULT PARAMETERS\n")
+    if argv == 'alpha_v1':
+        # localization_detection
+        params['ld_method'] = 'localization_detection_basic'
+        params['ld_method_args'] = [0.3] # [diff_th]
+        # beamforming
+        params['beamforming_mode'] = 'beam'
 
-    elif argv == '2':
-        params['mode'] = 'dev'
-        params['dataset'] = 'mic'
-
-    elif argv == '3':
-        params['mode'] = 'eval'
-        params['dataset'] = 'mic'
-
-    elif argv == '4':
-        params['mode'] = 'dev'
-        params['dataset'] = 'foa'
-
-    elif argv == '5':
-        params['mode'] = 'eval'
-        params['dataset'] = 'foa'
-
-    elif argv == '999':
-        print("QUICK TEST MODE\n")
-        params['quick_test'] = True
-        params['epochs_per_fit'] = 1
 
     else:
         print('ERROR: unknown argument {}'.format(argv))
