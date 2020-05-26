@@ -5,6 +5,7 @@ Main SELDT loop
 Execute the full analysis, from audio to output file.
 In dev mode, compute evaluation metrics too.
 '''
+import datetime
 import tempfile
 
 import numpy as np
@@ -21,18 +22,24 @@ from APRI.localization_detection import *
 import random
 from baseline.metrics.evaluation_metrics import compute_sed_scores
 from APRI.compute_metrics import compute_metrics
+import time
 
 
 # %% Parameters
 
-params = parameter.get_params()
+preset = 'alpha_v1'
+params = parameter.get_params(preset)
+write = True
+plot = True
+
+
 data_folder_path = os.path.join(params['dataset_dir'], 'foa_dev') # path to audios
 gt_folder_path = os.path.join(params['dataset_dir'], 'metadata_dev') # path to annotations
 this_file_path = os.path.dirname(os.path.abspath(__file__))
-result_folder_path = os.path.join(this_file_path, params['dcase_dir']) # todo change
+result_folder_path = os.path.join(this_file_path, params['results_dir'], preset) # todo change
 create_folder(result_folder_path)
 
-
+# numbers
 M = 4
 N = 600
 fs = params['fs']
@@ -41,25 +48,21 @@ window_size = params['window_size']
 window_overlap = params['window_overlap']
 nfft = params['nfft']
 D = params['D'] # decimate factor
+frame_length = params['label_hop_len_s']
 
-write = True
-plot = True
-# debug = True
-
-# diff_th = 0.2
-
+#methods
 ld_method = locals()[params['ld_method']]
 ld_method_args = params['ld_method_args']
 
 beamforming_mode = params['beamforming_mode']
-frame_length = params['label_hop_len_s']
 
 
 # %% Analysis
 
+start_time = time.time()
+
 print('                                              ')
 print('-------------- PROCESSING FILES --------------')
-print('                                              ')
 print('Folder path: ' + data_folder_path              )
 
 # Iterate over all audio files
@@ -69,10 +72,10 @@ audio_files = [f for f in os.listdir(data_folder_path) if not f.startswith('.')]
 # audio_files = ['fold6_room1_mix100_ov2.wav']
 audio_files = ['fold1_room1_mix001_ov1.wav']
 
-for audio_file_name in audio_files:
+for audio_file_idx, audio_file_name in enumerate(audio_files):
 
-    print('------------------------')
-    print(audio_file_name)
+    st = datetime.datetime.fromtimestamp(time.time()).strftime('%H:%M:%S')
+    print("{}: {}, {}".format(audio_file_idx, st, audio_file_name))
 
     ############################################
     # Preprocess: prepare file output in case
@@ -121,16 +124,25 @@ for audio_file_name in audio_files:
     ############################################
     # Plot results
     if plot:
-        plot_results(csv_file_path)
+        plot_results(csv_file_path, params)
+
 
 print('-------------- PROCESSING FINISHED --------------')
 print('                                                 ')
 
 
-# %%
-# OPTIONAL EVAL
+# %% OPTIONAL EVAL
 
 if params['mode'] == 'dev':
     print('-------------- COMPUTE DOA METRICS --------------')
     gt_folder = os.path.join(params['dataset_dir'], 'metadata_dev')  # path to annotations
-    compute_metrics(gt_folder, result_folder_path)
+    compute_metrics(gt_folder, result_folder_path, params)
+
+
+# %%
+end_time = time.time()
+
+print('                                               ')
+print('-------------- PROCESS COMPLETED --------------')
+print('                                               ')
+print('Elapsed time: ' + str(end_time-start_time)      )

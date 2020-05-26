@@ -64,17 +64,15 @@ def get_params(argv='1'):
         lad_doa_thresh=20,
 
         # APRI PARAMETERS
+
+        results_dir = 'results',
+
         window = 'boxcar',
         window_size = 2400,
         window_overlap = 0,
         nfft = 2400,
         D = 10, # decimation
 
-        ld_method = 'localization_detection_basic',
-        # ld_method_args= diff_th,
-        ld_method_args =    [0.3],
-
-        beamforming_mode = 'beam',
     )
     feature_label_resolution = int(params['label_hop_len_s'] // params['hop_len_s'])
     params['feature_sequence_length'] = params['label_sequence_length'] * feature_label_resolution
@@ -127,30 +125,40 @@ def get_params(argv='1'):
 
 
 
+
+    # if argv == '1':
+    #     print("USING DEFAULT PARAMETERS\n")
+    #
+    # elif argv == '2':
+    #     params['mode'] = 'dev'
+    #     params['dataset'] = 'mic'
+    #
+    # elif argv == '3':
+    #     params['mode'] = 'eval'
+    #     params['dataset'] = 'mic'
+    #
+    # elif argv == '4':
+    #     params['mode'] = 'dev'
+    #     params['dataset'] = 'foa'
+    #
+    # elif argv == '5':
+    #     params['mode'] = 'eval'
+    #     params['dataset'] = 'foa'
+    #
+    # elif argv == '999':
+    #     print("QUICK TEST MODE\n")
+    #     params['quick_test'] = True
+    #     params['epochs_per_fit'] = 1
+
+
     # ########### User defined parameters ##############
-    if argv == '1':
-        print("USING DEFAULT PARAMETERS\n")
+    if argv == 'alpha_v1':
+        # localization_detection
+        params['ld_method'] = 'localization_detection_basic'
+        params['ld_method_args'] = [0.3] # [diff_th]
+        # beamforming
+        params['beamforming_mode'] = 'beam'
 
-    elif argv == '2':
-        params['mode'] = 'dev'
-        params['dataset'] = 'mic'
-
-    elif argv == '3':
-        params['mode'] = 'eval'
-        params['dataset'] = 'mic'
-
-    elif argv == '4':
-        params['mode'] = 'dev'
-        params['dataset'] = 'foa'
-
-    elif argv == '5':
-        params['mode'] = 'eval'
-        params['dataset'] = 'foa'
-
-    elif argv == '999':
-        print("QUICK TEST MODE\n")
-        params['quick_test'] = True
-        params['epochs_per_fit'] = 1
 
     else:
         print('ERROR: unknown argument {}'.format(argv))

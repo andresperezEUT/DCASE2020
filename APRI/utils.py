@@ -407,7 +407,7 @@ def plot_metadata(metadata_file_name):
 
 
 
-def plot_results(file_name):
+def plot_results(file_name, params):
 
     def collect_classwise_data(_in_dict):
         _out_dict = {}
@@ -431,7 +431,6 @@ def plot_results(file_name):
 
         if not plot_y_ax:
             plt.gca().axes.set_yticklabels([])
-    params = parameter.get_params()
 
 
 

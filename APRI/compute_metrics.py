@@ -1,3 +1,9 @@
+"""
+TODO COMPLETE
+
+from calculate_dev_results_from_dcase_output.py
+"""
+
 import os
 from baseline.metrics import SELD_evaluation_metrics
 import baseline.cls_feature_class
@@ -21,14 +27,7 @@ def get_nb_files(_pred_file_list, _group='split'):
 
     return _cnt_dict
 
-
-
-def compute_metrics(ref_desc_files, pred_output_format_files):
-
-    params = baseline.parameter.get_params()
-    # ref_desc_files = os.path.join(params['dataset_dir'], 'metadata_dev') # path to annotations
-    # this_file_path = os.path.dirname(os.path.abspath(__file__))
-    # pred_output_format_files = os.path.join(this_file_path, params['dcase_dir']) # todo change
+def compute_metrics(ref_desc_files, pred_output_format_files, params):
 
     feat_cls = baseline.cls_feature_class.FeatureClass(params)
 
