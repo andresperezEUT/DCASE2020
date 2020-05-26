@@ -116,7 +116,6 @@ def get_params(argv='1'):
     else:
         warnings.warn('user not known', UserWarning)
 
-
     # MATPLOTLIB BACKEND
     if user == 'PANS':
         plt.switch_backend('MacOSX')
@@ -126,43 +125,31 @@ def get_params(argv='1'):
 
 
 
-    # if argv == '1':
-    #     print("USING DEFAULT PARAMETERS\n")
-    #
-    # elif argv == '2':
-    #     params['mode'] = 'dev'
-    #     params['dataset'] = 'mic'
-    #
-    # elif argv == '3':
-    #     params['mode'] = 'eval'
-    #     params['dataset'] = 'mic'
-    #
-    # elif argv == '4':
-    #     params['mode'] = 'dev'
-    #     params['dataset'] = 'foa'
-    #
-    # elif argv == '5':
-    #     params['mode'] = 'eval'
-    #     params['dataset'] = 'foa'
-    #
-    # elif argv == '999':
-    #     print("QUICK TEST MODE\n")
-    #     params['quick_test'] = True
-    #     params['epochs_per_fit'] = 1
-
-
     # ########### User defined parameters ##############
+
+    if argv == 'oracle_beam':
+        # localization_detection
+        params['ld_method'] = 'ld_oracle'
+        # beamforming
+        params['beamforming_mode'] = 'beam'
+        # classification
+        params['class_method'] = 'event_class_prediction'
+        params['class_method_args'] = ['model.joblib']  # [model_name]
+
     if argv == 'alpha_v1':
         # localization_detection
-        params['ld_method'] = 'localization_detection_basic'
+        params['ld_method'] = 'ld_basic'
         params['ld_method_args'] = [0.3] # [diff_th]
         # beamforming
         params['beamforming_mode'] = 'beam'
+        # classification
+        params['class_method'] = 'event_class_prediction_random'
+        params['class_method_args'] = []
 
 
     else:
         print('ERROR: unknown argument {}'.format(argv))
-        exit()
+        # exit()
 
     for key, value in params.items():
         print("\t{}: {}".format(key, value))

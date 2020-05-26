@@ -8,26 +8,17 @@ In dev mode, compute evaluation metrics too.
 import datetime
 import tempfile
 
-import numpy as np
-import soundfile as sf
 import matplotlib.pyplot as plt
-plt.switch_backend('MacOSX')
-import scipy.signal
-import librosa
 from baseline.cls_feature_class import create_folder
-import os
-from APRI.utils import *
 from APRI.localization_detection import *
-# from APRI.event_class_prediction import *
-import random
-from baseline.metrics.evaluation_metrics import compute_sed_scores
 from APRI.compute_metrics import compute_metrics
+from APRI.event_class_prediction import *
 import time
-
 
 # %% Parameters
 
 preset = 'alpha_v1'
+# preset = 'oracle_beam'
 params = parameter.get_params(preset)
 write = True
 plot = True
@@ -50,9 +41,6 @@ nfft = params['nfft']
 D = params['D'] # decimate factor
 frame_length = params['label_hop_len_s']
 
-#methods
-ld_method = locals()[params['ld_method']]
-ld_method_args = params['ld_method_args']
 
 beamforming_mode = params['beamforming_mode']
 
@@ -96,6 +84,12 @@ for audio_file_idx, audio_file_name in enumerate(audio_files):
 
     ############################################
     # Localization and detection analysis: from stft to event_list
+    ld_method_string = params['ld_method']
+    ld_method = locals()[ld_method_string]
+    if ld_method_string == 'ld_oracle':
+        ld_method_args = [audio_file_name, gt_folder_path] # need to pass the current name to get the associated metadata file
+    else:
+        ld_method_args = params['ld_method_args']
     event_list = ld_method(stft, *ld_method_args)
 
     ############################################
@@ -103,17 +97,25 @@ for audio_file_idx, audio_file_name in enumerate(audio_files):
     # TODO: modify so file writting is not needed
     num_events = len(event_list)
     for event_idx in range(num_events):
+
         event = event_list[event_idx]
         mono_event = get_mono_audio_from_event(b_format, event, beamforming_mode, fs, frame_length)
-        # Save into temp file # TODO
-        # fo = tempfile.NamedTemporaryFile()
-        # sf.write
-        # Event class prediction # TODO: setup some way to specify model, classifier, etc
-        # class_string = event_class_prediction_random() # TODO FIX
-        class_idx = random.randint(0,13)
+
+        # Save into temp file
+        fo = tempfile.NamedTemporaryFile()
+        temp_file_name = fo.name+'.wav'
+        sf.write(temp_file_name, mono_event, fs)
+
+        # Predict
+        class_method_string = params['class_method']
+        class_method = locals()[class_method_string]
+        class_method_args = params['class_method_args']
+
+        class_idx = class_method(temp_file_name, *class_method_args)
         event.set_classID(class_idx)
+
         # Close (delete) file
-        # fo.close() # TODO
+        fo.close()
 
         ############################################
         # Generate metadata file from event
@@ -135,8 +137,7 @@ print('                                                 ')
 
 if params['mode'] == 'dev':
     print('-------------- COMPUTE DOA METRICS --------------')
-    gt_folder = os.path.join(params['dataset_dir'], 'metadata_dev')  # path to annotations
-    compute_metrics(gt_folder, result_folder_path, params)
+    compute_metrics(gt_folder_path, result_folder_path, params)
 
 
 # %%

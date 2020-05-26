@@ -6,7 +6,7 @@ The function:
 - calculates the audio features for the audio file that are used as input in the model framework
 - executed the model and return the event class
 
-# TODO: RETURN CLASS IDX INSTEAD OF STRING
+
 '''
 
 import numpy as np
@@ -16,6 +16,7 @@ import essentia.standard as es
 import random
 from APRI.utils import get_class_name_dict
 
+# TODO: this line should go inside the corresponding method
 model_input_path = os.path.dirname(os.path.realpath(__file__))+'/models/event_class/model.joblib'
 
 ### FUNCIONES PARA PREDICCIÓN DE EVENT_CLASS ###
@@ -83,24 +84,34 @@ def get_features_music_extractor(audio_path):
     audio_features = np.array(audio_features)
     return audio_features.tolist()
 
+# TODO: add model name as second function argument
 def event_class_prediction(audio_path):
     variables=get_features_music_extractor(audio_path)
     model = joblib.load(model_input_path)
     event_class=model.predict(np.array([variables]))
-    return event_class
 
-def event_class_prediction_random():
-    idx = random.randint(0,13)
-    dict = get_class_name_dict()
-    return dict[idx]
+    # TODO: refactor model_predict to output class_idx (int) instead of class_label (string)
+    # then remove these ugly lines
+    event_idx = -1
+    for k, v in get_class_name_dict().items():  # for name, age in dictionary.iteritems():  (for Python 2.x)
+        if v == event_class:
+            event_idx = k
+
+    return event_idx
+
+def event_class_prediction_random(audio_path):
+    return random.randint(0,13)
 
 
-### EJEMPLO DE PREDICCIÓN DE UN AUDIO ###
-
-audio_path='/home/ribanez/movidas/dcase20/dcase20_dataset/oracle_mono_signals/male_scream/61.wav'
-print(event_class_prediction(audio_path))
-
-
+# ### EJEMPLO DE PREDICCIÓN DE UN AUDIO ###
+#
+# audio_path='/home/ribanez/movidas/dcase20/dcase20_dataset/oracle_mono_signals/male_scream/61.wav'
+# print(event_class_prediction(audio_path))
+#
+#
+# audio_path = '/Volumes/Dinge/audio/dereverberation/test1/anechoic.wav'
+# get_features_music_extractor(audio_path)
+#
 
 
 
