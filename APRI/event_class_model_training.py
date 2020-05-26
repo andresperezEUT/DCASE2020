@@ -25,26 +25,9 @@ import xgboost as xgb
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.svm import SVC
+from APRI.utils import get_class_name_dict
 
 # List of classes
-def get_class_name_dict():
-    return {
-        0: 'alarm',
-        1: 'crying_baby',
-        2: 'crash',
-        3: 'barking_dog',
-        4: 'running_engine',
-        5: 'female_scream',
-        6: 'female_speech',
-        7: 'burning_fire',
-        8: 'footsteps',
-        9: 'knocking_on_door',
-        10:'male_scream',
-        11:'male_speech',
-        12:'ringing_phone',
-        13:'piano'
-    }
-
 
 params = parameter.get_params()
 event_type= get_class_name_dict().values()
