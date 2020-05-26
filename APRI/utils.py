@@ -274,8 +274,8 @@ class Event:
                 writer.writerow([self._frames[idx],
                                  self._classID,
                                  self._instance,
-                                 self._azis[idx],
-                                 self._eles[idx]])
+                                 self._azis[idx]*180/np.pi,     # csv needs degrees
+                                 self._eles[idx]*180/np.pi])    # csv needs degrees
 
 
 def get_class_name_dict():
@@ -465,7 +465,7 @@ def plot_results(file_name):
     stft = np.abs(np.squeeze(feat_cls._spectrogram(audio[:, :1])))
     stft = librosa.amplitude_to_db(stft, ref=np.max)
 
-    plt.figure(figsize=(20, 15))
+    plt.figure()
     gs = gridspec.GridSpec(4, 4)
     ax0 = plt.subplot(gs[0, 1:3]), librosa.display.specshow(stft.T, sr=fs, x_axis='s', y_axis='linear'), plt.xlim(
         [0, 60]), plt.xticks([]), plt.xlabel(''), plt.title('Spectrogram')

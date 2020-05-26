@@ -11,7 +11,11 @@ This is our contribution to [DCASE2020 Task 3 Challenge]((http://dcase.community
 
 ## Dependencies
 Probably a lot.
+* numpy
 * Ipython (why?)
+* scipy
+* sklearn
+* matplotlib
 * soundfile (pysoundfile)
 * librosa
 * keras (I'm using v2.3.1)

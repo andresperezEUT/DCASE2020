@@ -72,7 +72,7 @@ def get_params(argv='1'):
 
         ld_method = 'localization_detection_basic',
         # ld_method_args= diff_th,
-        ld_method_args =    [0.2],
+        ld_method_args =    [0.3],
 
         beamforming_mode = 'beam',
     )

@@ -28,7 +28,9 @@ def get_nb_files(_pred_file_list, _group='split'):
 # INPUT DIRECTORY
 # TODO
 ref_desc_files = '/Volumes/Dinge/datasets/DCASE2020_TASK3/metadata_dev' # reference description directory location
-pred_output_format_files = '/Users/andres.perez/source/DCASE2020/baseline/results/4_foa_dev' # predicted output format directory location
+pred_output_format_files = '/Users/andres.perez/source/DCASE2020/APRI/results/' # predicted output format directory location
+pred_output_format_files = '/Volumes/Dinge/datasets/DCASE2020_TASK3/metadata_dev' # predicted output format directory location
+# pred_output_format_files = '/Volumes/Dinge/datasets/DCASE2020_TASK3/metadata_dev' # predicted output format directory location
 use_polar_format = True # Compute SELD metrics using polar or Cartesian coordinates
 
 # Load feature class
@@ -36,11 +38,11 @@ params = baseline.parameter.get_params()
 feat_cls = baseline.cls_feature_class.FeatureClass(params)
 
 # collect reference files info
-ref_files = os.listdir(ref_desc_files)
+ref_files = [f for f in os.listdir(ref_desc_files) if f !='.DS_Store']
 nb_ref_files = len(ref_files)
 
 # collect predicted files info
-pred_files = os.listdir(pred_output_format_files)
+pred_files = [f for f in os.listdir(pred_output_format_files) if f !='.DS_Store']
 nb_pred_files = len(pred_files)
 
 # Calculate scores for different splits, overlapping sound events, and impulse responses (reverberant scenes)
@@ -61,11 +63,14 @@ for score_type in score_type_list:
         for pred_cnt, pred_file in enumerate(split_cnt_dict[split_key]):
             # Load predicted output format file
             pred_dict = feat_cls.load_output_format_file(os.path.join(pred_output_format_files, pred_file))
-            if use_polar_format:
-                pred_dict_polar = feat_cls.convert_output_format_cartesian_to_polar(pred_dict)
-                pred_labels = feat_cls.segment_labels(pred_dict_polar, feat_cls.get_nb_frames())
-            else:
-                pred_labels = feat_cls.segment_labels(pred_dict, feat_cls.get_nb_frames())
+            pred_dict_polar = pred_dict # already in polar!
+            pred_labels = feat_cls.segment_labels(pred_dict_polar, feat_cls.get_nb_frames())
+
+            # if use_polar_format:
+            #     pred_dict_polar = feat_cls.convert_output_format_cartesian_to_polar(pred_dict)
+            #     pred_labels = feat_cls.segment_labels(pred_dict_polar, feat_cls.get_nb_frames())
+            # else:
+            #     pred_labels = feat_cls.segment_labels(pred_dict, feat_cls.get_nb_frames())
 
             # Load reference description file
             gt_dict_polar = feat_cls.load_output_format_file(os.path.join(ref_desc_files, pred_file.replace('.npy', '.csv')))

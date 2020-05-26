@@ -19,6 +19,8 @@ from APRI.utils import *
 from APRI.localization_detection import *
 # from APRI.event_class_prediction import *
 import random
+from baseline.metrics.evaluation_metrics import compute_sed_scores
+from APRI.compute_metrics import compute_metrics
 
 
 # %% Parameters
@@ -65,7 +67,7 @@ audio_files = [f for f in os.listdir(data_folder_path) if not f.startswith('.')]
 
 # Uncomment the following lines if you want a specific file
 # audio_files = ['fold6_room1_mix100_ov2.wav']
-audio_files = ['fold6_room1_mix001_ov1.wav']
+audio_files = ['fold1_room1_mix001_ov1.wav']
 
 for audio_file_name in audio_files:
 
@@ -77,8 +79,9 @@ for audio_file_name in audio_files:
     if write:
         csv_file_name = (os.path.splitext(audio_file_name)[0]) + '.csv'
         csv_file_path = os.path.join(result_folder_path, csv_file_name)
-        # with open(csv_file_name, "w") as result_csv_file:
-        #     pass # just create the file
+        # since we always append to the csv file, make a reset on the file
+        if os.path.exists(csv_file_path):
+            os.remove(csv_file_path)
 
     ############################################
     # Open file
@@ -119,3 +122,15 @@ for audio_file_name in audio_files:
     # Plot results
     if plot:
         plot_results(csv_file_path)
+
+print('-------------- PROCESSING FINISHED --------------')
+print('                                                 ')
+
+
+# %%
+# OPTIONAL EVAL
+
+if params['mode'] == 'dev':
+    print('-------------- COMPUTE DOA METRICS --------------')
+    gt_folder = os.path.join(params['dataset_dir'], 'metadata_dev')  # path to annotations
+    compute_metrics(gt_folder, result_folder_path)
