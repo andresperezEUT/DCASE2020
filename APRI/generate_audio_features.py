@@ -7,7 +7,6 @@ The output values are stored in a folder `oracle_mono_signals/audio_features` wi
 Inside it, a folder is created for each event class, and a single file in created for each event
 keeping the name (number) of the original audio file.
 
- # TODO: delete duplicate instances of get_class_name_dict
 """
 from baseline import parameter
 import essentia
@@ -15,6 +14,7 @@ import essentia.standard as es
 import os
 import numpy as np
 from baseline.cls_feature_class import create_folder
+from APRI.utils import get_class_name_dict
 
 def get_feature_list():
     return [
@@ -57,23 +57,6 @@ def get_feature_list():
          'lowlevel.silence_rate_60dB.var'
     ]
 
-def get_class_name_dict():
-    return {
-        0: 'alarm',
-        1: 'crying_baby',
-        2: 'crash',
-        3: 'barking_dog',
-        4: 'running_engine',
-        5: 'female_scream',
-        6: 'female_speech',
-        7: 'burning_fire',
-        8: 'footsteps',
-        9: 'knocking_on_door',
-        10:'male_scream',
-        11:'male_speech',
-        12:'ringing_phone',
-        13:'piano'
-    }
 
 params = parameter.get_params()
 event_type= get_class_name_dict().values()
