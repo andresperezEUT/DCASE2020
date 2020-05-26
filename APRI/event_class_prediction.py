@@ -6,7 +6,6 @@ The function:
 - calculates the audio features for the audio file that are used as input in the model framework
 - executed the model and return the event class
 
-
 '''
 
 import numpy as np
@@ -62,6 +61,12 @@ def get_feature_list():
          'lowlevel.silence_rate_60dB.var'
     ]
 
+def get_key(val):
+    classes=get_class_name_dict()
+    for key, value in classes.items():
+         if val == value:
+             return key
+
 def get_features_music_extractor(audio_path):
     print("Extracting features...")
     features, features_frames = es.MusicExtractor(lowlevelFrameSize=4096,
@@ -89,29 +94,23 @@ def event_class_prediction(audio_path):
     variables=get_features_music_extractor(audio_path)
     model = joblib.load(model_input_path)
     event_class=model.predict(np.array([variables]))
-
-    # TODO: refactor model_predict to output class_idx (int) instead of class_label (string)
-    # then remove these ugly lines
-    event_idx = -1
-    for k, v in get_class_name_dict().items():  # for name, age in dictionary.iteritems():  (for Python 2.x)
-        if v == event_class:
-            event_idx = k
-
+    event_idx=get_key(event_class)
     return event_idx
 
-def event_class_prediction_random(audio_path):
-    return random.randint(0,13)
+def event_class_prediction_random():
+    idx = random.randint(0,13)
+    dict = get_class_name_dict()
+    return dict[idx]
 
 
-# ### EJEMPLO DE PREDICCIÓN DE UN AUDIO ###
-#
-# audio_path='/home/ribanez/movidas/dcase20/dcase20_dataset/oracle_mono_signals/male_scream/61.wav'
-# print(event_class_prediction(audio_path))
-#
-#
-# audio_path = '/Volumes/Dinge/audio/dereverberation/test1/anechoic.wav'
-# get_features_music_extractor(audio_path)
-#
+
+
+### EJEMPLO DE PREDICCIÓN DE UN AUDIO ###
+
+audio_path='/home/ribanez/movidas/dcase20/dcase20_dataset/oracle_mono_signals/male_scream/61.wav'
+print(event_class_prediction(audio_path))
+
+
 
 
 
