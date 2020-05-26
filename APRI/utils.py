@@ -1,3 +1,4 @@
+import csv
 import os
 import numpy as np
 from baseline import cls_feature_class, parameter
@@ -5,11 +6,28 @@ import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
 from baseline.metrics.evaluation_metrics import cart2sph
 import scipy.stats
+import soundfile as sf
+import warnings
+import librosa.display
 
 
+# %% SIGNAL
+
+def compute_spectrogram(data, sr, window, window_size, window_overlap, nfft, D=None):
+
+    t, f, stft = scipy.signal.stft(data.T, sr, window=window, nperseg=window_size, noverlap=window_overlap, nfft=nfft)
+    stft = stft[:,:-1,:-1] # round shape
+    M, K, N = stft.shape
+    # TODO: check non-integer cases
+    if D is not None:
+        dec_stft = np.empty((M, K//D, N), dtype=complex)
+        for k in range(K//D):
+            dec_stft[:,k,:] = stft[:,k*D,:] # decimate
+        stft = dec_stft
+    return stft
 
 
-# %% STUFF
+# %% STATS
 
 def circmedian(angs, unit='rad'):
     # from https://github.com/scipy/scipy/issues/6644
@@ -126,6 +144,46 @@ def mono_extractor(b_format, azis=None, eles=None, mode='beam'):
     return x
 
 
+def get_mono_audio_from_event(b_format, event, beamforming_mode, fs, frame_length):
+
+    frames = event.get_frames()
+    w = frame_length  # frame length of the annotations
+    samples_per_frame = int(w * fs)
+    start_time_samples = int(frames[0] * samples_per_frame)
+    end_time_samples = int((frames[-1] + 1) * samples_per_frame)  # add 1 here so we push the duration to the end
+    mono_event = None
+
+    if beamforming_mode == 'omni':
+            mono_event = mono_extractor(b_format[start_time_samples:end_time_samples],
+                                        mode=beamforming_mode)
+
+    elif beamforming_mode == 'beam':
+        azi_frames = event.get_azis()
+        ele_frames = event.get_eles()
+        # frames to samples; TODO: interpolation would be cool
+        num_frames = len(frames)
+        num_samples = num_frames * samples_per_frame
+
+        assert (end_time_samples - start_time_samples == num_samples)
+
+        azi_samples = np.zeros(num_samples)
+        ele_samples = np.zeros(num_samples)
+        for idx in range(num_frames):
+            azi_samples[(idx * samples_per_frame):(idx + 1) * samples_per_frame] = azi_frames[idx]
+            ele_samples[(idx * samples_per_frame):(idx + 1) * samples_per_frame] = ele_frames[idx]
+
+        mono_event = mono_extractor(b_format[start_time_samples:end_time_samples],
+                                    azis=azi_samples * np.pi / 180,  # deg2rad
+                                    eles=ele_samples * np.pi / 180,  # deg2rad
+                                    mode=beamforming_mode)
+
+    else:
+        warnings.warn('MONO METHOD NOT KNOWN"', UserWarning)
+
+    return mono_event
+
+
+
 
 # %% PLOT
 
@@ -167,7 +225,6 @@ def plot_diffuseness(stft):
 
 # %% DATA MANAGEMENT
 
-
 class Event:
     def __init__(self, classID, instance, frames, azis, eles):
         self._classID = classID
@@ -178,6 +235,9 @@ class Event:
 
     def get_classID(self):
         return self._classID
+
+    def set_classID(self, classID):
+        self._classID = classID
 
     def get_instance(self):
         return self._instance
@@ -206,6 +266,16 @@ class Event:
         print(self._frames)
         print(self._azis)
         print(self._eles)
+
+    def export_csv(self, csv_file):
+        with open(csv_file, 'a') as csvfile:
+            writer = csv.writer(csvfile)
+            for idx in range(len(self._frames)):
+                writer.writerow([self._frames[idx],
+                                 self._classID,
+                                 self._instance,
+                                 self._azis[idx]*180/np.pi,     # csv needs degrees
+                                 self._eles[idx]*180/np.pi])    # csv needs degrees
 
 
 def get_class_name_dict():
@@ -282,6 +352,136 @@ def plot_metadata(metadata_file_name):
     ax5 = plt.subplot(gs[2, 0]), plot_func(ref_data, params['label_hop_len_s'], ind=3, plot_y_ax=True), plt.ylim(
         [-90, 90]), plt.title('Elevation reference')
 
+    params = parameter.get_params()
 
+    # output format file to visualize
+    pred = os.path.join(params['dcase_dir'], '4_foa_dev/fold1_room1_mix001_ov1.csv')
+    pred = '/Users/andres.perez/source/DCASE2020/baseline/results/4_foa_dev/fold1_room1_mix001_ov1.csv'
+
+    # path of reference audio directory for visualizing the spectrogram and description directory for
+    # visualizing the reference
+    # Note: The code finds out the audio filename from the predicted filename automatically
+    ref_dir = os.path.join(params['dataset_dir'], 'metadata_dev')
+    aud_dir = os.path.join(params['dataset_dir'], 'foa_dev')
+
+    # load the predicted output format
+    feat_cls = cls_feature_class.FeatureClass(params)
+    pred_dict = feat_cls.load_output_format_file(pred)
+    pred_dict_polar = feat_cls.convert_output_format_cartesian_to_polar(pred_dict)
+
+    # load the reference output format
+    ref_filename = os.path.basename(pred)
+    ref_dict_polar = feat_cls.load_output_format_file(os.path.join(ref_dir, ref_filename))
+
+    pred_data = collect_classwise_data(pred_dict_polar)
+    ref_data = collect_classwise_data(ref_dict_polar)
+
+    nb_classes = len(feat_cls.get_classes())
+
+    # load the audio and extract spectrogram
+    ref_filename = os.path.basename(pred).replace('.csv', '.wav')
+    audio, fs = feat_cls._load_audio(os.path.join(aud_dir, ref_filename))
+    stft = np.abs(np.squeeze(feat_cls._spectrogram(audio[:, :1])))
+    stft = librosa.amplitude_to_db(stft, ref=np.max)
+
+    plot.figure(figsize=(20, 15))
+    gs = gridspec.GridSpec(4, 4)
+    ax0 = plot.subplot(gs[0, 1:3]), librosa.display.specshow(stft.T, sr=fs, x_axis='s', y_axis='linear'), plot.xlim(
+        [0, 60]), plot.xticks([]), plot.xlabel(''), plot.title('Spectrogram')
+    ax1 = plot.subplot(gs[1, :2]), plot_func(ref_data, params['label_hop_len_s'], ind=1, plot_y_ax=True), plot.ylim(
+        [-1, nb_classes + 1]), plot.title('SED reference')
+    ax2 = plot.subplot(gs[1, 2:]), plot_func(pred_data, params['label_hop_len_s'], ind=1), plot.ylim(
+        [-1, nb_classes + 1]), plot.title('SED predicted')
+    ax3 = plot.subplot(gs[2, :2]), plot_func(ref_data, params['label_hop_len_s'], ind=2, plot_y_ax=True), plot.ylim(
+        [-180, 180]), plot.title('Azimuth reference')
+    ax4 = plot.subplot(gs[2, 2:]), plot_func(pred_data, params['label_hop_len_s'], ind=2), plot.ylim(
+        [-180, 180]), plot.title('Azimuth predicted')
+    ax5 = plot.subplot(gs[3, :2]), plot_func(ref_data, params['label_hop_len_s'], ind=3, plot_y_ax=True), plot.ylim(
+        [-90, 90]), plot.title('Elevation reference')
+    ax6 = plot.subplot(gs[3, 2:]), plot_func(pred_data, params['label_hop_len_s'], ind=3), plot.ylim(
+        [-90, 90]), plot.title('Elevation predicted')
+    ax_lst = [ax0, ax1, ax2, ax3, ax4, ax5, ax6]
+    # plot.savefig(os.path.join(params['dcase_dir'] , ref_filename.replace('.wav', '.jpg')), dpi=300, bbox_inches = "tight")
+    plot.show()
+
+
+
+
+def plot_results(file_name, params):
+
+    def collect_classwise_data(_in_dict):
+        _out_dict = {}
+        for _key in _in_dict.keys():
+            for _seld in _in_dict[_key]:
+                if _seld[0] not in _out_dict:
+                    _out_dict[_seld[0]] = []
+                _out_dict[_seld[0]].append([_key, _seld[0], _seld[1], _seld[2]])
+        return _out_dict
+
+    def plot_func(plot_data, hop_len_s, ind, plot_x_ax=False, plot_y_ax=False):
+        cmap = ['b', 'r', 'g', 'y', 'k', 'c', 'm', 'b', 'r', 'g', 'y', 'k', 'c', 'm']
+        for class_ind in plot_data.keys():
+            time_ax = np.array(plot_data[class_ind])[:, 0] * hop_len_s
+            y_ax = np.array(plot_data[class_ind])[:, ind]
+            plt.plot(time_ax, y_ax, marker='.', color=cmap[class_ind], linestyle='None', markersize=4)
+        plt.grid()
+        plt.xlim([0, 60])
+        if not plot_x_ax:
+            plt.gca().axes.set_xticklabels([])
+
+        if not plot_y_ax:
+            plt.gca().axes.set_yticklabels([])
+
+
+
+    # output format file to visualize
+    pred = os.path.join(params['dcase_dir'], file_name)
+
+    # path of reference audio directory for visualizing the spectrogram and description directory for
+    # visualizing the reference
+    # Note: The code finds out the audio filename from the predicted filename automatically
+    ref_dir = os.path.join(params['dataset_dir'], 'metadata_dev')
+    aud_dir = os.path.join(params['dataset_dir'], 'foa_dev')
+
+    # load the predicted output format
+    feat_cls = cls_feature_class.FeatureClass(params)
+    pred_dict = feat_cls.load_output_format_file(pred)
+    # pred_dict_polar = feat_cls.convert_output_format_cartesian_to_polar(pred_dict)
+    pred_dict_polar = pred_dict
+
+    # load the reference output format
+    ref_filename = os.path.basename(pred)
+    ref_dict_polar = feat_cls.load_output_format_file(os.path.join(ref_dir, ref_filename))
+
+    pred_data = collect_classwise_data(pred_dict_polar)
+    ref_data = collect_classwise_data(ref_dict_polar)
+
+    nb_classes = len(feat_cls.get_classes())
+
+    # load the audio and extract spectrogram
+    ref_filename = os.path.basename(pred).replace('.csv', '.wav')
+    audio, fs = feat_cls._load_audio(os.path.join(aud_dir, ref_filename))
+    stft = np.abs(np.squeeze(feat_cls._spectrogram(audio[:, :1])))
+    stft = librosa.amplitude_to_db(stft, ref=np.max)
+
+    plt.figure()
+    gs = gridspec.GridSpec(4, 4)
+    ax0 = plt.subplot(gs[0, 1:3]), librosa.display.specshow(stft.T, sr=fs, x_axis='s', y_axis='linear'), plt.xlim(
+        [0, 60]), plt.xticks([]), plt.xlabel(''), plt.title('Spectrogram')
+    ax1 = plt.subplot(gs[1, :2]), plot_func(ref_data, params['label_hop_len_s'], ind=1, plot_y_ax=True), plt.ylim(
+        [-1, nb_classes + 1]), plt.title('SED reference')
+    ax2 = plt.subplot(gs[1, 2:]), plot_func(pred_data, params['label_hop_len_s'], ind=1), plt.ylim(
+        [-1, nb_classes + 1]), plt.title('SED predicted')
+    ax3 = plt.subplot(gs[2, :2]), plot_func(ref_data, params['label_hop_len_s'], ind=2, plot_y_ax=True), plt.ylim(
+        [-180, 180]), plt.title('Azimuth reference')
+    ax4 = plt.subplot(gs[2, 2:]), plot_func(pred_data, params['label_hop_len_s'], ind=2), plt.ylim(
+        [-180, 180]), plt.title('Azimuth predicted')
+    ax5 = plt.subplot(gs[3, :2]), plot_func(ref_data, params['label_hop_len_s'], ind=3, plot_y_ax=True), plt.ylim(
+        [-90, 90]), plt.title('Elevation reference')
+    ax6 = plt.subplot(gs[3, 2:]), plot_func(pred_data, params['label_hop_len_s'], ind=3), plt.ylim(
+        [-90, 90]), plt.title('Elevation predicted')
+    ax_lst = [ax0, ax1, ax2, ax3, ax4, ax5, ax6]
+    # plt.savefig(os.path.join(params['dcase_dir'] , ref_filename.replace('.wav', '.jpg')), dpi=300, bbox_inches = "tight")
+    plt.show()
 # %%
 

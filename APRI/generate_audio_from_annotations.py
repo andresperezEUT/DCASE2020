@@ -27,12 +27,12 @@ import soundfile as sf
 import numpy as np
 import matplotlib.pyplot as plt
 from baseline.cls_feature_class import create_folder
-from APRI.utils import plot_metadata, get_class_name_dict, mono_extractor, Event
+from APRI.utils import plot_metadata, get_class_name_dict, get_mono_audio_from_event, Event
 import warnings
 
 # %% CONFIG
 
-write_file = True
+write_file = False
 plot = False
 debug = False
 
@@ -345,40 +345,7 @@ for audio_file_name in audio_files:
         # Get monophonic estimates of the event, and save into files
         for event_idx, event in enumerate(event_list):
 
-            frames = event.get_frames()
-            w = params['label_hop_len_s'] # frame length of the annotations
-            samples_per_frame = int(w * fs)
-            start_time_samples = int(frames[0] * samples_per_frame)
-            end_time_samples = int((frames[-1]+1) * samples_per_frame) # add 1 here so we push the duration to the end
-
-
-
-            if beamforming_mode == 'omni':
-                mono_event = mono_extractor(b_format[start_time_samples:end_time_samples],
-                                            mode=beamforming_mode)
-
-            elif beamforming_mode == 'beam':
-                azi_frames = event.get_azis()
-                ele_frames = event.get_eles()
-                # frames to samples; TODO: interpolation would be cool
-                num_frames = len(frames)
-                num_samples = num_frames * samples_per_frame
-
-                assert(end_time_samples - start_time_samples == num_samples)
-
-                azi_samples = np.zeros(num_samples)
-                ele_samples = np.zeros(num_samples)
-                for idx in range(num_frames):
-                    azi_samples[(idx*samples_per_frame):(idx+1)*samples_per_frame ] = azi_frames[idx]
-                    ele_samples[(idx*samples_per_frame):(idx+1)*samples_per_frame ] = ele_frames[idx]
-
-                mono_event = mono_extractor(b_format[start_time_samples:end_time_samples],
-                                            azis=azi_samples*np.pi/180, # deg2rad
-                                            eles=ele_samples*np.pi/180, # deg2rad
-                                            mode=beamforming_mode)
-
-            else:
-                warnings.warn('MONO METHOD NOT KNOWN"', UserWarning)
+            mono_event = get_mono_audio_from_event(b_format, event, beamforming_mode, fs, params['label_hop_len_s'])
 
             ######################
             event_occurrence_idx = occurrences_per_class[event.get_classID()]
@@ -387,8 +354,10 @@ for audio_file_name in audio_files:
 
             ######################
             # write file
+            '''
             if write_file:
                 sf.write(os.path.join(output_path, class_name, mono_file_name), mono_event, sr)
+            '''
             # increment counter
             occurrences_per_class[event.get_classID()] += 1
 

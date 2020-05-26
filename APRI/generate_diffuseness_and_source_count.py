@@ -13,7 +13,7 @@ Inside it, a folder is created for each dataset entry, containing two files:
 
 import soundfile as sf
 import matplotlib.pyplot as plt
-plt.switch_backend('MacOSX')
+#plt.switch_backend('MacOSX')
 import scipy.signal
 from baseline.cls_feature_class import create_folder
 from APRI.utils import *
@@ -31,12 +31,12 @@ N = 600
 window_size = 2400
 window_overlap = 0
 nfft = window_size
-D = 10 # decimate factor
+D = 20 # decimate factor
 
 plot = False
 decimate = True
 
-output_folder =  os.path.join(params['dataset_dir'], 'num_sources')
+output_folder =  os.path.join(params['dataset_dir'], 'num_sources_reduced')
 create_folder(output_folder)
 
 # %% Analysis
