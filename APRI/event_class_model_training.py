@@ -6,6 +6,7 @@ Several models are evaluated using a simple pipeline and unique gridsearch for e
 
 The trained model is stored as a joblib file in the folder ....
 
+ # TODO: delete duplicate instances of get_class_name_dict
 """
 
 from baseline import parameter

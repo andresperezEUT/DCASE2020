@@ -7,6 +7,7 @@ The output values are stored in a folder `oracle_mono_signals/audio_features` wi
 Inside it, a folder is created for each event class, and a single file in created for each event
 keeping the name (number) of the original audio file.
 
+ # TODO: delete duplicate instances of get_class_name_dict
 """
 from baseline import parameter
 import essentia

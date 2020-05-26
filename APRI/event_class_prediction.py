@@ -6,12 +6,15 @@ The function:
 - calculates the audio features for the audio file that are used as input in the model framework
 - executed the model and return the event class
 
+# TODO: RETURN CLASS IDX INSTEAD OF STRING
 '''
 
 import numpy as np
 import joblib
 import os
 import essentia.standard as es
+import random
+from APRI.utils import get_class_name_dict
 
 model_input_path = os.path.dirname(os.path.realpath(__file__))+'/models/event_class/model.joblib'
 
@@ -85,6 +88,11 @@ def event_class_prediction(audio_path):
     model = joblib.load(model_input_path)
     event_class=model.predict(np.array([variables]))
     return event_class
+
+def event_class_prediction_random():
+    idx = random.randint(0,13)
+    dict = get_class_name_dict()
+    return dict[idx]
 
 
 ### EJEMPLO DE PREDICCIÓN DE UN AUDIO ###

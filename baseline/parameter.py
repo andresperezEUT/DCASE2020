@@ -61,8 +61,20 @@ def get_params(argv='1'):
         doa_objective='masked_mse',     # supports: mse, masked_mse. mse- original seld approach; masked_mse - dcase 2020 approach
         
         #METRIC PARAMETERS
-        lad_doa_thresh=20
-       
+        lad_doa_thresh=20,
+
+        # APRI PARAMETERS
+        window = 'boxcar',
+        window_size = 2400,
+        window_overlap = 0,
+        nfft = 2400,
+        D = 10, # decimation
+
+        ld_method = 'localization_detection_basic',
+        # ld_method_args= diff_th,
+        ld_method_args =    [0.2],
+
+        beamforming_mode = 'beam',
     )
     feature_label_resolution = int(params['label_hop_len_s'] // params['hop_len_s'])
     params['feature_sequence_length'] = params['label_sequence_length'] * feature_label_resolution
