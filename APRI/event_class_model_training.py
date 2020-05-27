@@ -6,7 +6,6 @@ Several models are evaluated using a simple pipeline and unique gridsearch for e
 
 The trained model is stored as a joblib file in the folder ....
 
- # TODO: delete duplicate instances of get_class_name_dict
 """
 
 from baseline import parameter
@@ -32,7 +31,7 @@ from APRI.utils import get_class_name_dict
 params = parameter.get_params()
 event_type= get_class_name_dict().values()
 data_folder_path = os.path.join(params['dataset_dir'], 'oracle_mono_signals_beam_all/audio_features_beam_all/') # path to arrays
-model_output_path =  os.path.join(params['dataset_dir'], 'models/event_class_beam_all/') # path to arrays
+model_output_path =  os.path.join(params['dataset_dir'], 'models/event_class_xgb/') # path to arrays
 
 # Import data and parse in pandas dataframes
 rows=[]
@@ -88,10 +87,10 @@ grid_params_svr = [{'reg__kernel': ['rbf'],
                     'reg__gamma': [0.01],
                     'reg__C': [100]}]
 
-grid_params_XGB = [{'reg__colsample_bytree': [0.5,0.6,0.7],
-                    "reg__learning_rate": [0.3], # default 0.1
+grid_params_XGB = [{'reg__colsample_bytree': [0.1,0.8],
+                    "reg__learning_rate": [0.01,0.1], # default 0.1
                     "reg__max_depth": [6], # default 3
-                    "reg__n_estimators": [100,200]}]
+                    "reg__n_estimators": [500]}]
 
 
 # Defining some grid searches
