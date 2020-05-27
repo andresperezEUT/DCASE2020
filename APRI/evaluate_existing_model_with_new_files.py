@@ -39,7 +39,7 @@ params = parameter.get_params()
 event_type= get_class_name_dict().values()
 data_folder_path = os.path.join(params['dataset_dir'], 'oracle_mono_signals/audio_features/') # path to arrays
 
-model_input_path = os.path.dirname(os.path.realpath(__file__))+'/models/event_class_beam_all/model.joblib'
+model_input_path = os.path.dirname(os.path.realpath(__file__))+'/models/event_class_rf/model.joblib'
 # Import data and parse in pandas dataframes
 rows=[]
 for event in event_type:
