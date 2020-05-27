@@ -120,7 +120,7 @@ def get_params(argv='1'):
     if user == 'PANS':
         plt.switch_backend('MacOSX')
     elif user == 'FAIK':
-        plt.switch_backend('agg')
+        plt.switch_backend('TKagg')
 
 
 
@@ -134,7 +134,8 @@ def get_params(argv='1'):
         params['beamforming_mode'] = 'beam'
         # classification
         params['class_method'] = 'event_class_prediction'
-        params['class_method_args'] = ['model.joblib']  # [model_name]
+        params['class_method_args'] = ['event_class_rf']
+        params['preset_descriptor'] = 'loc:metadata; beam:beam; cls:random_forest'
 
     if argv == 'alpha_v1':
         # localization_detection
@@ -145,7 +146,18 @@ def get_params(argv='1'):
         # classification
         params['class_method'] = 'event_class_prediction_random'
         params['class_method_args'] = []
+        params['preset_descriptor'] = 'loc:basic; beam:beam; cls:random'
 
+    if argv == 'alpha_v2':
+        # localization_detection
+        params['ld_method'] = 'ld_basic'
+        params['ld_method_args'] = [0.3] # [diff_th]
+        # beamforming
+        params['beamforming_mode'] = 'beam'
+        # classification
+        params['class_method'] = 'event_class_prediction'
+        params['class_method_args'] = ['event_class_rf']
+        params['preset_descriptor'] = 'loc:basic; beam:beam; cls:random_forest'
 
     else:
         print('ERROR: unknown argument {}'.format(argv))
