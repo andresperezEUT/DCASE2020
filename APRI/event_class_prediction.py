@@ -68,6 +68,7 @@ def get_key(val):
              return key
 
 def get_features_music_extractor(audio_path):
+    #TODO: set verbose parameter to false
     features, features_frames = ess.MusicExtractor(
                                                   lowlevelFrameSize=4096,
                                                   lowlevelHopSize=2048,
@@ -92,6 +93,7 @@ def get_features_music_extractor(audio_path):
     return audio_features.tolist()
 
 def get_event_class_model(model_name):
+    #TODO: avoid load the model for each audio file
     model_input_path = os.path.dirname(os.path.realpath(__file__)) + '/models/'+model_name+'/model.joblib'
     model = joblib.load(model_input_path)
     return model
