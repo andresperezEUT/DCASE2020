@@ -146,6 +146,16 @@ def get_params(argv='1'):
         params['class_method'] = 'event_class_prediction_random'
         params['class_method_args'] = []
 
+    if argv == 'dereverb':
+        # localization_detection
+        params['ld_method'] = 'ld_basic_dereverb'
+        params['ld_method_args'] = [0.3] # [diff_th]
+        # beamforming
+        params['beamforming_mode'] = 'beam'
+        # classification
+        params['class_method'] = 'event_class_prediction_random'
+        params['class_method_args'] = []
+
 
     else:
         print('ERROR: unknown argument {}'.format(argv))

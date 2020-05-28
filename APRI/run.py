@@ -17,8 +17,9 @@ import time
 
 # %% Parameters
 
-preset = 'alpha_v1'
-# preset = 'oracle_beam'
+# preset = 'alpha_v1'
+preset = 'dereverb'
+
 params = parameter.get_params(preset)
 write = True
 plot = True

@@ -183,7 +183,85 @@ def get_mono_audio_from_event(b_format, event, beamforming_mode, fs, frame_lengt
     return mono_event
 
 
+# %% DEREVERBERATION
 
+def herm_k(X):
+    return X.conj().transpose((0, 2, 1))
+
+def transpose_k(X):
+    return X.transpose((0, 2, 1))
+
+def estimate_MAR_sparse_parallel(y_tf, L, tau, p, i_max, ita, epsilon):
+    """
+    GROUP SPARSITY FOR MIMO SPEECH DEREVERBERATION
+
+    :return:
+    """
+
+    dimM, dimK, dimN = y_tf.shape
+
+    X = y_tf.transpose((1,2,0))  # [K, N, M]
+    i = 0
+    D = X  # [K, N, M]
+    PHI = np.tile(np.identity(dimM)[np.newaxis], (dimK, 1, 1)) # [K, M, M]
+    F = ita  # just for initialization
+    F_k = ita  # just for initialization
+
+    # Get recursive matrix
+    Xtau = np.zeros((dimK, dimN, dimM * L), dtype=complex)  # [K, N, ML]
+    for m in range(dimM):
+        Xtau_m = np.zeros((dimK, dimN, L), dtype=complex) # [K, N, L]
+        for l in range(L):
+            for n in range(dimN):
+                if n >= tau + l:  # avoid aliasing
+                    Xtau_m[:, n, l] = X[:, n - tau - l, m]
+        Xtau[:, :, L * m:L * (m + 1)] = Xtau_m
+
+    # while i < i_max and F >= ita:
+    while i < i_max and np.mean(F_k) >= ita:
+        print('  iter',i, 'np.mean(F_k)', np.mean(F_k))
+
+        last_D = D # [K, N, M]
+
+        # Estimate weights
+        w = np.empty((dimK, dimN), dtype='complex')  # [K, N]
+        for n in range(dimN):
+            d_n = last_D[:, n, :][:, :, np.newaxis]  # [K, N, 1]
+            # inner = np.squeeze(np.sqrt(d_n.conj().transpose((0, 2, 1)) @ np.linalg.pinv(PHI) @ d_n)) # [K]
+            inner = np.squeeze(np.sqrt(herm_k(d_n) @ np.linalg.pinv(PHI) @ d_n)) # [K]
+            w[:, n] = np.power(np.power(inner, 2) + epsilon, (p / 2) - 1)
+
+        # Estimate G
+        # todo parallelize
+        W = np.empty((dimK, dimN, dimN), dtype=complex) # [K, N, N]
+        for k in range(dimK):
+            W[k] = np.diag(w[k])
+
+        G = np.linalg.pinv(herm_k(Xtau) @ W @ Xtau) @ (herm_k(Xtau) @ W @ X)  # [K, ML, M]
+
+        # Estimate D
+        D = X - (Xtau @ G) # [K, N, M]
+
+        # Estimate PHI
+        PHI = (1 / dimN) * (transpose_k(D) @ W @ D.conj()) # [K, M, M]
+
+        # Estimate convergence
+        # F = np.linalg.norm(D - last_D) / np.linalg.norm(D)
+        # Per-band convergence
+        F_k =  np.linalg.norm(D - last_D, axis=(1,2)) / np.linalg.norm(D, axis=(1,2))
+        # print(F_k < ita_k)
+        # print(F_k)
+        # plt.figure()
+        # plt.title(str(i))
+        # plt.plot(F_k)
+        # plt.hlines(np.mean(F_k), 0,dimK-1)
+        # plt.show()
+        # print(np.mean(F_k), F)
+
+        # Update pointer
+        i += 1
+
+    return D.transpose((2, 0, 1)), G, PHI
 
 # %% PLOT
 
@@ -384,25 +462,25 @@ def plot_metadata(metadata_file_name):
     stft = np.abs(np.squeeze(feat_cls._spectrogram(audio[:, :1])))
     stft = librosa.amplitude_to_db(stft, ref=np.max)
 
-    plot.figure(figsize=(20, 15))
+    plt.figure(figsize=(20, 15))
     gs = gridspec.GridSpec(4, 4)
-    ax0 = plot.subplot(gs[0, 1:3]), librosa.display.specshow(stft.T, sr=fs, x_axis='s', y_axis='linear'), plot.xlim(
-        [0, 60]), plot.xticks([]), plot.xlabel(''), plot.title('Spectrogram')
-    ax1 = plot.subplot(gs[1, :2]), plot_func(ref_data, params['label_hop_len_s'], ind=1, plot_y_ax=True), plot.ylim(
-        [-1, nb_classes + 1]), plot.title('SED reference')
-    ax2 = plot.subplot(gs[1, 2:]), plot_func(pred_data, params['label_hop_len_s'], ind=1), plot.ylim(
-        [-1, nb_classes + 1]), plot.title('SED predicted')
-    ax3 = plot.subplot(gs[2, :2]), plot_func(ref_data, params['label_hop_len_s'], ind=2, plot_y_ax=True), plot.ylim(
-        [-180, 180]), plot.title('Azimuth reference')
-    ax4 = plot.subplot(gs[2, 2:]), plot_func(pred_data, params['label_hop_len_s'], ind=2), plot.ylim(
-        [-180, 180]), plot.title('Azimuth predicted')
-    ax5 = plot.subplot(gs[3, :2]), plot_func(ref_data, params['label_hop_len_s'], ind=3, plot_y_ax=True), plot.ylim(
-        [-90, 90]), plot.title('Elevation reference')
-    ax6 = plot.subplot(gs[3, 2:]), plot_func(pred_data, params['label_hop_len_s'], ind=3), plot.ylim(
-        [-90, 90]), plot.title('Elevation predicted')
+    ax0 = plt.subplot(gs[0, 1:3]), librosa.display.specshow(stft.T, sr=fs, x_axis='s', y_axis='linear'), plt.xlim(
+        [0, 60]), plt.xticks([]), plt.xlabel(''), plt.title('Spectrogram')
+    ax1 = plt.subplot(gs[1, :2]), plot_func(ref_data, params['label_hop_len_s'], ind=1, plot_y_ax=True), plt.ylim(
+        [-1, nb_classes + 1]), plt.title('SED reference')
+    ax2 = plt.subplot(gs[1, 2:]), plot_func(pred_data, params['label_hop_len_s'], ind=1), plt.ylim(
+        [-1, nb_classes + 1]), plt.title('SED predicted')
+    ax3 = plt.subplot(gs[2, :2]), plot_func(ref_data, params['label_hop_len_s'], ind=2, plot_y_ax=True), plt.ylim(
+        [-180, 180]), plt.title('Azimuth reference')
+    ax4 = plt.subplot(gs[2, 2:]), plot_func(pred_data, params['label_hop_len_s'], ind=2), plt.ylim(
+        [-180, 180]), plt.title('Azimuth predicted')
+    ax5 = plt.subplot(gs[3, :2]), plot_func(ref_data, params['label_hop_len_s'], ind=3, plot_y_ax=True), plt.ylim(
+        [-90, 90]), plt.title('Elevation reference')
+    ax6 = plt.subplot(gs[3, 2:]), plot_func(pred_data, params['label_hop_len_s'], ind=3), plt.ylim(
+        [-90, 90]), plt.title('Elevation predicted')
     ax_lst = [ax0, ax1, ax2, ax3, ax4, ax5, ax6]
-    # plot.savefig(os.path.join(params['dcase_dir'] , ref_filename.replace('.wav', '.jpg')), dpi=300, bbox_inches = "tight")
-    plot.show()
+    # plt.savefig(os.path.join(params['dcase_dir'] , ref_filename.replace('.wav', '.jpg')), dpi=300, bbox_inches = "tight")
+    plt.show()
 
 
 

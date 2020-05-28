@@ -326,3 +326,16 @@ def ld_basic(stft, diff_th):
 
     return event_list
 
+
+def ld_basic_dereverb(stft, diff_th):
+
+    L = 10
+    tau = 1
+    p = 0.25
+    i_max = 20
+    ita = 1e-4
+    epsilon = 1e-8
+
+    stft_dry, _, _ = estimate_MAR_sparse_parallel(stft, L, tau, p, i_max, ita, epsilon)
+
+    return ld_basic(stft_dry, diff_th)
