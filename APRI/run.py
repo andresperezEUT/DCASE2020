@@ -16,12 +16,10 @@ from APRI.event_class_prediction import *
 import time
 
 # %% Parameters
-#preset = 'alpha_v1'
-preset = 'alpha_v2'
-# preset = 'oracle_beam'
+preset = 'mi_primerito_dia'
 params = parameter.get_params(preset)
 write = True
-plot = True
+plot = False
 
 
 data_folder_path = os.path.join(params['dataset_dir'], 'foa_dev') # path to audios
@@ -57,7 +55,12 @@ print('Pipeline: ' + params['preset_descriptor']      )
 audio_files = [f for f in os.listdir(data_folder_path) if not f.startswith('.')]
 
 # Uncomment the following lines if you want a specific file
-audio_files = ['fold1_room1_mix007_ov1.wav']
+# audio_files = ['fold1_room1_mix007_ov1.wav',
+#                'fold2_room1_mix007_ov1.wav',
+#                'fold3_room1_mix007_ov1.wav',
+#                'fold4_room1_mix007_ov1.wav',
+#                'fold5_room1_mix007_ov1.wav',
+#                'fold6_room1_mix007_ov1.wav']
 
 for audio_file_idx, audio_file_name in enumerate(audio_files):
 

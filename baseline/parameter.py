@@ -157,15 +157,17 @@ def get_params(argv='1'):
         params['class_method_args'] = ['event_class_rf']
         params['preset_descriptor'] = 'loc:basic; beam:beam; cls:random_forest'
 
-    if argv == 'dereverb':
+    if argv == 'mi_primerito_dia':
         # localization_detection
-        params['ld_method'] = 'ld_basic_dereverb'
-        params['ld_method_args'] = [0.3] # [diff_th]
+        params['ld_method'] = 'ld_basic_dereverb_filter'
+        params['ld_method_args'] = [0.3, 5, 4]  # [diff_th, L, event_minimum_length]
         # beamforming
         params['beamforming_mode'] = 'beam'
         # classification
-        params['class_method'] = 'event_class_prediction_random'
-        params['class_method_args'] = []
+        params['class_method'] = 'event_class_prediction'
+        params['class_method_args'] = ['event_class_rf']
+        params['preset_descriptor'] = 'loc:dereverb_filter; beam:beam; cls:random_forest'
+
 
 
     else:

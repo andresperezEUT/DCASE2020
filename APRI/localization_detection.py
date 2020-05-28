@@ -362,15 +362,32 @@ def ld_basic(stft, diff_th):
     return event_list
 
 
-def ld_basic_dereverb(stft, diff_th):
+def ld_basic_dereverb_filter(stft, diff_th=0.3, L=5, event_minimum_length=4):
+    """
+    same as basic, but dereverb+filter out events shorter than a given parameter
+    :param stft:
+    :param diff_th:
+    :return:
+    """
 
-    L = 10
+    # dereverb
+    # L = 5
     tau = 1
     p = 0.25
-    i_max = 20
+    i_max = 10
     ita = 1e-4
     epsilon = 1e-8
-
     stft_dry, _, _ = estimate_MAR_sparse_parallel(stft, L, tau, p, i_max, ita, epsilon)
 
-    return ld_basic(stft_dry, diff_th)
+    # l&d
+    event_list_full = ld_basic(stft_dry, diff_th)
+
+    # filter
+    # todo: probably easy to optimize
+    event_list_clean = []
+    for e in event_list_full:
+        if len(e.get_frames()) >= event_minimum_length:
+            event_list_clean.append(e)
+
+    return event_list_clean
+

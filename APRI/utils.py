@@ -425,6 +425,7 @@ def plot_metadata(metadata_file_name):
     nb_classes = len(feat_cls.get_classes())
 
     plt.figure()
+    # plt.title(ref_filename) # TODO, ADD TITLE
     gs = gridspec.GridSpec(3, 1)
     ax1 = plt.subplot(gs[0,0]), plot_func(ref_data, params['label_hop_len_s'], ind=1, plot_y_ax=True), plt.ylim(
         [-1, nb_classes + 1]), plt.title('SED reference')
@@ -493,6 +494,7 @@ def plot_results(file_name, params):
     stft = librosa.amplitude_to_db(stft, ref=np.max)
 
     plt.figure()
+    # plt.title(ref_filename) # TODO, ADD TITLE
     gs = gridspec.GridSpec(4, 4)
     ax0 = plt.subplot(gs[0, 1:3]), librosa.display.specshow(stft.T, sr=fs, x_axis='s', y_axis='linear'), plt.xlim(
         [0, 60]), plt.xticks([]), plt.xlabel(''), plt.title('Spectrogram')
