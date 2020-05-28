@@ -69,6 +69,9 @@ for event in event_type:
     audio_path= os.path.join(data_folder_path,event) #path to file
     for audio in os.scandir(audio_path):
         print("Extracting features from ",event+' ' + audio.name)
+        # TODO: set verbose parameter to false
+        # TODO: add parameter 'analysisSampleRate=24000' in order to speed up process
+        # TODO: try out with 'chromaprintCompute=True'
         features, features_frames = es.MusicExtractor(lowlevelFrameSize=4096,
                                               lowlevelHopSize=2048,
                                               tonalFrameSize=4096,

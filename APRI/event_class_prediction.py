@@ -69,6 +69,7 @@ def get_key(val):
 
 def get_features_music_extractor(audio_path):
     #TODO: set verbose parameter to false
+    #TODO: add parameter 'analysisSampleRate=24000' in order to speed up process
     features, features_frames = ess.MusicExtractor(
                                                   lowlevelFrameSize=4096,
                                                   lowlevelHopSize=2048,
