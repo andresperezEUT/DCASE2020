@@ -70,7 +70,7 @@ def intensity_vector(stft):
 
 def doa(stft):
     I = intensity_vector(stft)
-    return np.asarray(cart2sph(-I[0], -I[1], -I[2]))[:-1]
+    return np.asarray(cart2sph(I[2], I[0], I[1]))[:-1]
 
 def energy_density(stft):
     P = stft[0]  # sound pressure
