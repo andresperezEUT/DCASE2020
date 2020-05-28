@@ -180,6 +180,8 @@ def get_mono_audio_from_event(b_format, event, beamforming_mode, fs, frame_lengt
     else:
         warnings.warn('MONO METHOD NOT KNOWN"', UserWarning)
 
+    # normalize audio to 1
+    mono_event /= np.max(np.abs(mono_event))
     return mono_event
 
 
