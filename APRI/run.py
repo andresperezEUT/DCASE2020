@@ -16,10 +16,9 @@ from APRI.event_class_prediction import *
 import time
 
 # %% Parameters
-
-# preset = 'alpha_v1'
-preset = 'dereverb'
-
+#preset = 'alpha_v1'
+# preset = 'alpha_v2'
+preset = 'oracle_beam'
 params = parameter.get_params(preset)
 write = True
 plot = True
@@ -45,7 +44,6 @@ frame_length = params['label_hop_len_s']
 
 beamforming_mode = params['beamforming_mode']
 
-
 # %% Analysis
 
 start_time = time.time()
@@ -53,13 +51,14 @@ start_time = time.time()
 print('                                              ')
 print('-------------- PROCESSING FILES --------------')
 print('Folder path: ' + data_folder_path              )
+print('Pipeline: ' + params['preset_descriptor']      )
 
 # Iterate over all audio files
 audio_files = [f for f in os.listdir(data_folder_path) if not f.startswith('.')]
 
 # Uncomment the following lines if you want a specific file
-# audio_files = ['fold6_room1_mix100_ov2.wav']
-audio_files = ['fold1_room1_mix001_ov1.wav']
+audio_files = ['fold6_room1_mix051_ov2.wav']
+#audio_files = ['fold1_room1_mix007_ov1.wav']
 
 for audio_file_idx, audio_file_name in enumerate(audio_files):
 

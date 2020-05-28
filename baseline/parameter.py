@@ -98,7 +98,6 @@ def get_params(argv='1'):
 
     # INPUT PATH
     # dataset_dir: Base folder containing the foa/mic and metadata folders
-    # TODO: set proper path. After restart the python interpreter
     if user == 'PANS':
         params['dataset_dir'] = '/Volumes/Dinge/datasets/DCASE2020_TASK3'
     elif user == 'FAIK':
@@ -108,7 +107,6 @@ def get_params(argv='1'):
 
     # OUTPUT PATH
     # Directory to dump extracted features and labels
-    # TODO: set proper path. After restart the python interpreter
     if user == 'PANS':
         params['feat_label_dir'] ='/Volumes/Dinge/datasets/DCASE2020_TASK3/feat_label/'
     elif user == 'FAIK':
@@ -120,7 +118,7 @@ def get_params(argv='1'):
     if user == 'PANS':
         plt.switch_backend('MacOSX')
     elif user == 'FAIK':
-        plt.switch_backend('agg')
+        plt.switch_backend('TKagg')
 
 
 
@@ -134,7 +132,8 @@ def get_params(argv='1'):
         params['beamforming_mode'] = 'beam'
         # classification
         params['class_method'] = 'event_class_prediction'
-        params['class_method_args'] = ['model.joblib']  # [model_name]
+        params['class_method_args'] = ['event_class_xgb']
+        params['preset_descriptor'] = 'loc:metadata; beam:beam; cls:xgb'
 
     if argv == 'alpha_v1':
         # localization_detection
@@ -145,6 +144,18 @@ def get_params(argv='1'):
         # classification
         params['class_method'] = 'event_class_prediction_random'
         params['class_method_args'] = []
+        params['preset_descriptor'] = 'loc:basic; beam:beam; cls:random'
+
+    if argv == 'alpha_v2':
+        # localization_detection
+        params['ld_method'] = 'ld_basic'
+        params['ld_method_args'] = [0.3] # [diff_th]
+        # beamforming
+        params['beamforming_mode'] = 'beam'
+        # classification
+        params['class_method'] = 'event_class_prediction'
+        params['class_method_args'] = ['event_class_rf']
+        params['preset_descriptor'] = 'loc:basic; beam:beam; cls:random_forest'
 
     if argv == 'dereverb':
         # localization_detection

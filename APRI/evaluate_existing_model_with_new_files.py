@@ -37,9 +37,9 @@ def get_class_name_dict():
 
 params = parameter.get_params()
 event_type= get_class_name_dict().values()
-data_folder_path = os.path.join(params['dataset_dir'], 'oracle_mono_signals/audio_features/') # path to arrays
+data_folder_path = os.path.join(params['dataset_dir'], 'oracle_mono_signals_beam_all/audio_features_beam_all/') # path to arrays
 
-model_input_path = os.path.dirname(os.path.realpath(__file__))+'/models/event_class_beam_all/model.joblib'
+model_input_path = os.path.dirname(os.path.realpath(__file__))+'/models/event_class_xgb/model.joblib'
 # Import data and parse in pandas dataframes
 rows=[]
 for event in event_type:
@@ -66,7 +66,10 @@ df_y=pd.DataFrame(data=data_y,index=rows,columns=['target'])
 print(df_x.shape)
 model = joblib.load(model_input_path)
 events=[]
+i=0
 for index,row in df_x.iterrows():
+    i+=1
+    print(i)
     event_class = model.predict(np.array([row]))
     events.append(event_class)
 accuracy=accuracy_score(df_y['target'],events)
