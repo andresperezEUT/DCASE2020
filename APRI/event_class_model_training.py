@@ -31,7 +31,7 @@ from APRI.utils import get_class_name_dict
 params = parameter.get_params()
 event_type= get_class_name_dict().values()
 data_folder_path = os.path.join(params['dataset_dir'], 'oracle_mono_signals_beam_all/audio_features_beam_all/') # path to arrays
-model_output_path =  os.path.join(params['dataset_dir'], 'models/event_class_xgb/') # path to arrays
+model_output_path =  os.path.join(params['dataset_dir'], 'models/event_class_svc/') # path to arrays
 
 # Import data and parse in pandas dataframes
 rows=[]
@@ -69,10 +69,10 @@ pipe_XGB = Pipeline([('scl',StandardScaler()),('reg',xgb.XGBClassifier(objective
 
 # Defining some Grids
 
-grid_params_rf = [{'reg__n_estimators': [500,1000],
-                   'reg__max_depth': [8,16,32],
+grid_params_rf = [{'reg__n_estimators': [2000],
+                   'reg__max_depth': [16,32],
                    'reg__max_features': ["auto"],
-                   'reg__min_samples_split': [2,4]}]
+                   'reg__min_samples_split': [8]}]
 
 grid_params_gb = [{'reg__learning_rate': [0.01,0.02,0.03],
                    'reg__n_estimators' : [100,500,1000],
@@ -80,12 +80,8 @@ grid_params_gb = [{'reg__learning_rate': [0.01,0.02,0.03],
 
 
 grid_params_svr = [{'reg__kernel': ['rbf'],
-                    'reg__gamma': [1e-10,1e-8,1e-6,1e-5,1e-4,0.01, 0.1],
-                    'reg__C': [1, 10, 100, 1000, 10000,100000,1000000,1e8,1e10,1e12]}]
-
-grid_params_svr = [{'reg__kernel': ['rbf'],
-                    'reg__gamma': [0.01],
-                    'reg__C': [100]}]
+                    'reg__gamma': [1e-10,1e-8,1e-6,1e-5,1e-4,0.001,0.01,0.1],
+                    'reg__C': [50,60,70,80,90,100,110,120,130,140,150]}]
 
 grid_params_XGB = [{'reg__colsample_bytree': [0.1,0.8],
                     "reg__learning_rate": [0.01,0.1], # default 0.1
@@ -95,11 +91,11 @@ grid_params_XGB = [{'reg__colsample_bytree': [0.1,0.8],
 
 # Defining some grid searches
 
-gs_rf = GridSearchCV(estimator=pipe_rf,param_grid=grid_params_rf,scoring='accuracy',cv=2,verbose=10,n_jobs=-1)
+gs_rf = GridSearchCV(estimator=pipe_rf,param_grid=grid_params_rf,scoring='accuracy',cv=10,verbose=10,n_jobs=-1)
 
 gs_gb = GridSearchCV(estimator=pipe_gb,param_grid=grid_params_gb,scoring='accuracy',cv=2,verbose=10,n_jobs=-1)
 
-gs_svr = GridSearchCV(estimator=pipe_svr,param_grid=grid_params_svr,scoring='accuracy',cv=5,verbose=10,n_jobs=-1)
+gs_svr = GridSearchCV(estimator=pipe_svr,param_grid=grid_params_svr,scoring='accuracy',cv=2,verbose=10,n_jobs=-1)
 
 gs_XGB = GridSearchCV(estimator=pipe_XGB,param_grid=grid_params_XGB,scoring='accuracy',cv=4,verbose=10,n_jobs=-1)
 
@@ -107,8 +103,8 @@ grids = [gs_rf, gs_gb, gs_svr]
 grid_dict = {0: 'random_forest',
              1: 'gradient_boosting',
              2: 'svc'}
-grids = [gs_XGB]
-grid_dict = {0: 'xgb'}
+grids = [gs_svr]
+grid_dict = {0: 'svc'}
 
 # Split train and test
 train_x, test_x, train_y, test_y = train_test_split(df_x, df_y['target'], test_size=0.15, random_state=42)
