@@ -377,6 +377,7 @@ def get_class_name_dict():
     }
 
 
+
 def plot_metadata(metadata_file_name):
     # Based on visualize_SELD_output.py
 
@@ -430,60 +431,7 @@ def plot_metadata(metadata_file_name):
     ax3 = plt.subplot(gs[1, 0]), plot_func(ref_data, params['label_hop_len_s'], ind=2, plot_y_ax=True), plt.ylim(
         [-180, 180]), plt.title('Azimuth reference')
     ax5 = plt.subplot(gs[2, 0]), plot_func(ref_data, params['label_hop_len_s'], ind=3, plot_y_ax=True), plt.ylim(
-        [-90, 90]), plt.title('Elevation reference')
-
-    params = parameter.get_params()
-
-    # output format file to visualize
-    pred = os.path.join(params['dcase_dir'], '4_foa_dev/fold1_room1_mix001_ov1.csv')
-    pred = '/Users/andres.perez/source/DCASE2020/baseline/results/4_foa_dev/fold1_room1_mix001_ov1.csv'
-
-    # path of reference audio directory for visualizing the spectrogram and description directory for
-    # visualizing the reference
-    # Note: The code finds out the audio filename from the predicted filename automatically
-    ref_dir = os.path.join(params['dataset_dir'], 'metadata_dev')
-    aud_dir = os.path.join(params['dataset_dir'], 'foa_dev')
-
-    # load the predicted output format
-    feat_cls = cls_feature_class.FeatureClass(params)
-    pred_dict = feat_cls.load_output_format_file(pred)
-    pred_dict_polar = feat_cls.convert_output_format_cartesian_to_polar(pred_dict)
-
-    # load the reference output format
-    ref_filename = os.path.basename(pred)
-    ref_dict_polar = feat_cls.load_output_format_file(os.path.join(ref_dir, ref_filename))
-
-    pred_data = collect_classwise_data(pred_dict_polar)
-    ref_data = collect_classwise_data(ref_dict_polar)
-
-    nb_classes = len(feat_cls.get_classes())
-
-    # load the audio and extract spectrogram
-    ref_filename = os.path.basename(pred).replace('.csv', '.wav')
-    audio, fs = feat_cls._load_audio(os.path.join(aud_dir, ref_filename))
-    stft = np.abs(np.squeeze(feat_cls._spectrogram(audio[:, :1])))
-    stft = librosa.amplitude_to_db(stft, ref=np.max)
-
-    plt.figure(figsize=(20, 15))
-    gs = gridspec.GridSpec(4, 4)
-    ax0 = plt.subplot(gs[0, 1:3]), librosa.display.specshow(stft.T, sr=fs, x_axis='s', y_axis='linear'), plt.xlim(
-        [0, 60]), plt.xticks([]), plt.xlabel(''), plt.title('Spectrogram')
-    ax1 = plt.subplot(gs[1, :2]), plot_func(ref_data, params['label_hop_len_s'], ind=1, plot_y_ax=True), plt.ylim(
-        [-1, nb_classes + 1]), plt.title('SED reference')
-    ax2 = plt.subplot(gs[1, 2:]), plot_func(pred_data, params['label_hop_len_s'], ind=1), plt.ylim(
-        [-1, nb_classes + 1]), plt.title('SED predicted')
-    ax3 = plt.subplot(gs[2, :2]), plot_func(ref_data, params['label_hop_len_s'], ind=2, plot_y_ax=True), plt.ylim(
-        [-180, 180]), plt.title('Azimuth reference')
-    ax4 = plt.subplot(gs[2, 2:]), plot_func(pred_data, params['label_hop_len_s'], ind=2), plt.ylim(
-        [-180, 180]), plt.title('Azimuth predicted')
-    ax5 = plt.subplot(gs[3, :2]), plot_func(ref_data, params['label_hop_len_s'], ind=3, plot_y_ax=True), plt.ylim(
-        [-90, 90]), plt.title('Elevation reference')
-    ax6 = plt.subplot(gs[3, 2:]), plot_func(pred_data, params['label_hop_len_s'], ind=3), plt.ylim(
-        [-90, 90]), plt.title('Elevation predicted')
-    ax_lst = [ax0, ax1, ax2, ax3, ax4, ax5, ax6]
-    # plt.savefig(os.path.join(params['dcase_dir'] , ref_filename.replace('.wav', '.jpg')), dpi=300, bbox_inches = "tight")
-    plt.show()
-
+        [-180, 180]), plt.title('Elevation reference')
 
 
 
@@ -557,9 +505,9 @@ def plot_results(file_name, params):
     ax4 = plt.subplot(gs[2, 2:]), plot_func(pred_data, params['label_hop_len_s'], ind=2), plt.ylim(
         [-180, 180]), plt.title('Azimuth predicted')
     ax5 = plt.subplot(gs[3, :2]), plot_func(ref_data, params['label_hop_len_s'], ind=3, plot_y_ax=True), plt.ylim(
-        [-90, 90]), plt.title('Elevation reference')
+        [-180, 180]), plt.title('Elevation reference')
     ax6 = plt.subplot(gs[3, 2:]), plot_func(pred_data, params['label_hop_len_s'], ind=3), plt.ylim(
-        [-90, 90]), plt.title('Elevation predicted')
+        [-180, 180]), plt.title('Elevation predicted')
     ax_lst = [ax0, ax1, ax2, ax3, ax4, ax5, ax6]
     # plt.savefig(os.path.join(params['dcase_dir'] , ref_filename.replace('.wav', '.jpg')), dpi=300, bbox_inches = "tight")
     plt.show()
