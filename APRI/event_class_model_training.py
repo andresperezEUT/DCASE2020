@@ -36,8 +36,11 @@ model_output_path =  os.path.join(params['dataset_dir'], 'models/event_class_svc
 # Import data and parse in pandas dataframes
 rows=[]
 for event in event_type:
+    i=0
     array_path= os.path.join(data_folder_path,event) #path to file
+    print(event)
     for array in os.scandir(array_path):
+        i+=1
         row=event+os.path.splitext(array.name)[0]
         rows.append(row)
         x=np.load(array)
@@ -48,12 +51,16 @@ for event in event_type:
         else:
             data_x=x
             data_y=y
+
 columns=[]
 i=0
 for value in x:
     i+=1
     column='v'+str(i)
     columns.append(column)
+print(data_x.shape)
+print(data_y.shape)
+print(len(rows))
 df_x=pd.DataFrame(data=data_x,index=rows,columns=columns)
 df_y=pd.DataFrame(data=data_y,index=rows,columns=['target'])
 print(df_x.shape)
@@ -83,9 +90,9 @@ grid_params_svr = [{'reg__kernel': ['rbf'],
                     'reg__gamma': [1e-10,1e-8,1e-6,1e-5,1e-4,0.001,0.01,0.1],
                     'reg__C': [50,60,70,80,90,100,110,120,130,140,150]}]
 
-grid_params_XGB = [{'reg__colsample_bytree': [0.1,0.8],
-                    "reg__learning_rate": [0.01,0.1], # default 0.1
-                    "reg__max_depth": [6], # default 3
+grid_params_XGB = [{'reg__colsample_bytree': [0.1],
+                    "reg__learning_rate": [0.1], # default 0.1
+                    "reg__max_depth": [3], # default 3
                     "reg__n_estimators": [500]}]
 
 
@@ -103,11 +110,15 @@ grids = [gs_rf, gs_gb, gs_svr]
 grid_dict = {0: 'random_forest',
              1: 'gradient_boosting',
              2: 'svc'}
-grids = [gs_svr]
-grid_dict = {0: 'svc'}
+grids = [gs_XGB]
+grid_dict = {0: 'xgb'}
 
 # Split train and test
 train_x, test_x, train_y, test_y = train_test_split(df_x, df_y['target'], test_size=0.15, random_state=42)
+print(train_x.shape)
+print(train_y.shape)
+print(test_x.shape)
+print(test_y.shape)
 best_acc = 0
 best_cls = 0
 best_gs = ''

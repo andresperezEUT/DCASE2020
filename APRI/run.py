@@ -16,9 +16,9 @@ from APRI.event_class_prediction import *
 import time
 
 # %% Parameters
-preset = 'alpha_v1'
+#preset = 'alpha_v1'
 # preset = 'alpha_v2'
-# preset = 'oracle_beam'
+preset = 'oracle_beam'
 params = parameter.get_params(preset)
 write = True
 plot = True
@@ -57,8 +57,8 @@ print('Pipeline: ' + params['preset_descriptor']      )
 audio_files = [f for f in os.listdir(data_folder_path) if not f.startswith('.')]
 
 # Uncomment the following lines if you want a specific file
-#audio_files = ['fold6_room1_mix070_ov2.wav']
-audio_files = ['fold1_room1_mix002_ov1.wav']
+audio_files = ['fold6_room1_mix051_ov2.wav']
+#audio_files = ['fold1_room1_mix007_ov1.wav']
 
 for audio_file_idx, audio_file_name in enumerate(audio_files):
 

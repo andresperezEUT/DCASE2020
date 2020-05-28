@@ -132,8 +132,8 @@ def get_params(argv='1'):
         params['beamforming_mode'] = 'beam'
         # classification
         params['class_method'] = 'event_class_prediction'
-        params['class_method_args'] = ['event_class_rf']
-        params['preset_descriptor'] = 'loc:metadata; beam:beam; cls:random_forest'
+        params['class_method_args'] = ['event_class_xgb']
+        params['preset_descriptor'] = 'loc:metadata; beam:beam; cls:xgb'
 
     if argv == 'alpha_v1':
         # localization_detection
