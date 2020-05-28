@@ -102,10 +102,8 @@ for audio_file_name in audio_files:
 
             ######################
             # write file
-            '''
             if write_file:
                 sf.write(os.path.join(output_path, class_name, mono_file_name), mono_event, sr)
-            '''
             # increment counter
             occurrences_per_class[event.get_classID()] += 1
 
