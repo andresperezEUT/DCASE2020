@@ -11,7 +11,7 @@ from APRI.compute_metrics import compute_metrics
 
 # %% PARAMS
 
-preset = 'alpha_v1'
+preset = 'mi_primerito_dia'
 params = parameter.get_params(preset)
 gt_folder = os.path.join(params['dataset_dir'], 'metadata_dev')  # path to annotations
 this_file_path = os.path.dirname(os.path.abspath(__file__))
