@@ -13,13 +13,14 @@ from baseline.cls_feature_class import create_folder
 from APRI.localization_detection import *
 from APRI.compute_metrics import compute_metrics
 from APRI.event_class_prediction import *
+from APRI.postprocessing import *
 import time
 
 # %% Parameters
-preset = 'mi_primerito_dia'
+preset = 'mi_primerito_dia_xgb'
 params = parameter.get_params(preset)
 write = True
-plot = False
+plot = True
 
 
 data_folder_path = os.path.join(params['dataset_dir'], 'foa_dev') # path to audios
@@ -54,13 +55,13 @@ print('Pipeline: ' + params['preset_descriptor']      )
 # Iterate over all audio files
 audio_files = [f for f in os.listdir(data_folder_path) if not f.startswith('.')]
 
-# Uncomment the following lines if you want a specific file
-# audio_files = ['fold1_room1_mix007_ov1.wav',
-#                'fold2_room1_mix007_ov1.wav',
-#                'fold3_room1_mix007_ov1.wav',
-#                'fold4_room1_mix007_ov1.wav',
-#                'fold5_room1_mix007_ov1.wav',
-#                'fold6_room1_mix007_ov1.wav']
+#Uncomment the following lines if you want a specific file
+audio_files = ['fold1_room1_mix007_ov1.wav',
+                'fold2_room1_mix007_ov1.wav',
+                'fold3_room1_mix007_ov1.wav',
+                'fold4_room1_mix007_ov1.wav',
+                'fold5_room1_mix007_ov1.wav',
+                'fold6_room1_mix007_ov1.wav']
 
 for audio_file_idx, audio_file_name in enumerate(audio_files):
 
@@ -116,13 +117,25 @@ for audio_file_idx, audio_file_name in enumerate(audio_files):
         class_idx = class_method(temp_file_name, *class_method_args)
         event.set_classID(class_idx)
 
+
+        # Postprocessing:
+        event_filter=params['event_filter_activation']
+        if event_filter:
+            event_filter_method_string=params['event_filter_method']
+            event_filter_method = locals()[event_filter_method_string]
+            event_filters_method_args=params['event_filter_method_args']
+            process=event_filter_method(event,*event_filters_method_args)
+
+
+
         # Close (delete) file
         fo.close()
 
         ############################################
         # Generate metadata file from event
-        if write:
-            event.export_csv(csv_file_path)
+        if process==True:
+            if write:
+                event.export_csv(csv_file_path)
 
 
     ############################################
