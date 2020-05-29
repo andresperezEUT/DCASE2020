@@ -11,12 +11,12 @@ The function:
 import numpy as np
 import joblib
 import os
+import essentia as es
 import essentia.standard as ess
 import random
+from essentia.standard import MusicExtractor as ms
 from APRI.utils import get_class_name_dict
-
-# TODO: this line should go inside the corresponding method
-
+import sys
 
 ### FUNCIONES PARA PREDICCIÓN DE EVENT_CLASS ###
 
@@ -67,31 +67,37 @@ def get_key(val):
          if val == value:
              return key
 
-def get_features_music_extractor(audio_path):
+def get_features_music_extractor(audio):
     #TODO: set verbose parameter to false
     #TODO: add parameter 'analysisSampleRate=24000' in order to speed up process
-    features, features_frames = ess.MusicExtractor(
+    # In MusicExtractor.compute: Parameter sampleRate = 24000 is not within specified range: {32000,44100,48000}
+    try:
+        features, features_frames = ms(
+                                                  analysisSampleRate=44100,
+                                                  chromaprintCompute=True,
                                                   lowlevelFrameSize=4096,
                                                   lowlevelHopSize=2048,
                                                   tonalFrameSize=4096,
                                                   tonalHopSize=2048,
                                                   rhythmStats=["mean", "var", "dmean"],
                                                   lowlevelStats=["mean", "var", "dmean"],
-                                                  )(audio_path)
-
-
-    feature_list = get_feature_list()
-    audio_features = []
-    for feature in feature_list:
-        x = features[feature]
-        if type(x) is float:
-            x = np.array(x)
-            y = [x]
-        else:
-            y = x.tolist()
-        audio_features = audio_features + y
-    audio_features = np.array(audio_features)
-    return audio_features.tolist()
+                                                  )(audio)
+        feature_list = get_feature_list()
+        audio_features = []
+        for feature in feature_list:
+            x = features[feature]
+            if type(x) is float:
+                x = np.array(x)
+                y = [x]
+            else:
+                y = x.tolist()
+            audio_features = audio_features + y
+        audio_features = np.array(audio_features)
+        audio_features.tolist()
+    except:
+        audio_features=[]
+        print('MusicExtractor returns an error. Setting random class...')
+    return audio_features
 
 def get_event_class_model(model_name):
     #TODO: avoid load the model for each audio file
@@ -101,10 +107,14 @@ def get_event_class_model(model_name):
 
 
 def event_class_prediction(audio,model_name):
+
     variables=get_features_music_extractor(audio)
     model=get_event_class_model(model_name)
-    event_class=model.predict(np.array([variables]))
-    event_idx=get_key(event_class)
+    if len(variables)==0:
+        event_idx=event_class_prediction_random(audio)
+    else:
+        event_class=model.predict(np.array([variables]))
+        event_idx = get_key(event_class)
     return event_idx
 
 def event_class_prediction_random(audio_path):
