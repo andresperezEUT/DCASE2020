@@ -20,6 +20,8 @@ Probably a lot.
 * librosa
 * keras (I'm using v2.3.1)
 * tensorflow (I'm currently using v2.0.0, since newest 2.1+ collides with that keras version)
+* essentia (check https://essentia.upf.edu/installing.html)
+* xgboost
 * ...
 
 ## Getting started
