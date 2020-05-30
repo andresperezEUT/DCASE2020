@@ -17,16 +17,18 @@ from APRI.postprocessing import *
 import time
 
 # %% Parameters
-preset = 'mi_primerito_dia_xgb'
-params = parameter.get_params(preset)
+preset = 'mi_primerito_dia_postfilter'
 write = True
 plot = True
+quick = True
 
-
+params = parameter.get_params(preset)
 data_folder_path = os.path.join(params['dataset_dir'], 'foa_dev') # path to audios
 gt_folder_path = os.path.join(params['dataset_dir'], 'metadata_dev') # path to annotations
 this_file_path = os.path.dirname(os.path.abspath(__file__))
-result_folder_path = os.path.join(this_file_path, params['results_dir'], preset) # todo change
+result_folder_path = os.path.join(this_file_path, params['results_dir'], preset)
+if quick:
+    result_folder_path += '_Q!' # save quick results in separated folders, so that eval.py can benefit from it
 create_folder(result_folder_path)
 
 # numbers
@@ -40,8 +42,16 @@ nfft = params['nfft']
 D = params['D'] # decimate factor
 frame_length = params['label_hop_len_s']
 
-
 beamforming_mode = params['beamforming_mode']
+
+# Dataset
+all_audio_files = [f for f in os.listdir(data_folder_path) if not f.startswith('.')]
+quick_audio_files = ['fold1_room1_mix007_ov1.wav',
+                     'fold2_room1_mix007_ov1.wav',
+                     'fold3_room1_mix007_ov1.wav',
+                     'fold4_room1_mix007_ov1.wav',
+                     'fold5_room1_mix007_ov1.wav',
+                     'fold6_room1_mix007_ov1.wav']
 
 # %% Analysis
 
@@ -51,17 +61,13 @@ print('                                              ')
 print('-------------- PROCESSING FILES --------------')
 print('Folder path: ' + data_folder_path              )
 print('Pipeline: ' + params['preset_descriptor']      )
+if quick:
+    print('Quick!')
 
-# Iterate over all audio files
-audio_files = [f for f in os.listdir(data_folder_path) if not f.startswith('.')]
-
-#Uncomment the following lines if you want a specific file
-audio_files = ['fold1_room1_mix007_ov1.wav',
-                'fold2_room1_mix007_ov1.wav',
-                'fold3_room1_mix007_ov1.wav',
-                'fold4_room1_mix007_ov1.wav',
-                'fold5_room1_mix007_ov1.wav',
-                'fold6_room1_mix007_ov1.wav']
+if quick:
+    audio_files = quick_audio_files
+else:
+    audio_files = all_audio_files
 
 for audio_file_idx, audio_file_name in enumerate(audio_files):
 
@@ -117,25 +123,23 @@ for audio_file_idx, audio_file_name in enumerate(audio_files):
         class_idx = class_method(temp_file_name, *class_method_args)
         event.set_classID(class_idx)
 
-
+        ############################################
         # Postprocessing:
-        event_filter=params['event_filter_activation']
+        process_event = True # default True, so it works also when no event_filter
+        event_filter = params['event_filter_activation']
         if event_filter:
-            event_filter_method_string=params['event_filter_method']
+            event_filter_method_string = params['event_filter_method']
             event_filter_method = locals()[event_filter_method_string]
-            event_filters_method_args=params['event_filter_method_args']
-            process=event_filter_method(event,*event_filters_method_args)
-
-
+            event_filters_method_args = params['event_filter_method_args']
+            process_event = event_filter_method(event, *event_filters_method_args)
 
         # Close (delete) file
         fo.close()
 
         ############################################
         # Generate metadata file from event
-        if process==True:
-            if write:
-                event.export_csv(csv_file_path)
+        if write and process_event:
+            event.export_csv(csv_file_path)
 
 
     ############################################
