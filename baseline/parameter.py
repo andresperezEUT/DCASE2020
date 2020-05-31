@@ -195,7 +195,7 @@ def get_params(argv='1'):
         # postprocessing
         params['event_filter_activation']= True
         params['event_filter_method'] = 'event_filter_v1'
-        params['event_filter_method_args']=[5,10] #[frames threshold, frames_threshold_fp_8]
+        params['event_filter_method_args']=[10] #[frames threshold, frames_threshold_fp_8]
 
         params['preset_descriptor'] = 'loc:dereverb_filter; beam:beam; cls:random_forest; postfilter:v1'
 
@@ -211,7 +211,7 @@ def get_params(argv='1'):
         # postprocessing
         params['event_filter_activation']= True
         params['event_filter_method'] = 'event_filter_v1'
-        params['event_filter_method_args']=[5,10] #[frames threshold, frames_threshold_fp_8]
+        params['event_filter_method_args']=[10] #[frames threshold, frames_threshold_fp_8]
 
         params['preset_descriptor'] = 'loc:dereverb_filter; beam:beam; cls:xgb'
 
