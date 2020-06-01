@@ -126,5 +126,6 @@ else:
         for audio in os.scandir(audio_path):
             print("Extracting features from ", event + ' ' + audio.name)
             audio_features, column_labels = compute_audio_features(audio, options)
+            file_name = os.path.splitext(audio.name)[0]
             np.save(os.path.join(audio_features_output_path, 'column_labels.npy'), column_labels)
-            np.save(os.path.join(audio_features_output_path, event, file_name + '.npy'), audio_features)
+            np.save(os.path.join(audio_features_output_path, event,file_name+ '.npy'), audio_features)
