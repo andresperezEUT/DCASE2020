@@ -473,6 +473,28 @@ def compute_audio_features(audio,options):
     audio_features = np.array(audio_features)
     return audio_features, column_labels
 
+def compute_audio_features_from_audio(audio,options):
+    loader = MonoLoader(filename=audio)
+    audio = loader()
+    features = compute_lowlevel(audio, options)
+    features = compute_tonal(audio, features, options)
+    audio_features = []
+    column_labels = []
+    for feature in features.descriptorNames():
+        x = features[feature]
+        if x.shape == (1,):
+            y = [x[0]]
+        else:
+            y = x[0].tolist()
+        c = 0
+        for i in range(len(y)):
+            c += 1
+            z = feature + str(c)
+            column_labels.append(z)
+        audio_features = audio_features + y
+    audio_features = np.array(audio_features)
+    return audio_features, column_labels
+
 
 
 
