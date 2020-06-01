@@ -127,8 +127,6 @@ def compute_lowlevel(audio, options):
         pool.add(namespace + '.' + 'silence_rate_20dB', int(is_silent_threshold(frame, -20)))
 
         if options['skipSilence'] and essentia.isSilent(frame):
-            total_frames -= 1
-            start_of_frame += hopSize
             continue
             
         # temporal descriptors
@@ -362,8 +360,6 @@ def compute_tonal(audio, pool2, options):
     for frame in frames:
 
         if options['skipSilence'] and essentia.isSilent(frame):
-          total_frames -= 1
-          start_of_frame += hopSize
           continue
 
         frame_windowed = window(frame)

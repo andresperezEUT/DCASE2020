@@ -226,8 +226,8 @@ def get_params(argv='1'):
         params['class_method_args'] = ['event_class_xgb_2']
         # postprocessing
         params['event_filter_activation'] = True
-        params['event_filter_method'] = 'event_filter_v1'
-        params['event_filter_method_args'] = [10]  # [frames_threshold_fp_8]
+        params['event_filter_method'] = 'event_filter_v2'
+        params['event_filter_method_args'] = [10]  # [frames_threshold_fp_3]
 
         params['preset_descriptor'] = 'loc:dereverb_filter; beam:beam; cls:xgb2; postfilter'
 

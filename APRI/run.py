@@ -46,12 +46,12 @@ beamforming_mode = params['beamforming_mode']
 
 # Dataset
 all_audio_files = [f for f in os.listdir(data_folder_path) if not f.startswith('.')]
-quick_audio_files = ['fold1_room1_mix007_ov1.wav',
-                     'fold2_room1_mix007_ov1.wav',
-                     'fold3_room1_mix007_ov1.wav',
-                     'fold4_room1_mix007_ov1.wav',
-                     'fold5_room1_mix007_ov1.wav',
-                     'fold6_room1_mix007_ov1.wav']
+quick_audio_files = ['fold1_room1_mix008_ov1.wav',
+                     'fold2_room1_mix008_ov1.wav',
+                     'fold3_room1_mix008_ov1.wav',
+                     'fold4_room1_mix008_ov1.wav',
+                     'fold5_room1_mix008_ov1.wav',
+                     'fold6_room1_mix008_ov1.wav']
 
 # %% Analysis
 

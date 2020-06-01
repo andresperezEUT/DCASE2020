@@ -62,7 +62,8 @@ def get_feature_list():
 params = parameter.get_params()
 event_type= get_class_name_dict().values()
 data_folder_path = os.path.join(params['dataset_dir'], 'oracle_mono_signals_beam_all/') # path to audios
-audio_features_output_path= os.path.join(data_folder_path,'audio_features_optimized/')
+data_folder_path = os.path.join(params['dataset_dir'], 'oracle_mono_signals_beam_all_aug/') # path to audios
+audio_features_output_path= os.path.join(data_folder_path,'audio_features_optimized_aug/')
 get_column_labels= True
 mode='optimized'
 

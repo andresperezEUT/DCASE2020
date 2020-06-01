@@ -14,7 +14,7 @@ import numpy as np
 import pandas as pd
 import sklearn
 from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import accuracy_score,confusion_matrix
+from sklearn.metrics import accuracy_score,confusion_matrix, roc_auc_score, f1_score
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import Pipeline
@@ -29,14 +29,17 @@ from APRI.utils import get_class_name_dict
 
 # List of classes
 
+print(sorted(sklearn.metrics.SCORERS.keys()))
 params = parameter.get_params()
 event_type= get_class_name_dict().values()
 data_folder_path = os.path.join(params['dataset_dir'], 'oracle_mono_signals_beam_all/audio_features_optimized/') # path to arrays
-model_output_path =  os.path.join(params['dataset_dir'], 'models/event_class_optimized/') # path to arrays
+data_aug_folder_path = os.path.join(params['dataset_dir'], 'oracle_mono_signals_beam_all_aug/audio_features_optimized_aug/') # path to arrays
+model_output_path =  os.path.join(params['dataset_dir'], 'models/event_class_optimized_augmented/') # path to arrays
 
 # Import data and parse in pandas dataframes
 rows=[]
 for event in event_type:
+    print("Event ",str(event))
     i=0
     array_path= os.path.join(data_folder_path,event) #path to file
     for array in os.scandir(array_path):
@@ -52,13 +55,25 @@ for event in event_type:
             data_x=x
             data_y=y
 
-columns=[]
-i=0
-for value in x:
-    i+=1
-    column='v'+str(i)
-    columns.append(column)
+number_sample=1300
+for event in event_type:
+    print("Completing event ",str(event))
+    i=0
+    array_path= os.path.join(data_aug_folder_path,event) #path to file
+    for array in os.scandir(array_path):
+        if np.count_nonzero(data_y == str(event))<number_sample:
+            row=event+os.path.splitext(array.name)[0]
+            rows.append(row)
+            x=np.load(array)
+            y=str(event)
 
+            if 'data_x' in locals():
+                data_x=np.vstack((data_x,x))
+                data_y = np.vstack((data_y, y))
+            else:
+                data_x=x
+                data_y=y
+print(data_x.shape)
 columns = np.load(os.path.join(data_folder_path, 'column_labels.npy')).tolist()
 df_x=pd.DataFrame(data=data_x,index=rows,columns=columns)
 df_y=pd.DataFrame(data=data_y,index=rows,columns=['target'])
@@ -72,7 +87,7 @@ pipe_gb = Pipeline([(('reg', GradientBoostingClassifier(random_state=42)))])
 
 pipe_svr = Pipeline([('scl', StandardScaler()),('reg', SVC())])
 
-pipe_XGB = Pipeline([('reg',xgb.XGBClassifier(booster = "gbtree", objective = "multi:softprob", num_class = 14,random_state=42))])
+pipe_XGB = Pipeline([('reg',xgb.XGBClassifier(booster = "gbtree", objective = "multi:softmax",num_class=14,random_state=42))])
 
 # Defining some Grids
 
@@ -91,14 +106,11 @@ grid_params_svr = [{'reg__kernel': ['rbf'],
                     'reg__C': [10]}]
 
 grid_params_XGB = [{'reg__colsample_bytree': [0.3],
-                   "reg__learning_rate": [0.3], # default 0.1
-                    "reg__max_depth": [4], # default 3
+                   "reg__learning_rate": [0.15,0.2], # default 0.1
+                    "reg__max_depth": [3], # default 3
                     "reg__n_estimators": [500]}]
 
-
 # Defining some grid searches
-
-skf = StratifiedKFold(n_splits=5, shuffle = True, random_state = 1001)
 
 
 gs_rf = GridSearchCV(estimator=pipe_rf,param_grid=grid_params_rf,scoring='accuracy',cv=5,verbose=10,n_jobs=-1)
@@ -107,22 +119,21 @@ gs_gb = GridSearchCV(estimator=pipe_gb,param_grid=grid_params_gb,scoring='accura
 
 gs_svr = GridSearchCV(estimator=pipe_svr,param_grid=grid_params_svr,scoring='accuracy',cv=5,verbose=10,n_jobs=-1)
 
-gs_XGB = GridSearchCV(estimator=pipe_XGB,param_grid=grid_params_XGB,scoring='accuracy',cv=skf.split(data_x,data_y),verbose=10,n_jobs=-1)
+gs_XGB = GridSearchCV(estimator=pipe_XGB,param_grid=grid_params_XGB,scoring='f1_weighted', cv=5,verbose=10,n_jobs=-1)
+
+
+
 
 grids = [gs_rf, gs_svr,gs_XGB]
 grid_dict = {0: 'random_forest',
              1: 'svc',
              2: 'XGB'}
 
-grids = [gs_rf]
-grid_dict = {0: 'random_forest'}
+grids = [gs_XGB]
+grid_dict = {0: 'XGB'}
 
 # Split train and test
 train_x, test_x, train_y, test_y = train_test_split(df_x, df_y['target'], test_size=0.10, random_state=42)
-print(train_x.shape)
-print(train_y.shape)
-print(test_x.shape)
-print(test_y.shape)
 best_acc = 0
 best_cls = 0
 best_gs = ''
@@ -145,19 +156,19 @@ for idx, gs in enumerate(grids):
         best_acc = accuracy_score(test_y, y_pred)
         best_gs = gs
         best_cls = idx
-    joblib.dump(best_gs.best_estimator_, model_output_path + 'provisional_train/'+ grid_dict[idx]+ '/model.joblib')
-    joblib.dump(best_gs.best_params_, model_output_path + 'provisional_train/'+ grid_dict[idx]+ '/params.joblib')
+    #joblib.dump(best_gs.best_estimator_, model_output_path + 'provisional_train/'+ grid_dict[idx]+ '/model.joblib')
+    #joblib.dump(best_gs.best_params_, model_output_path + 'provisional_train/'+ grid_dict[idx]+ '/params.joblib')
 print('\n Classifier with best score: %s' % grid_dict[best_cls])
 
 joblib.dump(best_gs.best_estimator_, model_output_path+'provisional_train/model.joblib')
 joblib.dump(best_gs.best_params_, model_output_path+'provisional_train/params.joblib')
-
+'''
 model= joblib.load( model_output_path + 'provisional_train/random_forest/model.joblib')
 importances=model.steps[0][1].feature_importances_
 df_importance=pd.DataFrame(data=importances,index=columns,columns=['importance'])
 df_importance = df_importance.sort_values(by='importance',ascending=False)
 df_importance.to_pickle(os.path.join(model_output_path + 'provisional_train/random_forest/important_columns.pkl'))
-
+'''
 
 
 
