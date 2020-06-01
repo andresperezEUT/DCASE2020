@@ -39,7 +39,6 @@ rows=[]
 for event in event_type:
     i=0
     array_path= os.path.join(data_folder_path,event) #path to file
-    print(event)
     for array in os.scandir(array_path):
         i+=1
         row=event+os.path.splitext(array.name)[0]
@@ -61,14 +60,8 @@ for value in x:
     columns.append(column)
 
 columns = np.load(os.path.join(data_folder_path, 'column_labels.npy')).tolist()
-
-print(len(columns))
-print(data_x.shape)
-print(data_y.shape)
-print(len(rows))
 df_x=pd.DataFrame(data=data_x,index=rows,columns=columns)
 df_y=pd.DataFrame(data=data_y,index=rows,columns=['target'])
-print(df_x.shape)
 # Defining some pipelines. GB, RF and SVC
 
 
@@ -79,7 +72,7 @@ pipe_gb = Pipeline([(('reg', GradientBoostingClassifier(random_state=42)))])
 
 pipe_svr = Pipeline([('scl', StandardScaler()),('reg', SVC())])
 
-pipe_XGB = Pipeline([('reg',xgb.XGBClassifier(booster = "gbtree", objective = "multi:softprob", num_class = 14, eval_metric = "mlogloss",random_state=42))])
+pipe_XGB = Pipeline([('reg',xgb.XGBClassifier(booster = "gbtree", objective = "multi:softprob", num_class = 14,random_state=42))])
 
 # Defining some Grids
 
@@ -122,8 +115,7 @@ grid_dict = {0: 'random_forest',
              2: 'XGB'}
 
 grids = [gs_rf]
-grid_dict = {0: 'random_forest',
-             }
+grid_dict = {0: 'random_forest'}
 
 # Split train and test
 train_x, test_x, train_y, test_y = train_test_split(df_x, df_y['target'], test_size=0.10, random_state=42)
@@ -161,10 +153,10 @@ joblib.dump(best_gs.best_estimator_, model_output_path+'provisional_train/model.
 joblib.dump(best_gs.best_params_, model_output_path+'provisional_train/params.joblib')
 
 model= joblib.load( model_output_path + 'provisional_train/random_forest/model.joblib')
-importances=model.steps[1][1].feature_importances_
+importances=model.steps[0][1].feature_importances_
 df_importance=pd.DataFrame(data=importances,index=columns,columns=['importance'])
 df_importance = df_importance.sort_values(by='importance',ascending=False)
-df_importance.to_pickle(os.path.join(best_gs.best_estimator_, model_output_path + 'provisional_train/random_forest/important_columns.pkl'))
+df_importance.to_pickle(os.path.join(model_output_path + 'provisional_train/random_forest/important_columns.pkl'))
 
 
 
