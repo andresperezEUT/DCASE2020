@@ -18,6 +18,7 @@ from essentia.standard import MusicExtractor as ms
 from APRI.utils import get_class_name_dict
 from APRI.get_audio_features import *
 import sys
+import pandas as pd
 
 ### FUNCIONES PARA PREDICCIÓN DE EVENT_CLASS ###
 
@@ -34,6 +35,8 @@ def get_features_music_extractor(audio):
     options['hopSize'] = 1024
     options['skipSilence'] = True
     audio_features, column_labels = compute_audio_features_from_audio(audio, options)
+    audio_features=audio_features.reshape(-1,1)
+    audio_features=pd.DataFrame(data=audio_features.T,index=['pred'],columns=[column_labels])
     return audio_features
 
 def get_event_class_model(model_name):
@@ -45,10 +48,12 @@ def get_event_class_model(model_name):
 def event_class_prediction(audio,model_name):
     variables=get_features_music_extractor(audio)
     model=get_event_class_model(model_name)
+    names=model.steps[0][1].get_booster().feature_names
+    variables=variables[names]
     if len(variables)==0:
         event_idx=event_class_prediction_random(audio)
     else:
-        event_class=model.predict(np.array([variables]))
+        event_class=model.predict(variables)
         event_idx = get_key(event_class)
     return event_idx
 
