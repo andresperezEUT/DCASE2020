@@ -17,7 +17,7 @@ from APRI.postprocessing import *
 import time
 
 # %% Parameters
-preset = 'mi_primerito_dia_postfilter'
+preset = 'new_features_xgb'
 write = True
 plot = True
 quick = True

@@ -163,7 +163,7 @@ def get_params(argv='1'):
         # postprocessing
         params['event_filter_activation']= False
         params['event_filter_method'] = ''
-        params['event_filter_method_args']=[] #[frames threshold, frames_threshold_fp_8]
+        params['event_filter_method_args']=[] #[frames_threshold_fp_8]
 
         params['preset_descriptor'] = 'loc:basic; beam:beam; cls:random_forest'
 
@@ -179,7 +179,7 @@ def get_params(argv='1'):
         # postprocessing
         params['event_filter_activation']= False
         params['event_filter_method'] = ''
-        params['event_filter_method_args']=[] #[frames threshold, frames_threshold_fp_8]
+        params['event_filter_method_args']=[] #[frames_threshold_fp_8]
 
         params['preset_descriptor'] = 'loc:dereverb_filter; beam:beam; cls:random_forest'
 
@@ -195,7 +195,7 @@ def get_params(argv='1'):
         # postprocessing
         params['event_filter_activation']= True
         params['event_filter_method'] = 'event_filter_v1'
-        params['event_filter_method_args']=[10] #[frames threshold, frames_threshold_fp_8]
+        params['event_filter_method_args']=[10] #[frames_threshold_fp_8]
 
         params['preset_descriptor'] = 'loc:dereverb_filter; beam:beam; cls:random_forest; postfilter:v1'
 
@@ -211,9 +211,25 @@ def get_params(argv='1'):
         # postprocessing
         params['event_filter_activation']= True
         params['event_filter_method'] = 'event_filter_v1'
-        params['event_filter_method_args']=[10] #[frames threshold, frames_threshold_fp_8]
+        params['event_filter_method_args']=[10] #[frames_threshold_fp_8]
 
         params['preset_descriptor'] = 'loc:dereverb_filter; beam:beam; cls:xgb'
+
+        if argv == 'new_features_xgb':
+            # localization_detection
+            params['ld_method'] = 'ld_basic_dereverb_filter'
+            params['ld_method_args'] = [0.3, 5, 4]  # [diff_th, L, event_minimum_length]
+            # beamforming
+            params['beamforming_mode'] = 'beam'
+            # classification
+            params['class_method'] = 'event_class_prediction'
+            params['class_method_args'] = ['event_class_xgb_2']
+            # postprocessing
+            params['event_filter_activation'] = True
+            params['event_filter_method'] = 'event_filter_v1'
+            params['event_filter_method_args'] = [10]  # [frames_threshold_fp_8]
+
+            params['preset_descriptor'] = 'loc:dereverb_filter; beam:beam; cls:xgb2; postfilter'
 
     else:
         print('ERROR: unknown argument {}'.format(argv))
