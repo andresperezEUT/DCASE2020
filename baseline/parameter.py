@@ -159,7 +159,7 @@ def get_params(argv='1'):
         params['beamforming_mode'] = 'beam'
         # classification
         params['class_method'] = 'event_class_prediction'
-        params['class_method_args'] = ['event_class_rf']
+        params['class_method_args'] = ['event_class_sklearn']
         # postprocessing
         params['event_filter_activation']= False
         params['event_filter_method'] = ''
@@ -175,7 +175,7 @@ def get_params(argv='1'):
         params['beamforming_mode'] = 'beam'
         # classification
         params['class_method'] = 'event_class_prediction'
-        params['class_method_args'] = ['event_class_rf']
+        params['class_method_args'] = ['event_class_sklearn']
         # postprocessing
         params['event_filter_activation']= False
         params['event_filter_method'] = ''
@@ -191,7 +191,7 @@ def get_params(argv='1'):
         params['beamforming_mode'] = 'beam'
         # classification
         params['class_method'] = 'event_class_prediction'
-        params['class_method_args'] = ['event_class_rf']
+        params['class_method_args'] = ['event_class_sklearn']
         # postprocessing
         params['event_filter_activation']= True
         params['event_filter_method'] = 'event_filter_v1'
@@ -223,7 +223,7 @@ def get_params(argv='1'):
         params['beamforming_mode'] = 'beam'
         # classification
         params['class_method'] = 'event_class_prediction'
-        params['class_method_args'] = ['event_class_xgb_2']
+        params['class_method_args'] = ['event_class_xgb']
         # postprocessing
         params['event_filter_activation'] = True
         params['event_filter_method'] = 'event_filter_v2'

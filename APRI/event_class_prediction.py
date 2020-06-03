@@ -19,6 +19,13 @@ from APRI.utils import get_class_name_dict
 from APRI.get_audio_features import *
 import sys
 import pandas as pd
+import soundfile as sf
+import essentia.standard as essentia
+from essentia.standard import *
+import os
+import csv
+import xgboost as xgb
+
 
 ### FUNCIONES PARA PREDICCIÓN DE EVENT_CLASS ###
 
@@ -40,22 +47,29 @@ def get_features_music_extractor(audio):
     return audio_features
 
 def get_event_class_model(model_name):
-    model_input_path = os.path.dirname(os.path.realpath(__file__)) + '/models/'+model_name+'/model.joblib'
-    model = joblib.load(model_input_path)
+    if model_name=='event_class_sklearn':
+        model_input_path = os.path.dirname(os.path.realpath(__file__)) + '/models/'+model_name+'/model.joblib'
+        model = joblib.load(model_input_path)
+    else:
+        model_input_path = os.path.dirname(os.path.realpath(__file__)) + '/models/' + model_name + '/model.bin'
+        model = xgb.Booster()
+        model.load_model(model_input_path)
+
     return model
 
 
 def event_class_prediction(audio,model_name):
-    variables=get_features_music_extractor(audio)
-    model=get_event_class_model(model_name)
-    names=model.steps[0][1].get_booster().feature_names
-    variables=variables[names]
-    if len(variables)==0:
-        event_idx=event_class_prediction_random(audio)
+    model = get_event_class_model(model_name)
+    if model_name=='event_class_sklearn':
+        variables=get_features_music_extractor(audio)
+        event_class = model.predict(variables)
+        class_idx = get_key(event_class)
     else:
-        event_class=model.predict(variables)
-        event_idx = get_key(event_class)
-    return event_idx
+        variables=xgb.DMatrix(variables)
+        event_class = model.predict(variables)
+        class_idx=int(event_class)
+    return class_idx
 
 def event_class_prediction_random(audio_path):
     return random.randint(0,13)
+
