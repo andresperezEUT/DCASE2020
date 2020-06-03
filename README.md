@@ -21,7 +21,8 @@ Probably a lot.
 * keras (I'm using v2.3.1)
 * tensorflow (I'm currently using v2.0.0, since newest 2.1+ collides with that keras version)
 * essentia (check https://essentia.upf.edu/installing.html)
-* xgboost
+* xgboost TODO
+* pandas
 * ...
 
 ## Getting started
@@ -38,6 +39,6 @@ Inside **seld-dcase2020** folder:
 Except for the contents in the `metrics` folder that have [MIT License](seld-dcase2020/metrics/LICENSE.md). The rest of the repository is licensed under the [TAU License](seld-dcase2020/LICENSE.md).
 See 
 
-Otherwise: [Do What the Fuck You Want To Public License](APRI/LICENSE.md)
+Otherwise: [Do What the Fuck You Want To Public License](LICENSE.md)
 
 
