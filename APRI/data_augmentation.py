@@ -20,7 +20,7 @@ def save_audio_file(output_path, original_name,event, suffix, data):
     path=os.path.join(output_path,event,original_name+suffix+'.wav') #path to file
     librosa.output.write_wav(path, data, 24000, norm=False)
 def load_audio_file(file_path):
-    data = librosa.core.load(file_path)[0]
+    data = librosa.load(file_path,sr=None)[0]
     return data
 
 #adding white noise
@@ -53,19 +53,22 @@ def time_shifting(data,shift):
 for event in event_type:
     create_folder(os.path.join(audio_augmented_output_path, event))
     audio_path = os.path.join(data_folder_path, event)  # path to file
+    i=0
     for audio in os.scandir(audio_path):
-        print("Augmenting...",audio.name)
         original_name = os.path.splitext(audio.name)[0]
         data=load_audio_file(audio.path)
         data_wn=adding_white_noise(data)
         data_sa09=stretch_audio(data,0.8)
-        data_sa11 = stretch_audio(data, 1.12)
+        data_sa11 = stretch_audio(data, 1.2)
         data_psd=pitch_shifting(data,-1)
         data_psu=pitch_shifting(data,1)
-        data_ts=time_shifting(data,1000)
+        data_ts=time_shifting(data,round(len(data)/2))
         save_audio_file(audio_augmented_output_path,original_name,event,'_wn',data_wn)
         save_audio_file(audio_augmented_output_path, original_name, event, '_sa08', data_sa09)
         save_audio_file(audio_augmented_output_path, original_name, event, '_sa12', data_sa11)
         save_audio_file(audio_augmented_output_path, original_name, event, '_psd', data_psd)
         save_audio_file(audio_augmented_output_path, original_name, event, '_psu', data_psu)
         save_audio_file(audio_augmented_output_path, original_name, event, '_ts', data_ts)
+        if i%100==0:
+            print('DA. Processing: ',str(event),' ',i,' completed.')
+        i+=1
