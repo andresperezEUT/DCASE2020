@@ -61,9 +61,9 @@ def get_feature_list():
 
 params = parameter.get_params()
 event_type= get_class_name_dict().values()
-data_folder_path = os.path.join(params['dataset_dir'], 'oracle_mono_signals_beam_all/') # path to audios
 data_folder_path = os.path.join(params['dataset_dir'], 'oracle_mono_signals_beam_all_aug/') # path to audios
-audio_features_output_path= os.path.join(data_folder_path,'audio_features_optimized_aug/')
+data_folder_path = os.path.join(params['dataset_dir'], 'oracle_mono_signals_beam_all_aug/') # path to audios
+audio_features_output_path= os.path.join(data_folder_path,'audio_features_beam_all/')
 get_column_labels= True
 mode='optimized'
 
@@ -121,6 +121,7 @@ if mode=='musicextractor':
             print("Saving file ",event+file_name+'.npy')
             np.save(os.path.join(audio_features_output_path, event, file_name+'.npy'), audio_features)
 else:
+    i=0
     for event in event_type:
         create_folder(os.path.join(audio_features_output_path,event))
         audio_path= os.path.join(data_folder_path,event) #path to file
@@ -128,5 +129,7 @@ else:
             print("Extracting features from ", event + ' ' + audio.name)
             audio_features, column_labels = compute_audio_features(audio, options)
             file_name = os.path.splitext(audio.name)[0]
-            np.save(os.path.join(audio_features_output_path, 'column_labels.npy'), column_labels)
+            if i==0:
+                np.save(os.path.join(audio_features_output_path, 'column_labels.npy'), column_labels)
+                i+=1
             np.save(os.path.join(audio_features_output_path, event,file_name+ '.npy'), audio_features)
