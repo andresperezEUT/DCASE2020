@@ -281,7 +281,6 @@ def normalize(hpcp):
         hpcp[i] = hpcp[i] / m
     return hpcp
 
-
 def compute_tonal(audio, pool2, options):
     namespace = 'tonal'
     pool = essentia.Pool()
@@ -432,7 +431,6 @@ def compute_tonal(audio, pool2, options):
     pool2.add(namespace + '.' + 'hpcp_var', statistics[1])
     return pool2
 
-
 def compute_statistics(array):
     array_mean = []
     array_var = []
@@ -444,8 +442,6 @@ def compute_statistics(array):
     array_mean = np.array(array_mean)
     array_var = np.array(array_var)
     return [array_mean, array_var]
-
-
 
 def compute_audio_features(audio,options):
     loader = MonoLoader(filename=audio.path)
@@ -470,7 +466,7 @@ def compute_audio_features(audio,options):
     return audio_features, column_labels
 
 def compute_audio_features_from_audio(audio,options):
-    loader = MonoLoader(filename=audio)
+    loader = MonoLoader(filename=audio,sampleRate=24000)
     audio = loader()
     features = compute_lowlevel(audio, options)
     features = compute_tonal(audio, features, options)
