@@ -26,15 +26,18 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.svm import SVC
 from APRI.utils import get_class_name_dict
-
+from sklearn.metrics import classification_report
+from baseline.cls_feature_class import create_folder
+from APRI.get_audio_features import *
 # List of classes
 
 print(sorted(sklearn.metrics.SCORERS.keys()))
 params = parameter.get_params()
 event_type= get_class_name_dict().values()
-data_folder_path = os.path.join(params['dataset_dir'], 'oracle_mono_signals_beam_all/audio_features_optimized/') # path to arrays
-data_aug_folder_path = os.path.join(params['dataset_dir'], 'oracle_mono_signals_beam_all_aug/audio_features_optimized_aug/') # path to arrays
-model_output_path =  os.path.join(params['dataset_dir'], 'models/event_class_optimized_augmented/') # path to arrays
+data_folder_path = os.path.join(params['dataset_dir'], 'oracle_mono_signals_beam_all/audio_features_beam_all/') # path to arrays
+#data_aug_folder_path = os.path.join(params['dataset_dir'], 'oracle_mono_signals_beam_all_aug/audio_features_optimized_aug/') # path to arrays
+model_output_path =  os.path.join(params['dataset_dir'], 'models/event_class_xgb/') # path to arrays
+augmentation=False
 
 # Import data and parse in pandas dataframes
 rows=[]
@@ -54,25 +57,24 @@ for event in event_type:
         else:
             data_x=x
             data_y=y
-
-number_sample=1300
-for event in event_type:
-    print("Completing event ",str(event))
-    i=0
-    array_path= os.path.join(data_aug_folder_path,event) #path to file
-    for array in os.scandir(array_path):
-        if np.count_nonzero(data_y == str(event))<number_sample:
-            row=event+os.path.splitext(array.name)[0]
-            rows.append(row)
-            x=np.load(array)
-            y=str(event)
-
-            if 'data_x' in locals():
-                data_x=np.vstack((data_x,x))
-                data_y = np.vstack((data_y, y))
-            else:
-                data_x=x
-                data_y=y
+if augmentation:
+    number_sample=2000
+    for event in event_type:
+        print("Completing event ",str(event))
+        i=0
+        array_path= os.path.join(data_aug_folder_path,event) #path to file
+        for array in os.scandir(array_path):
+            if np.count_nonzero(data_y == str(event))<number_sample:
+                row=event+os.path.splitext(array.name)[0]
+                rows.append(row)
+                x=np.load(array)
+                y=str(event)
+                if 'data_x' in locals():
+                    data_x=np.vstack((data_x,x))
+                    data_y = np.vstack((data_y, y))
+                else:
+                    data_x=x
+                    data_y=y
 print(data_x.shape)
 columns = np.load(os.path.join(data_folder_path, 'column_labels.npy')).tolist()
 df_x=pd.DataFrame(data=data_x,index=rows,columns=columns)
@@ -87,7 +89,7 @@ pipe_gb = Pipeline([(('reg', GradientBoostingClassifier(random_state=42)))])
 
 pipe_svr = Pipeline([('scl', StandardScaler()),('reg', SVC())])
 
-pipe_XGB = Pipeline([('reg',xgb.XGBClassifier(booster = "gbtree", objective = "multi:softmax",num_class=14,random_state=42))])
+pipe_XGB = Pipeline([('reg',xgb.XGBClassifier(booster = "gbtree", objective = "multi:softprob",num_class=14,random_state=42))])
 
 # Defining some Grids
 
@@ -106,7 +108,7 @@ grid_params_svr = [{'reg__kernel': ['rbf'],
                     'reg__C': [10]}]
 
 grid_params_XGB = [{'reg__colsample_bytree': [0.3],
-                   "reg__learning_rate": [0.15,0.2], # default 0.1
+                   "reg__learning_rate": [0.3], # default 0.1
                     "reg__max_depth": [3], # default 3
                     "reg__n_estimators": [500]}]
 
@@ -133,7 +135,7 @@ grids = [gs_XGB]
 grid_dict = {0: 'XGB'}
 
 # Split train and test
-train_x, test_x, train_y, test_y = train_test_split(df_x, df_y['target'], test_size=0.10, random_state=42)
+train_x, test_x, train_y, test_y = train_test_split(df_x, df_y['target'], test_size=0.20, random_state=42)
 best_acc = 0
 best_cls = 0
 best_gs = ''
@@ -148,9 +150,16 @@ for idx, gs in enumerate(grids):
     print('Best training accuracy: %.3f' % gs.best_score_)
     # Prediction using best model
     y_pred = gs.predict(test_x)
+    print('Prediction f1-score for best params: %.3f ' % f1_score(test_y, y_pred,average='weighted'))
     print('Prediction accuracy for best params: %.3f ' % accuracy_score(test_y, y_pred))
     print('Prediction accuracy for best params:')
     print(confusion_matrix(test_y,y_pred))
+    means = gs.cv_results_['mean_test_score']
+    stds = gs.cv_results_['std_test_score']
+    for mean, std, params in zip(means, stds, gs.cv_results_['params']):
+        print("%0.3f (+/-%0.03f) for %r"
+              % (mean, std * 2, params))
+    print(classification_report(test_y,y_pred))
     # Track best (highest test accuracy) model
     if accuracy_score(test_y, y_pred) > best_acc:
         best_acc = accuracy_score(test_y, y_pred)
@@ -162,6 +171,85 @@ print('\n Classifier with best score: %s' % grid_dict[best_cls])
 
 joblib.dump(best_gs.best_estimator_, model_output_path+'provisional_train/model.joblib')
 joblib.dump(best_gs.best_params_, model_output_path+'provisional_train/params.joblib')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#Check
+rows=[]
+'''
+
+for event in event_type:
+    print("Event ",str(event))
+    i=0
+    data_path= os.path.join('/home/ribanez/Escritorio/audios/',event) #path to file
+    data_path_o= os.path.join('/home/ribanez/Escritorio/audios/audio_features',event) #path to file
+    create_folder(os.path.join(data_path_o, event))
+    for audio in os.scandir(data_path):
+        print("Extracting features from ", event + ' ' + audio.name)
+        audio_features, column_labels = compute_audio_features(audio, options)
+        file_name = os.path.splitext(audio.name)[0]
+        if i == 0:
+            np.save(os.path.join(data_path_o, 'column_labels.npy'), column_labels)
+            i += 1
+        np.save(os.path.join(data_path_o, event, file_name + '.npy'), audio_features)
+'''
+
+'''
+for event in event_type:
+    i = 0
+    array_path = os.path.join('/home/ribanez/Escritorio/audios/audio_features',event,event)  # path to file
+    array_path = os.path.join(data_folder_path, event)  # path to file
+    for array in os.scandir(array_path):
+        i+=1
+        row=event+os.path.splitext(array.name)[0]
+        rows.append(row)
+        x=np.load(array)
+        y=str(event)
+        if 'datacheck_x' in locals():
+            datacheck_x=np.vstack((datacheck_x,x))
+            datacheck_y = np.vstack((datacheck_y, y))
+        else:
+            datacheck_x=x
+            datacheck_y=y
+
+dfcheck_x=pd.DataFrame(data=datacheck_x,index=rows,columns=columns)
+test_y=pd.DataFrame(data=datacheck_y,index=rows,columns=['target'])
+joblib.dump(best_gs.best_estimator_, model_output_path+'provisional_train/model.joblib')
+y_pred = gs.predict(dfcheck_x)
+
+print('Prediction f1-score for best params: %.3f ' % f1_score(test_y, y_pred, average='weighted'))
+print('Prediction accuracy for best params: %.3f ' % accuracy_score(test_y, y_pred))
+print('Prediction accuracy for best params:')
+print(confusion_matrix(test_y, y_pred))
+'''
 '''
 model= joblib.load( model_output_path + 'provisional_train/random_forest/model.joblib')
 importances=model.steps[0][1].feature_importances_
