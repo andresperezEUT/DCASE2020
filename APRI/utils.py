@@ -457,11 +457,8 @@ def plot_results(file_name, params):
         plt.xlim([0, 60])
         if not plot_x_ax:
             plt.gca().axes.set_xticklabels([])
-
         if not plot_y_ax:
             plt.gca().axes.set_yticklabels([])
-
-
 
     # output format file to visualize
     pred = os.path.join(params['dcase_dir'], file_name)
