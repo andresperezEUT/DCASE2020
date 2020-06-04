@@ -7,7 +7,7 @@ In dev mode, compute evaluation metrics too.
 '''
 import datetime
 import tempfile
-
+import soundfile as sf
 import matplotlib.pyplot as plt
 from baseline.cls_feature_class import create_folder
 from APRI.localization_detection import *
@@ -17,7 +17,7 @@ from APRI.postprocessing import *
 import time
 
 # %% Parameters
-preset = 'new_features_xgb'
+preset = 'mi_primerito_dia'
 write = True
 plot = True
 quick = True
@@ -46,12 +46,12 @@ beamforming_mode = params['beamforming_mode']
 
 # Dataset
 all_audio_files = [f for f in os.listdir(data_folder_path) if not f.startswith('.')]
-quick_audio_files = ['fold1_room1_mix008_ov1.wav',
-                     'fold2_room1_mix008_ov1.wav',
-                     'fold3_room1_mix008_ov1.wav',
-                     'fold4_room1_mix008_ov1.wav',
-                     'fold5_room1_mix008_ov1.wav',
-                     'fold6_room1_mix008_ov1.wav']
+quick_audio_files = ['fold1_room1_mix007_ov1.wav',
+                     'fold2_room1_mix007_ov1.wav',
+                     'fold3_room1_mix007_ov1.wav',
+                     'fold4_room1_mix007_ov1.wav',
+                     'fold5_room1_mix007_ov1.wav',
+                     'fold6_room1_mix007_ov1.wav']
 
 # %% Analysis
 
@@ -106,15 +106,12 @@ for audio_file_idx, audio_file_name in enumerate(audio_files):
     # TODO: modify so file writting is not needed
     num_events = len(event_list)
     for event_idx in range(num_events):
-
         event = event_list[event_idx]
         mono_event = get_mono_audio_from_event(b_format, event, beamforming_mode, fs, frame_length)
-
         # Save into temp file
         fo = tempfile.NamedTemporaryFile()
         temp_file_name = fo.name+'.wav'
         sf.write(temp_file_name, mono_event, fs)
-
         # Predict
         class_method_string = params['class_method']
         class_method = locals()[class_method_string]
@@ -122,11 +119,13 @@ for audio_file_idx, audio_file_name in enumerate(audio_files):
 
         class_idx = class_method(temp_file_name, *class_method_args)
         event.set_classID(class_idx)
-
         ############################################
         # Postprocessing:
-        process_event = True # default True, so it works also when no event_filter
-        event_filter = params['event_filter_activation']
+        process_event=True
+        try:
+            event_filter = params['event_filter_activation']
+        except:
+            event_filter = False  # default True, so it works also when no event_filter
         if event_filter:
             event_filter_method_string = params['event_filter_method']
             event_filter_method = locals()[event_filter_method_string]
@@ -143,7 +142,7 @@ for audio_file_idx, audio_file_name in enumerate(audio_files):
 
 
     ############################################
-    # Plot results
+        # Plot results
     if plot:
         plot_results(csv_file_path, params)
 
