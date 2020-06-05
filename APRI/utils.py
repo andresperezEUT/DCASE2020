@@ -376,7 +376,24 @@ def get_class_name_dict():
         13:'piano'
     }
 
-
+def get_class_name_dict_extra():
+    return {
+        0: 'alarm',
+        1: 'crying_baby',
+        2: 'crash',
+        3: 'barking_dog',
+        4: 'running_engine',
+        5: 'female_scream',
+        6: 'female_speech',
+        7: 'burning_fire',
+        8: 'footsteps',
+        9: 'knocking_on_door',
+        10:'male_scream',
+        11:'male_speech',
+        12:'ringing_phone',
+        13:'piano',
+        14:'falsepositive'
+    }
 
 def plot_metadata(metadata_file_name):
     # Based on visualize_SELD_output.py

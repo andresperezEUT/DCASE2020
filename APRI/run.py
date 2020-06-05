@@ -17,9 +17,9 @@ from APRI.postprocessing import *
 import time
 
 # %% Parameters
-preset = 'mi_primerito_dia'
+preset = 'oracle_beam'
 write = True
-plot = True
+plot =True
 quick = True
 
 params = parameter.get_params(preset)
@@ -68,7 +68,6 @@ if quick:
     audio_files = quick_audio_files
 else:
     audio_files = all_audio_files
-
 for audio_file_idx, audio_file_name in enumerate(audio_files):
 
     st = datetime.datetime.fromtimestamp(time.time()).strftime('%H:%M:%S')
@@ -116,7 +115,6 @@ for audio_file_idx, audio_file_name in enumerate(audio_files):
         class_method_string = params['class_method']
         class_method = locals()[class_method_string]
         class_method_args = params['class_method_args']
-
         class_idx = class_method(temp_file_name, *class_method_args)
         event.set_classID(class_idx)
         ############################################
@@ -145,6 +143,9 @@ for audio_file_idx, audio_file_name in enumerate(audio_files):
         # Plot results
     if plot:
         plot_results(csv_file_path, params)
+
+
+
 
 
 print('-------------- PROCESSING FINISHED --------------')
