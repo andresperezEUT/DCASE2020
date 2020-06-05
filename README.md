@@ -14,7 +14,7 @@ Probably a lot.
 * numpy
 * Ipython (why?)
 * scipy
-* sklearn
+* sklearn v0.23.0
 * matplotlib
 * soundfile (pysoundfile)
 * librosa
