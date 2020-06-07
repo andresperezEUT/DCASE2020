@@ -115,7 +115,8 @@ for audio_file_idx, audio_file_name in enumerate(audio_files):
         class_method_string = params['class_method']
         class_method = locals()[class_method_string]
         class_method_args = params['class_method_args']
-        class_idx = class_method(temp_file_name, *class_method_args)
+        class_idx = class_method(mono_event, *class_method_args)
+        #class_idx = class_method(temp_file_name, *class_method_args)
         event.set_classID(class_idx)
         ############################################
         # Postprocessing:

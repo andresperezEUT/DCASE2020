@@ -52,11 +52,18 @@ def get_source_dataframes(input_path,extra=False):
 def get_dataframe_balanced_split(df_real,df_aug,test_n,val_n,train_n):
     # Criteria:
     #   1. test and validation take rows from real events (test_n and val_n per class)
-    #   2. train takes the rest of the real events  and augmented data until reack train_n per class
+    #   2. train takes the rest of the real events  and augmented data until reach train_n per class
+    #   3. remove augmented data obtained from those audios included in test and validation.
     df_test=df_real.groupby('target',group_keys=False).apply(lambda x: x.sample(test_n))
     df_real=df_real.drop(df_test.index)
+    for ind in df_test.index:
+        df_aux = df_aug[df_aug.index.str.contains(str(ind)+"_", regex=False)]
+        df_aug =df_aug.drop(df_aux.index)
     df_val=df_real.groupby('target',group_keys=False).apply(lambda x: x.sample(val_n))
     df_real=df_real.drop(df_val.index)
+    for ind in df_val.index:
+        df_aux = df_aug[df_aug.index.str.contains(str(ind)+"_", regex=False)]
+        df_aug =df_aug.drop(df_aux.index)
     event_type = get_class_name_dict().values()
     i=0
     for event in event_type:
@@ -91,8 +98,3 @@ def get_dataframe_split(df_real,df_aug,test_p,val_p):
     df_train=pd.concat([df_train,df_train2])
     return df_test,df_val,df_train
 
-
-df_real=pd.read_pickle('/home/ribanez/movidas/dcase20/dcase20_dataset/Datasets_oracle_mono_signals_2020-06-06_00-07/source_dataframes/dataframe_source_real.pkl')
-df_aug=pd.read_pickle('/home/ribanez/movidas/dcase20/dcase20_dataset/Datasets_oracle_mono_signals_2020-06-06_00-07/source_dataframes/dataframe_source_aug.pkl')
-df_test,df_val,df_train=get_dataframe_balanced_split(df_real,df_aug,40,40,500)
-df_test,df_val,df_train=get_dataframe_split(df_real,df_aug,0.1,0.1)

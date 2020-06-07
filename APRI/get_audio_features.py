@@ -432,8 +432,8 @@ def compute_tonal(audio, pool2, options):
 
 # Method to obtain array with audio features
 def compute_audio_features(audio,options):
-    loader = MonoLoader(filename=audio,sampleRate=24000)
-    audio = loader()
+    #loader = MonoLoader(filename=audio,sampleRate=24000)
+    #audio = loader()
     features = compute_lowlevel(audio, options)
     features = compute_tonal(audio, features, options)
     audio_features = []
@@ -452,6 +452,31 @@ def compute_audio_features(audio,options):
         audio_features = audio_features + y
     audio_features = np.array(audio_features)
     return audio_features, column_labels
+
+
+## Data augmentation parameters:
+def get_data_augmentation_parameters():
+    aug_options=dict()
+    ### White noise
+    aug_options['white_noise']=True
+    aug_options['noise_rate']=0.01
+    ### Time stretching
+    aug_options['time_stretching']=True
+    aug_options['rates']=[0.8,1.2]
+    ### Pitch shifting
+    aug_options['pitch_shifting']=True
+    aug_options['steps']=[-1,1]
+    ### Time shifting
+    aug_options['time_shifting']=True
+    return aug_options
+## Audio features parameters
+def get_audio_features_options():
+    options = dict()
+    options['sampleRate'] = 24000
+    options['frameSize'] = 2048
+    options['hopSize'] = 1024
+    options['skipSilence'] = True
+    return options
 
 
 

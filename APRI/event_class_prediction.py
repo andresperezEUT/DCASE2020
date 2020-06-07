@@ -31,9 +31,10 @@ import xgboost as xgb
 
 def get_key(val):
     classes=get_class_name_dict()
+    print(val)
     for key, value in classes.items():
          if val == value:
-             return key
+              return key
 
 def get_features_music_extractor(audio):
     options = dict()
@@ -41,31 +42,33 @@ def get_features_music_extractor(audio):
     options['frameSize'] = 2048
     options['hopSize'] = 1024
     options['skipSilence'] = True
-    audio_features, column_labels = compute_audio_features_from_audio(audio, options)
+    audio_features, column_labels = compute_audio_features(audio, options)
     audio_features=audio_features.reshape(-1,1)
     audio_features=pd.DataFrame(data=audio_features.T,index=['pred'],columns=[column_labels])
     return audio_features
 
 def get_event_class_model(model_name):
-    if model_name=='event_class_sklearn':
-        model_input_path = os.path.dirname(os.path.realpath(__file__)) + '/models/'+model_name+'/model.joblib'
-        model = joblib.load(model_input_path)
-    else:
+    if 'xgb' in model_name:
         model_input_path = os.path.dirname(os.path.realpath(__file__)) + '/models/' + model_name + '/model.bin'
         model = xgb.Booster()
         model.load_model(model_input_path)
-
+    else:
+        model_input_path = os.path.dirname(os.path.realpath(__file__)) + '/models/'+model_name+'/model.joblib'
+        model = joblib.load(model_input_path)
     return model
 
 
 def event_class_prediction(audio,model_name):
     model = get_event_class_model(model_name)
-    if model_name=='event_class_sklearn':
+    if 'xgb' in model_name:
         variables=get_features_music_extractor(audio)
-        event_class = model.predict(variables)
-        class_idx = get_key(event_class)
-    else:
+        print('aqui')
+        print(variables)
         variables=xgb.DMatrix(variables)
+        event_class = model.predict(variables)
+        class_idx=int(event_class)
+    else:
+        variables=get_features_music_extractor(audio)
         event_class = model.predict(variables)
         class_idx=int(event_class)
     return class_idx

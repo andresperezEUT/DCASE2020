@@ -21,20 +21,18 @@ import pickle
 params = parameter.get_params()
 dataset_dir= os.path.join(params['dataset_dir'])
 
-
 # Parameters
 mode='new' # new or modify
 pipeline='Datasets_2020-06-05_22-15' #if mode is 'modify'
-original_event_dataset='oracle_mono_signals_beam_all'
-test=True
+original_event_dataset='oracle_mono_testing'
 
-extra_events=True
-data_augmentation=True
+extra_events=False
+data_augmentation=False
 audio_parameters_real=True
-audio_parameters_aug=True
+audio_parameters_aug=False
 audio_parameters_extra=False
 creating_dataframe_real=True
-creating_dataframe_aug=True
+creating_dataframe_aug=False
 creating_dataframe_extra=False
 
 ## Data augmentation parameters:
@@ -109,6 +107,8 @@ if creating_dataframe_real:
         os.makedirs(output_path)
     df_real=get_source_dataframes(input_path)
     df_real.to_pickle(os.path.join(output_path,'dataframe_source_real.pkl'))
+
+
 if creating_dataframe_aug:
     print('Step: generating source dataframe ')
     input_path=os.path.join(root_folder,'audio_features_aug')

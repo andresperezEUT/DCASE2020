@@ -38,7 +38,9 @@ def training_batch_generate_audio_features(input_folder,output_folder,options,ex
         audio_path= os.path.join(input_path,event) #path to file
         for audio in os.scandir(audio_path):
             audio_p = os.path.join(audio_path, audio.name)  # path to file
-            audio_features, column_labels = compute_audio_features(audio_p, options)
+            loader = MonoLoader(filename=audio_p, sampleRate=24000)
+            audio_f = loader()
+            audio_features, column_labels = compute_audio_features(audio_f, options)
             file_name = os.path.splitext(audio.name)[0]
             if i==0:
                 np.save(os.path.join(output_path, 'column_labels.npy'), column_labels)
