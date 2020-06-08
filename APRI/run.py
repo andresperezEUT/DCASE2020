@@ -132,7 +132,7 @@ for audio_file_idx, audio_file_name in enumerate(audio_files):
             process_event = event_filter_method(event, *event_filters_method_args)
 
         # Close (delete) file
-        fo.close()
+        #fo.close()
 
         ############################################
         # Generate metadata file from event
