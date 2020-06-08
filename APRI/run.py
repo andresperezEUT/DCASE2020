@@ -19,8 +19,8 @@ import time
 # %% Parameters
 preset = 'oracle_beam'
 write = True
-plot =True
-quick = True
+plot =False
+quick = False
 
 params = parameter.get_params(preset)
 data_folder_path = os.path.join(params['dataset_dir'], 'foa_dev') # path to audios
@@ -108,9 +108,9 @@ for audio_file_idx, audio_file_name in enumerate(audio_files):
         event = event_list[event_idx]
         mono_event = get_mono_audio_from_event(b_format, event, beamforming_mode, fs, frame_length)
         # Save into temp file
-        fo = tempfile.NamedTemporaryFile()
-        temp_file_name = fo.name+'.wav'
-        sf.write(temp_file_name, mono_event, fs)
+        #fo = tempfile.NamedTemporaryFile()
+        #temp_file_name = fo.name+'.wav'
+        #sf.write(temp_file_name, mono_event, fs)
         # Predict
         class_method_string = params['class_method']
         class_method = locals()[class_method_string]

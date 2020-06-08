@@ -32,16 +32,16 @@ pipeline_modelling='' #if mode is 'modify'
 pipeline_feature_engineering='Datasets_oracle_mono_signals_beam_all_2020-06-06_01-43'
 
 build_dataframes=True
-data_augmentation=True
+data_augmentation=False
 feature_selection=False
-random_forest_model=False
-svc_model=False
+random_forest_model=True
+svc_model=True
 xgb_model=True
-ensemble=False
+ensemble=True
 ## Dataframe split:
 mode_split='all'
 split_options_balanced=[100,10,3000] #number of events per class in test, validation and train splits
-split_options_all=[0.1,0.1] #number of events per class in test, validation and train splits
+split_options_all=[0.1,0.02] #number of events per class in test, validation and train splits
 ## Feature selection
 fs_gridsearch=False
 fs_threshold=0.0025
@@ -133,16 +133,16 @@ if feature_selection:
         os.makedirs(os.path.join(root_folder, 'features_selection'))
     x_train,x_test,x_val,columns,rf_params=get_feature_selection(y_train,x_train,y_test,x_test,y_val,x_val,fs_gridsearch,fs_threshold,df_test)
     np.save(os.path.join(root_folder, 'features_selection/x_train.npy'),x_train)
-    np.save(os.path.join(root_folder, 'features_selection/x_test.npy'), x_train)
-    np.save(os.path.join(root_folder, 'features_selection/x_val.npy'), x_train)
-    np.save(os.path.join(root_folder, 'features_selection/columns.npy'), x_train)
+    np.save(os.path.join(root_folder, 'features_selection/x_test.npy'), x_test)
+    np.save(os.path.join(root_folder, 'features_selection/x_val.npy'), x_val)
+    np.save(os.path.join(root_folder, 'features_selection/columns.npy'), columns)
 
 #Models
 if os.path.exists(os.path.join(root_folder, 'features_selection')):
-    x_train=np.load(os.path.join(root_folder, 'features_selection/x_train.npy'),x_train)
-    x_test=np.load(os.path.join(root_folder, 'features_selection/x_test.npy'), x_test)
-    x_val=np.load(os.path.join(root_folder, 'features_selection/x_val.npy'), x_val)
-    columns=np.load(os.path.join(root_folder, 'features_selection/columns.npy'), columns)
+    x_train=np.load(os.path.join(root_folder, 'features_selection/x_train.npy'),allow_pickle=True)
+    x_test=np.load(os.path.join(root_folder, 'features_selection/x_test.npy'),allow_pickle=True)
+    x_val=np.load(os.path.join(root_folder, 'features_selection/x_val.npy'),allow_pickle=True)
+    columns=np.load(os.path.join(root_folder, 'features_selection/columns.npy'),allow_pickle=True)
 if not os.path.exists(os.path.join(root_folder, 'models')):
     os.makedirs(os.path.join(root_folder, 'models'))
 models_path=os.path.join(root_folder, 'models')
@@ -165,7 +165,7 @@ if svc_model:
     if not os.path.exists(os.path.join(models_path, 'svc')):
         os.makedirs(os.path.join(models_path, 'svc'))
     model_svc = train_svc(x_train, y_train, x_test, y_test, x_val, y_val, svc_gridsearch)
-    joblib.dump(model_svc, os.path.join(models_path, 'rf/model_svc.bin'))
+    joblib.dump(model_svc, os.path.join(models_path, 'svc/model_svc.bin'))
 
 
 

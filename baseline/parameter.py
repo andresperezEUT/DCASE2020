@@ -225,7 +225,7 @@ def get_params(argv='1'):
         params['class_method'] = 'event_class_prediction'
         params['class_method_args'] = ['event_class_xgb']
         # postprocessing
-        params['event_filter_activation'] = True
+        params['event_filter_activation'] = False
         params['event_filter_method'] = 'event_filter_v2'
         params['event_filter_method_args'] = [10]  # [frames_threshold_fp_3]
 

@@ -89,12 +89,14 @@ def get_dataframe_split(df_real,df_aug,test_p,val_p):
     df_real=df_real.drop(df_test.index)
     df_val=df_real.groupby('target',group_keys=False).apply(lambda x: x.sample(frac=val_p))
     df_train=df_real.drop(df_val.index)
-    df_test2 = df_aug.groupby('target',group_keys=False).apply(lambda x: x.sample(frac=test_p))
-    df_aug=df_aug.drop(df_test2.index)
-    df_val2=df_aug.groupby('target',group_keys=False).apply(lambda x: x.sample(frac=val_p))
-    df_train2=df_aug.drop(df_val2.index)
-    df_test=pd.concat([df_test,df_test2])
-    df_val=pd.concat([df_val,df_val2])
-    df_train=pd.concat([df_train,df_train2])
+    #df_test2 = df_aug.groupby('target',group_keys=False).apply(lambda x: x.sample(frac=test_p))
+    #df_aug=df_aug.drop(df_test2.index)
+    #df_val2=df_aug.groupby('target',group_keys=False).apply(lambda x: x.sample(frac=val_p))
+    #df_aug=df_aug.drop(df_val2.index)
+    index_list=[]
+    #df_train2=df_aug.drop(df_val2.index)
+    #df_test=pd.concat([df_test,df_test2])
+    #df_val=pd.concat([df_val,df_val2])
+    df_train=pd.concat([df_train,df_aug.sample(frac=0.3)])
     return df_test,df_val,df_train
 

@@ -41,7 +41,7 @@ def get_feature_selection(y_train,x_train,y_test,x_test,y_val,x_val,fs_gridsearc
         cls.set_params(**gs_fs.best_params_)
     else:
         grid_params_rf= {'n_estimators': 500,
-                   'max_depth': 32,
+                   'max_depth': 16,
                    'max_features': "auto"}
         cls.set_params(**grid_params_rf)
     sel = SelectFromModel(cls,threshold=fs_threshold)
@@ -58,8 +58,11 @@ def get_feature_selection(y_train,x_train,y_test,x_test,y_val,x_val,fs_gridsearc
     if(abs(accuracy_score(y_test, y_pred)-accuracy_score(y_test, y_pred2)))<0.02:
         print("Done feature selection. Lost accuracy: ",(accuracy_score(y_test, y_pred)-accuracy_score(y_test, y_pred2)))
         x_train=x_train_red
+        print(x_train.shape)
         x_test=x_test_red
+        print(x_test.shape)
         x_val=sel.transform(x_val)
+        print(x_val.shape)
         df_test2=df_test.drop(['target'],axis=1)
         columns=df_test2.columns[col_rem]
     else:
@@ -77,7 +80,7 @@ def train_xgb(x_train,y_train,x_test,y_test,x_val,y_val,xgb_gridsearch):
 #Params
     params = {
     'max_depth':5,
-    'min_child_weight': 1,
+    'min_child_weight': 3,
     'eta':0.05,
     'subsample': 1,
     'num_class':14,
@@ -91,8 +94,8 @@ def train_xgb(x_train,y_train,x_test,y_test,x_val,y_val,xgb_gridsearch):
         # Parameters max_depth and min_child_weight
         gridsearch_params = [
         (max_depth, min_child_weight)
-        for max_depth in [5]
-        for min_child_weight in [1]
+        for max_depth in [3,5,7]
+        for min_child_weight in [1,3]
     ]
         min_metric = float("Inf")
         best_params = None
@@ -123,7 +126,7 @@ def train_xgb(x_train,y_train,x_test,y_test,x_val,y_val,xgb_gridsearch):
         # Parameters sumbsample and colsample
         gridsearch_params = [
         (subsample, colsample)
-        for subsample in [1]
+        for subsample in [0.5,1]
         for colsample in [0.1,0.2]
     ]
         min_mae = float("Inf")
@@ -175,7 +178,7 @@ def train_xgb(x_train,y_train,x_test,y_test,x_val,y_val,xgb_gridsearch):
                 best_params = eta
                 print("Best params: {}, MAE: {}".format(best_params, min_mae))
             params['eta'] = best_params
-    num_boost_round = 3000
+    num_boost_round = 1000
     model = xgb.train(
         params,
         dtrain,
@@ -204,9 +207,9 @@ def train_rf(x_train,y_train,x_test,y_test,x_val,y_val,rf_gridsearch):
     cls = RandomForestClassifier()
     if rf_gridsearch:
         print('Tuning parameters...')
-        grid_params_rf = [{'bootstrap':[True,False],
-                           'n_estimators': [500],
-                           'max_depth': [32],
+        grid_params_rf = [{'bootstrap':[False],
+                           'n_estimators': [500,1000],
+                           'max_depth': [8,16],
                            'max_features': ["auto"]}]
         gs_fs = GridSearchCV(estimator=cls, param_grid=grid_params_rf, scoring='f1_weighted', cv=5, verbose=10,
                              n_jobs=-1)
@@ -215,15 +218,13 @@ def train_rf(x_train,y_train,x_test,y_test,x_val,y_val,rf_gridsearch):
         print('Best params: %s' % gs_fs.best_params_)
         # Best training data r2
         print('Best training accuracy: %.3f' % gs_fs.best_score_)
-        print(cls.get_params())
         cls.set_params(**gs_fs.best_params_)
         model = cls.fit(x_train, y_train)
     else:
         grid_params_rf = {'bootstrap': False,
                           'n_estimators': 500,
-                          'max_depth': 32,
+                          'max_depth': 16,
                           'max_features': "auto"}
-        cls.set_params(**grid_params_rf)
         model=cls.fit(x_train, y_train)
     print(print(cls.get_params()))
     print('Test predictions with trained mode...')
@@ -248,9 +249,9 @@ def train_svc(x_train,y_train,x_test,y_test,x_val,y_val,svc_gridsearch):
     pipe_svc = Pipeline([('scl', StandardScaler()), ('cls', SVC())])
     if svc_gridsearch:
         print('Tuning parameters...')
-        grid_params_svc = [{'cls__kernel': ['linear'],
+        grid_params_svc = [{'cls__kernel': ['linear','rbf'],
                             'cls__gamma': [0.001],
-                            'cls__C': [1]}]
+                            'cls__C': [100,10000]}]
         gs_svc = GridSearchCV(estimator=pipe_svc, param_grid=grid_params_svc, scoring='f1_weighted', cv=5, verbose=10,
                              n_jobs=-1)
         gs_svc.fit(x_train, y_train)
@@ -258,8 +259,8 @@ def train_svc(x_train,y_train,x_test,y_test,x_val,y_val,svc_gridsearch):
         print('Best params: %s' % gs_svc.best_params_)
         # Best training data r2
         print('Best training accuracy: %.3f' % gs_svc.best_score_)
-        pipe_svc.steps[1][1].set_params(**gs_svc.best_params_)
-        model=pipe_scv
+        #pipe_svc.steps[1][1].set_params(**gs_svc.best_params_)
+        model=gs_svc.best_estimator_
     else:
         grid_params_svc = {'kernel': 'rbf',
                             'gamma': 0.001,

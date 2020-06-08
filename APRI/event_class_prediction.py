@@ -42,6 +42,7 @@ def get_features_music_extractor(audio):
     options['frameSize'] = 2048
     options['hopSize'] = 1024
     options['skipSilence'] = True
+    audio=np.float32(audio)
     audio_features, column_labels = compute_audio_features(audio, options)
     audio_features=audio_features.reshape(-1,1)
     audio_features=pd.DataFrame(data=audio_features.T,index=['pred'],columns=[column_labels])
@@ -52,18 +53,32 @@ def get_event_class_model(model_name):
         model_input_path = os.path.dirname(os.path.realpath(__file__)) + '/models/' + model_name + '/model.bin'
         model = xgb.Booster()
         model.load_model(model_input_path)
+        try:
+            columns=np.load(os.path.dirname(os.path.realpath(__file__)) + '/models/' + model_name + '/columns.npy',allow_pickle=True)
+            feat_sel=True
+        except:
+            columns=()
+            feat_sel=False
     else:
-        model_input_path = os.path.dirname(os.path.realpath(__file__)) + '/models/'+model_name+'/model.joblib'
+        model_input_path = os.path.dirname(os.path.realpath(__file__)) + '/models/'+model_name+'/model.bin'
         model = joblib.load(model_input_path)
-    return model
+        try:
+            columns=np.load(os.path.dirname(os.path.realpath(__file__)) + '/models/' + model_name + '/columns.npy',allow_pickle=True)
+            feat_sel=True
+        except:
+            columns=()
+            feat_sel=False
+    return model,columns,feat_sel
 
 
 def event_class_prediction(audio,model_name):
-    model = get_event_class_model(model_name)
+    model,columns,feat_sel = get_event_class_model(model_name)
     if 'xgb' in model_name:
         variables=get_features_music_extractor(audio)
-        print('aqui')
-        print(variables)
+        if feat_sel:
+            print(variables.shape)
+            variables=variables[columns]
+            print(variables.shape)
         variables=xgb.DMatrix(variables)
         event_class = model.predict(variables)
         class_idx=int(event_class)
