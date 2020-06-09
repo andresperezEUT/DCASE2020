@@ -16,7 +16,7 @@ import os, datetime
 from baseline import parameter
 import pandas as pd
 from APRI.get_dataframes import *
-from APRI.get_modelling_utils import *
+from APRI.get_model_utils import *
 import pickle
 import csv
 import joblib
@@ -29,18 +29,18 @@ this_file_path = os.path.dirname(os.path.abspath(__file__))
 # Parameters
 mode='new' # new or modify
 pipeline_modelling='' #if mode is 'modify'
-pipeline_feature_engineering='Datasets_foa_dev_2020-06-08_b_format2'
+pipeline_feature_engineering='Datasets_foa_dev_2020-06-09'
 
 build_dataframes=True
 data_augmentation=False
 feature_selection=False
-random_forest_model=True
+random_forest_model=False
 svc_model=False
 xgb_model=False
 gb_model=True
 ensemble=True
 ## Dataframe split:
-mode_split='all'
+mode_split='challenge_1'
 split_options_balanced=[100,10,3000] #number of events per class in test, validation and train splits
 split_options_all=[0.2,0.01] #number of events per class in test, validation and train splits
 ## Feature selection
@@ -53,14 +53,21 @@ rf_gridsearch=False
 ## svc
 svc_gridsearch=False
 ## gb
-gb_gridsearch=False
+gb_gridsearch=True
+
+#Feature selection
+ft_mode='manual'
+
 
 # Create root folder for the execution
 if not os.path.exists(os.path.join(dataset_dir, 'models')):
     os.makedirs(os.path.join(dataset_dir, 'models'))
 if mode=='new':
     if feature_selection:
-        fs_label='fs'+str(fs_threshold).replace('.','')
+        if ft_mode=='automatic':
+            fs_label='fs'+str(fs_threshold).replace('.','')
+        else:
+            fs_label='fsmanual'
     else:
         fs_label=''
     print("Creating folder for the pipeline")
@@ -148,7 +155,11 @@ print(df.shape)
 if feature_selection:
     if not os.path.exists(os.path.join(root_folder, 'features_selection')):
         os.makedirs(os.path.join(root_folder, 'features_selection'))
-    x_train,x_test,x_val,columns,rf_params=get_feature_selection(y_train,x_train,y_test,x_test,y_val,x_val,fs_gridsearch,fs_threshold,df_test)
+    if ft_mode=='automatic':
+
+        x_train,x_test,x_val,columns,rf_params=get_feature_selection(y_train,x_train,y_test,x_test,y_val,x_val,fs_gridsearch,fs_threshold,df_test)
+    elif ft_mode=='manual':
+        x_train,x_test,x_val,columns=get_feature_selection_manual(x_train,x_test,x_val)
     np.save(os.path.join(root_folder, 'features_selection/x_train.npy'),x_train)
     np.save(os.path.join(root_folder, 'features_selection/x_test.npy'), x_test)
     np.save(os.path.join(root_folder, 'features_selection/x_val.npy'), x_val)

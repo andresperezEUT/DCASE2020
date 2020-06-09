@@ -1,14 +1,8 @@
 '''
 This script contains methods to compute several modelling steps:
-
 get_features_selection(): trains a random_forest classifier and select the features that contribute significantly to the model outputs
-
-
-
 get_dataframe_split(): to split source dataframe into train, test and validation.
 Different parameters allow for customize splits
-
-
 '''
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
@@ -72,87 +66,18 @@ def get_feature_selection(y_train,x_train,y_test,x_test,y_val,x_val,fs_gridsearc
     return x_train,x_test,x_val,columns,cls.get_params()
 
 
-def get_feature_selection_theme(x_train,x_test,x_val,features_dict):
-    remove_variables=dict()
-    remove_variables['lowlevel.barkbands_kurtosis_mean']=True
-    remove_variables['lowlevel.barkbands_kurtosis_var',
-    remove_variables['lowlevel.barkbands_skewness_mean',
-    remove_variables['lowlevel.barkbands_skewness_var',
-    remove_variables['lowlevel.barkbands_spread_mean',
-    remove_variables['lowlevel.barkbands_spread_var', 
-    remove_variables['lowlevel.hfc_mean',
-    remove_variables['lowlevel.hfc_var', 
-    remove_variables['lowlevel.pitch_salience_mean',
-    remove_variables['lowlevel.pitch_salience_var', 
-    remove_variables['lowlevel.silence_rate_20dB_mean1',
-    remove_variables['lowlevel.silence_rate_20dB_var1',
-    remove_variables['lowlevel.silence_rate_30dB_mean1',
-    remove_variables['lowlevel.silence_rate_30dB_var1',
-    remove_variables['lowlevel.silence_rate_60dB_mean1',
-    remove_variables['lowlevel.silence_rate_60dB_var1',
-    remove_variables['lowlevel.spectral_centroid_mean1',
-    remove_variables['lowlevel.spectral_centroid_var1',
-    remove_variables['lowlevel.spectral_complexity_mean1',
-    remove_variables['lowlevel.spectral_crest_mean1', 
-    remove_variables['lowlevel.spectral_crest_var1',
-    remove_variables['lowlevel.spectral_decrease_mean1',
-    remove_variables['lowlevel.spectral_decrease_var1',
-    remove_variables['lowlevel.spectral_energy_mean1',
-    remove_variables['lowlevel.spectral_energy_var1',
-    remove_variables['lowlevel.spectral_energyband_high_mean1',
-    remove_variables['lowlevel.spectral_energyband_high_var1',
-    remove_variables['lowlevel.spectral_energyband_low_mean1',
-    remove_variables['lowlevel.spectral_energyband_low_var1',
-    remove_variables['lowlevel.spectral_energyband_middle_high_mean1',
-    'lowlevel.spectral_energyband_middle_high_var1',
-    'lowlevel.spectral_energyband_middle_low_mean1',
-    'lowlevel.spectral_energyband_middle_low_var1',
-    'lowlevel.spectral_flatness_db_mean1',
-    'lowlevel.spectral_flatness_db_var1',
-    'lowlevel.spectral_rms_mean1', 
-    'lowlevel.spectral_rms_var1',
-    'lowlevel.spectral_rolloff_mean1',
-    'lowlevel.spectral_rolloff_var1',
-    'lowlevel.spectral_strongpeak_mean1',
-    'lowlevel.spectral_strongpeakh_var1',
-    'lowlevel.sspectral_complexity_var1',
-    'lowlevel.zerocrossingrate_mean1',
-    'lowlevel.zerocrossingrate_var1',
-    'tonal.tuning_diatonic_strength1',
-    'tonal.tuning_equal_tempered_deviation1',
-    'tonal.tuning_frequency1',
-    'tonal.tuning_nontempered_energy_ratio1',
-    'tonal.tuning_nontempered_peaks_energy_ratio1'
-    
-    
-    
-    'lowlevel.barkbands_mean1' #27
-    'lowlevel.barkbands_var1' #27
-    'lowlevel.erbbands_mean1' #40
-    'lowlevel.erbbands_var1' #40
-    'lowlevel.gfcc_mean1' #40
-    'lowlevel.gfcc_var1' #40
-    'lowlevel.melbands_mean1', #40
-    'lowlevel.melbands_var1', #40
-    'lowlevel.mfcc_mean1', #13
-    'lowlevel.mfcc_var1'#13
-    'lowlevel.spectral_contrast_mean1' #12
-    'lowlevel.spectral_contrast_var1', #12
-    'lowlevel.temporal_lpc_mean1' #11,
-    'lowlevel.temporal_lpc_var1' #11
-    'tonal.hpcp_mean1', #36
-    'tonal.hpcp_var1', #36
-    'tonal.thpcp1', #36
+def get_feature_selection_manual(x_train,x_test,x_val):
+    keep_variables='barkbands'
 
+    keep_cols = [col for col in x_train.columns if keep_variables in col]
+    x_train = x_train[keep_cols]
+    x_test = x_test[keep_cols]
+    x_val = x_val[keep_cols]
 
-
-
-
-
-
-
-
-
+    print(x_train.shape)
+    print(x_test.shape)
+    print(x_val.shape)
+    return x_train,x_test,x_val,keep_cols
 
 
 
@@ -375,24 +300,25 @@ def train_gb(x_train,y_train,x_test,y_test,x_val,y_val,gb_gridsearch):
     cls = GradientBoostingClassifier()
     if gb_gridsearch:
         print('Tuning parameters...')
-        grid_params_gb = [{'learning_rate':[0.05,0.1],
-                           'n_estimators': [500],
-                           'max_depth': [3,6],
+        grid_params_gb = [{'learning_rate':[0.05],
+                           'n_estimators': [1000],
+                           'max_depth': [6],
                            'subsample': [1],
-                           'min_samples_split': [2,4],
-                           'min_samples_leaf': [1,2],
-                           'max_features':['sqrt', 'log2'],
+                           'min_samples_split': [2],
+                           'min_samples_leaf': [1],
+                           'max_features':['sqrt'],
                            'verbose':[1]
                            }]
-        gs_gb = GridSearchCV(estimator=cls, param_grid=grid_params_gb, scoring='f1_weighted', cv=5, verbose=10,
+        gs_gb = GridSearchCV(estimator=cls, param_grid=grid_params_gb, scoring='f1_weighted', cv=10, verbose=10,
                              n_jobs=-1)
         gs_gb.fit(x_train, y_train)
         # Best params
         print('Best params: %s' % gs_gb.best_params_)
         # Best training data r2
         print('Best training accuracy: %.3f' % gs_gb.best_score_)
-        cls.set_params(**gs_gb.best_params_)
-        model = cls.fit(x_train, y_train)
+        model=gs_gb.best_estimator_
+        #cls.set_params(**gs_gb.best_params_)
+        #model = cls.fit(x_train, y_train)
     else:
         params_gb = {'learning_rate':0.05,
                            'n_estimators': 500,
