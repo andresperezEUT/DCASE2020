@@ -17,11 +17,7 @@ from APRI.postprocessing import *
 import time
 
 # %% Parameters
-<<<<<<< HEAD
-preset = 'particle1'
-=======
 preset = 'oracle_beam'
->>>>>>> 41ec7f1a7056d18ed4d37d3167ca3385e423207e
 write = True
 plot =False
 quick = True
@@ -50,20 +46,6 @@ beamforming_mode = params['beamforming_mode']
 
 # Dataset
 all_audio_files = [f for f in os.listdir(data_folder_path) if not f.startswith('.')]
-<<<<<<< HEAD
-# quick_audio_files = ['fold1_room1_mix008_ov1.wav',
-#                      'fold2_room1_mix008_ov1.wav',
-#                      'fold3_room1_mix008_ov1.wav',
-#                      'fold4_room1_mix008_ov1.wav',
-#                      'fold5_room1_mix008_ov1.wav',
-#                      'fold6_room1_mix008_ov1.wav']
-# quick_audio_files = ['fold1_room1_mix050_ov2.wav',
-#                      'fold2_room1_mix050_ov2.wav',
-#                      'fold3_room1_mix050_ov2.wav',
-#                      'fold4_room1_mix050_ov2.wav',
-#                      'fold5_room1_mix050_ov2.wav',]
-quick_audio_files = ['fold1_room1_mix027_ov2.wav']
-=======
 quick_audio_files = ['fold1_room1_mix007_ov1.wav',
                      'fold2_room1_mix007_ov1.wav',
                      'fold3_room1_mix007_ov1.wav',
@@ -76,7 +58,6 @@ quick_audio_files = ['fold1_room1_mix007_ov1.wav',
                      'fold2_room1_mix047_ov2.wav',
                      'fold2_room1_mix048_ov2.wav',
                      'fold2_room1_mix049_ov2.wav']
->>>>>>> 41ec7f1a7056d18ed4d37d3167ca3385e423207e
 
 # %% Analysis
 
@@ -111,13 +92,8 @@ for audio_file_idx, audio_file_name in enumerate(audio_files):
     # Open file
     audio_file_path = os.path.join(data_folder_path, audio_file_name)
     b_format, sr = sf.read(audio_file_path)
-<<<<<<< HEAD
     # TODO: CHECK PERFORMANCE AFTER THAT. DATA WAS ALREADY IN SN3D!!!!
     # b_format *= np.array([1, 1 / np.sqrt(3), 1 / np.sqrt(3), 1 / np.sqrt(3)])  # N3D to SN3D
-=======
-    b_format2=b_format
-    b_format2 *= np.array([1, 1 / np.sqrt(3), 1 / np.sqrt(3), 1 / np.sqrt(3)])  # N3D to SN3D
->>>>>>> 41ec7f1a7056d18ed4d37d3167ca3385e423207e
     # Get spectrogram
     stft = compute_spectrogram(b_format, sr, window, window_size, window_overlap, nfft, D)
 
@@ -172,7 +148,7 @@ for audio_file_idx, audio_file_name in enumerate(audio_files):
 
 
     ############################################
-        # Plot results
+    # Plot results
     if plot:
         plot_results(csv_file_path, params)
 
