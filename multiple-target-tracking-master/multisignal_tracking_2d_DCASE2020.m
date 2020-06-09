@@ -172,16 +172,8 @@ for k=1:size(Y,2)
         fprintf('Resampling done on time step %d\n',k);
     end
 end
-[FM,FP,SM,SP,Times] = kf_nmcda_collect(SS,A,Q);
-
-
-% %% VISUALIZATON
-% ttt = cell(size(Times))
-% for j=1:size(Times,1)
-%     for k=1:size(Times,2)
-%     ttt{j,k} = Times{j,k} *  1.7668; % moving
-%     end
-% end
+% [FM,FP,SM,SP,Times] = kf_nmcda_collect(SS,A,Q);
+[FM,FP,SM,SP,Times] = kf_nmcda_collect2(SS,A,Q,T);
 
 
 %% VISUALIZATON

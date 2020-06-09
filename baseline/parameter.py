@@ -249,7 +249,7 @@ def get_params(argv='1'):
         params['preset_descriptor'] = 'loc:dereverb_filter; beam:beam; cls:xgb2; postfilter'
 
 
-    if argv == 'particle1':
+    if argv == 'particle':
         # localization_detection
         params['window'] = 'hann'
         params['window_size'] = 2400
@@ -257,7 +257,8 @@ def get_params(argv='1'):
         params['nfft'] = 2400
         params['D'] = None
         params['ld_method'] = 'ld_particle'
-        params['ld_method_args'] = [0.05] # diff_th
+        # [diff_th, K_th, V_azi, V_ele, in_sd, in_sdn, in_cp, N]
+        params['ld_method_args'] = [0.05, 5, 20, 10, 5, 50, 0.1, 0.25, 30]
         # beamforming
         params['beamforming_mode'] = 'omni'
         # classification
@@ -266,7 +267,6 @@ def get_params(argv='1'):
         # postprocessing
         params['event_filter_activation'] = False
         params['preset_descriptor'] = 'loc:particle; beam:omni; cls:random'
-
 
 
 

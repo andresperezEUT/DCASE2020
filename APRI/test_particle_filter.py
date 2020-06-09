@@ -58,26 +58,26 @@ M, K, N = stft.shape
 stft = stft[:, :K//2 , :-1]
 M, K, N = stft.shape
 
-plot_magnitude_spectrogram(stft)
+# plot_magnitude_spectrogram(stft)
 
 DOA = doa(stft)  # Direction of arrival
 diff = diffuseness(stft, dt=2)  # Diffuseness
 
-plot_diffuseness(diff)
+# plot_diffuseness(diff)
 
 # HARD THRESHOLD
 diff_th = 0.05
 diff_mask = diff <= diff_th
-plt.figure()
-plt.title('diff hard mask')
-plt.pcolormesh(diff_mask)
+# plt.figure()
+# plt.title('diff hard mask')
+# plt.pcolormesh(diff_mask)
 
 
 # %%
 # ################### plot DOA statistics
 
 DOA = doa(stft)
-plot_doa(doa(stft))
+# plot_doa(doa(stft))
 
 doa_masked = np.empty((2, K, N))
 for k in range(K):
@@ -88,15 +88,24 @@ for k in range(K):
             doa_masked[:, k,n] = np.nan
 
 
-plot_doa(doa_masked)
+# plot_doa(doa_masked)
 
 
 DOA_decimated = np.empty((2, K, N//2)) # todo fix number
-DOA_decimated.shape
 for n in range(N//2):
     # todo fix numbers depending on decimation factor
     DOA_decimated[:,:,n] = np.nanmean([doa_masked[:,:,n*2],doa_masked[:,:,n*2-1]], axis=0 )
-plot_doa(DOA_decimated)
+
+    # TODO: try other methods...
+    # for k in range(K):
+    #     doas = np.asarray([ doa_masked[:,k,n*2], doa_masked[:,k,n*2+1] ])
+    #     if not np.any(np.isnan(doas)):
+    #         DOA_decimated[:, k, n] = np.mean(doas, axis=0)
+
+    # DOA_decimated[:,:,n] = doa_masked[:,:,n*2]
+
+
+# plot_doa(DOA_decimated)
 doa_masked = DOA_decimated
 
 M, K, N = doa_masked.shape
@@ -105,11 +114,15 @@ M, K, N = doa_masked.shape
 azis =  [ [] for n in range(N)]
 eles =  [ [] for n in range(N)]
 
+# filter with minimum number of estimates
+K_th = 5
 for n in range(N):
     a = doa_masked[0,:,n]
     e = doa_masked[1,:,n]
-    azis[n] = a[~np.isnan(a)]
-    eles[n] = e[~np.isnan(e)]
+    azis_filtered = a[~np.isnan(a)]
+    if len(azis_filtered) > K_th:
+        azis[n] = azis_filtered
+        eles[n] = e[~np.isnan(e)]
 
 plt.figure()
 # All estimates
@@ -123,6 +136,23 @@ for n in range(N):
         a = np.mod(azis[n] * 180 / np.pi, 360)
         plt.scatter(n, np.mod(circmedian(a,'deg'), 360), facecolors='none', edgecolors='k')
 
+# boxplot
+import seaborn as sns
+a = []
+for n in range(N):
+    if len(azis[n]) > 0:
+        a.append(np.mod(azis[n] * 180 / np.pi, 360))
+    else:
+        a.append([])
+plt.figure()
+sns.boxplot(data=a)
+
+# # number of single-source bins in frequency for each n
+# plt.figure()
+# plt.grid()
+# for n in range(N):
+#     if len(azis[n]) > 0:
+#         plt.scatter(n, len(azis[n]), marker='x',  edgecolors='b')
 
 
 # for n in range(N):
@@ -175,17 +205,8 @@ for n in range(N):
 
 
 # %% WRITE OUTPUT FILE
-from baseline.cls_feature_class import create_folder
+
 import tempfile
-# this_file_path = os.path.dirname(os.path.abspath(__file__))
-# result_folder_path = os.path.join(this_file_path, 'filter_input', preset)
-# create_folder(result_folder_path)
-#
-# csv_file_name = (os.path.splitext(audio_file_name)[0]) + '.csv'
-# csv_file_path = os.path.join(result_folder_path, csv_file_name)
-# # since we always append to the csv file, make a reset on the file
-# if os.path.exists(csv_file_path):
-#     os.remove(csv_file_path)
 
 fo = tempfile.NamedTemporaryFile()
 csv_file_path = fo.name + '.csv'
@@ -205,15 +226,6 @@ with open(csv_file_path, 'a') as csvfile:
 
 
 # %% PREPARE METADATA FOR MATLAB
-
-# result_gt_folder_path = os.path.join(this_file_path, 'filter_input_gt', preset)
-# create_folder(result_gt_folder_path)
-
-# csv_file_name_gt = (os.path.splitext(audio_file_name)[0]) + 'gt.csv'
-# csv_file_path_gt = os.path.join(result_gt_folder_path, csv_file_name_gt)
-# # since we always append to the csv file, make a reset on the file
-# if os.path.exists(csv_file_path_gt):
-#     os.remove(csv_file_path_gt)
 
 csv_file_path_gt = (os.path.splitext(csv_file_path)[0]) + '_gt.csv'
 
@@ -240,8 +252,16 @@ eng = matlab.engine.start_matlab()
 this_file_path = os.path.dirname(os.path.abspath(__file__))
 matlab_path = this_file_path + '/../multiple-target-tracking-master'
 eng.addpath(matlab_path)
-eng.func_tracking(csv_file_path, nargout=0)
 
+# default: [20, 10, 5, 50, 0.2, 25, 30]
+V_azi = 20 # maximum velocity per frame? in degree
+V_ele = V_azi//2 # maximum velocity per frame? in degree
+in_sd = 5  # std_dev of measurement noise, [1, 50].
+in_sdn = 50 # noise spectral density. values?
+init_birth = 0.1 # probability of new birth
+in_cp = 0.25 # percentage of noise in the measurement data
+num_particles = 30 # number of particles: montercarlo iterations?
+eng.func_tracking(csv_file_path, float(V_azi), float(V_ele), float(in_sd), float(in_sdn), init_birth, in_cp, float(num_particles), nargout=0)
 
 # output_file = '/Users/andres.perez/source/DCASE2020/APRI/filter_output/fold1_room1_mix027_ov2.mat'
 output = loadmat(output_file_path)
@@ -259,8 +279,11 @@ for n in range(num_events):
     eles  = (90 - output_data[n][1][1]) * np.pi/ 180. # in rads
     event_list.append(Event(-1, -1, frames, azis, eles))
 
-# %% PLOT # todo check elevation/inclination
+
+#  PLOT # todo check elevation/inclination
 plt.figure()
+title_string = str(V_azi) +'_'+ str(V_ele) +'_'+ str(in_sd) +'_'+ str(in_sdn) +'_'+ str(init_birth) +'_'+ str(in_cp) +'_'+ str(num_particles)
+plt.title(title_string)
 plt.grid()
 
 # framewise estimates
@@ -283,5 +306,3 @@ plt.scatter(t, a, facecolors='none', edgecolors='r')
 for e_idx, e in enumerate(event_list):
     a = e.get_azis() * 180 / np.pi
     plt.plot(e.get_frames(), a, color='chartreuse')
-
-

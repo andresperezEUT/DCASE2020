@@ -1,4 +1,4 @@
-function [] = func_tracking(input_file_path)
+function [] = func_tracking(input_file_path, V_azi, V_ele, in_sd, in_sdn, init_birth, in_cp, N)
 %FUNC_TRACKING Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -17,11 +17,11 @@ function [] = func_tracking(input_file_path)
 
     spatial_resolution = 1;
     % % Tuned variables
-    V_azi = 20;
-    V_ele = 10;
-    in_sd = 5;
-    in_sdn = 50;
-    in_cp = 0.25;
+%     V_azi = 20;
+%     V_ele = 10;
+%     in_sd = 5;
+%     in_sdn = 50;
+%     in_cp = 0.25;
 
     T = Y(1, 1:end);
     Y = Y(2:3, 1:end)*spatial_resolution;
@@ -74,7 +74,7 @@ function [] = func_tracking(input_file_path)
     qy = qx/2;
 
     % Probability of birth and death - Tuning not mandatory
-    init_birth = 0.1; % value between [0 1] - Prior probability of birth 
+%     init_birth = 0.1; % value between [0 1] - Prior probability of birth 
     alpha_death = 1; % always >= 1; 1 is good  
     beta_death = 1; % always >= 1; 1 is good 
 
@@ -88,7 +88,7 @@ function [] = func_tracking(input_file_path)
 
 
     % Initialize filter
-    N = 100; %Number of Monte Carlo samples - [10 100] range good
+%     N = 30; %Number of Monte Carlo samples - [10 100] range good
     S = kf_nmcda_init(N,M0,P0,dt);
 
 
@@ -126,18 +126,9 @@ function [] = func_tracking(input_file_path)
             fprintf('Resampling done on time step %d\n',k);
         end
     end
-    [FM,FP,SM,SP,Times] = kf_nmcda_collect(SS,A,Q);
+    % [FM,FP,SM,SP,Times] = kf_nmcda_collect(SS,A,Q);
+    [FM,FP,SM,SP,Times] = kf_nmcda_collect2(SS,A,Q,T);
 
-
-    %% VISUALIZATON
-%     ttt = cell(size(Times));
-%     for j=1:size(Times,1)
-%         for k=1:size(Times,2)
-%         ttt{j,k} = Times{j,k} *  1.7668; % moving
-%         end
-%     end
-% 
-%     ttt = Times
 
     %% VISUALIZATON
 

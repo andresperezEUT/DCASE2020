@@ -395,15 +395,13 @@ def ld_basic_dereverb_filter(stft, diff_th=0.3, L=5, event_minimum_length=4):
 
     return event_list_clean
 
-
-def ld_particle(stft, diff_th):
+def ld_particle(stft, diff_th, K_th, V_azi, V_ele, in_sd, in_sdn, init_birth, in_cp, num_particles):
     """
     find single-source tf-bins, and then feed them into the particle tracker
     :param stft:
     :param diff_th:
     :return:
     """
-
 
     # decimate in frequency
     M, K, N = stft.shape
@@ -432,36 +430,23 @@ def ld_particle(stft, diff_th):
     M, K, N = DOA_decimated.shape
 
     # Create lists of azis and eles for each output frame size
+    # Filter out spureous candidates
     azis = [[] for n in range(N)]
     eles = [[] for n in range(N)]
     for n in range(N):
-        a = doa_masked[0,
-            :, n]
-        e = doa_masked[1, :, n]
-        azis[n] = a[~np.isnan(a)]
-        eles[n] = e[~np.isnan(e)]
+        a = DOA_decimated[0, :, n]
+        e = DOA_decimated[1, :, n]
+        azis_filtered = a[~np.isnan(a)]
+        if len(azis_filtered) > K_th:
+            azis[n] = azis_filtered
+            eles[n] = e[~np.isnan(e)]
 
     # TODO: separate frames with two overlapping sources
-
-
 
     # Save into temp file
     fo = tempfile.NamedTemporaryFile()
     csv_file_path = fo.name + '.csv'
     output_file_path = (os.path.splitext(csv_file_path)[0]) + '.mat'
-
-    # preset = 'mi_primerito_dia_postfilter_Q!'
-    # this_file_path = os.path.dirname(os.path.abspath(__file__))
-    # result_folder_path = os.path.join(this_file_path, 'filter_input', preset)
-    # create_folder(result_folder_path)
-
-    # audio_file_name = 'fold1_room1_mix027_ov2'
-    # csv_file_name = (os.path.splitext(audio_file_name)[0]) + '.csv'
-    # result_folder_path = os.path.join(this_file_path, 'filter_input', preset)
-    # csv_file_path = os.path.join(result_folder_path, csv_file_name)
-    # # since we always append to the csv file, make a reset on the file
-    # if os.path.exists(csv_file_path):
-    #     os.remove(csv_file_path)
 
     with open(csv_file_path, 'a') as csvfile:
         writer = csv.writer(csvfile)
@@ -479,14 +464,13 @@ def ld_particle(stft, diff_th):
     this_file_path = os.path.dirname(os.path.abspath(__file__))
     matlab_path = this_file_path + '/../multiple-target-tracking-master'
     eng.addpath(matlab_path)
-    eng.func_tracking(csv_file_path, nargout=0)
+    eng.func_tracking(csv_file_path, float(V_azi), float(V_ele), float(in_sd),
+                      float(in_sdn), init_birth, in_cp, float(num_particles), nargout=0)
 
     # Load output matlab file
-    # output = loadmat('filter_output/fold1_room1_mix027_ov2.mat') # todo change path
     output = loadmat(output_file_path)
     output_data = output['tracks'][0]
     num_events = output_data.size
-
     # each element of output_data is a different event
     # order of stored data is [time][[azis][eles][std_azis][std_eles]]
 
@@ -494,9 +478,23 @@ def ld_particle(stft, diff_th):
     event_list = []
     for n in range(num_events):
         frames = (output_data[n][0][0] / 0.1).astype(int)  # frame numbers
-        azis = output_data[n][1][0] * np.pi / 180.  # in rads # todo adjust range
+        azis = output_data[n][1][0] * np.pi / 180.  # in rads
+        azis = [a - (2*np.pi) if a > np.pi else a for a in azis] # adjust range to [-pi, pi]
         eles = (90 - output_data[n][1][1]) * np.pi / 180.  # in rads, incl2ele
         event_list.append(Event(-1, -1, frames, azis, eles))
 
+    # # uncomment for plot doa estimates and particle trajectories
+    plt.figure()
+    # framewise estimates
+    est_csv = np.loadtxt(open(csv_file_path, "rb"), delimiter=",")
+    t = est_csv[:, 0] * 10
+    a = est_csv[:, 1]
+    e = est_csv[:, 2]
+    plt.scatter(t, a, marker='x', edgecolors='b')
+    # particle filter
+    for e_idx, e in enumerate(event_list):
+        azis = np.asarray(e.get_azis()) * 180 / np.pi
+        azis = [a + (360) if a < 0 else a for a in azis] # adjust range to [-pi, pi]
+        plt.plot(e.get_frames(), azis, color='chartreuse')
 
     return event_list

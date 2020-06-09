@@ -310,8 +310,8 @@ class Event:
         self._classID = classID
         self._instance = instance
         self._frames = frames # frame indices, in target hopsize units (0.1 s/frame)
-        self._azis = azis # in rad
-        self._eles = eles # in rad
+        self._azis = azis # in rad, range: [-pi, pi]
+        self._eles = eles # in rad, range: [-pi/2, pi/2]
 
     def get_classID(self):
         return self._classID

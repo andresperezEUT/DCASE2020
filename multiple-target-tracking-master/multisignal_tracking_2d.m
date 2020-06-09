@@ -28,7 +28,7 @@ clc
 
 %% I/O
 
-example = 2; % options - [1, 2]
+example = 1; % options - [1, 2]
 if example ==1
     % % % Example 1 - Stationary source
     % NOTE: ideally the stationary source location in the input data will be in
@@ -165,10 +165,8 @@ for k=1:size(Y,2)
         fprintf('Resampling done on time step %d\n',k);
     end
 end
-[FM,FP,SM,SP,Times] = kf_nmcda_collect(SS,A,Q);
-
-
-
+% [FM,FP,SM,SP,Times] = kf_nmcda_collect(SS,A,Q);
+[FM,FP,SM,SP,Times] = kf_nmcda_collect2(SS,A,Q,T);
 
 %% VISUALIZATON
 
@@ -182,12 +180,12 @@ for isazi=1:2
 
     tmp = [SS{end,:}];
     W = [tmp.W];
-    [~,ind] = max(W)
+    [~,ind] = max(W);
     for j=1:size(SM,1)
         if ~isempty(SM{j,ind})
             t = Times{j,ind};
             m = SM{j,ind};
-                      
+
             h=plot(t,m(isazi,:),'g-');
             set(h(1),'linewidth',2);
         end
