@@ -24,8 +24,11 @@ import essentia.standard as essentia
 from essentia.standard import *
 import os
 import csv
-import xgboost as xgb
 
+# import xgboost as xgb
+if os.environ.get('USER') == 'ribanez':
+    user = 'FAIK'
+    import xgboost as xgb
 
 ### FUNCIONES PARA PREDICCIÓN DE EVENT_CLASS ###
 
@@ -65,6 +68,7 @@ def event_class_prediction(audio,model_name):
         event_class = model.predict(variables)
         class_idx = get_key(event_class)
     else:
+        # TODO. rafa, esta linea deberia ir fuera del if/else, no?
         variables=xgb.DMatrix(variables)
         event_class = model.predict(variables)
         class_idx=int(event_class)

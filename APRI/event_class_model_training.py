@@ -20,7 +20,7 @@ from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import Pipeline
 from sklearn.model_selection import StratifiedKFold
 import joblib
-import xgboost as xgb
+# import xgboost as xgb
 
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.ensemble import GradientBoostingClassifier
@@ -31,6 +31,10 @@ from APRI.utils import get_class_name_dict
 
 print(sorted(sklearn.metrics.SCORERS.keys()))
 params = parameter.get_params()
+
+if params['user'] == 'FAIK':
+    import xgboost as xgb
+
 event_type= get_class_name_dict().values()
 data_folder_path = os.path.join(params['dataset_dir'], 'oracle_mono_signals_beam_all/audio_features_optimized/') # path to arrays
 data_aug_folder_path = os.path.join(params['dataset_dir'], 'oracle_mono_signals_beam_all_aug/audio_features_optimized_aug/') # path to arrays
