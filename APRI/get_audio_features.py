@@ -1,38 +1,28 @@
 """
 get_audio_features.py
 
-For each audio file, the script generates a set of audio features.
-It is a version avoiding using MusicExtractor to optimize computation
-The output values are stored in a folder `oracle_mono_signals/audio_features_optimized` within `params['dataset_dir']`.
-Inside it, a folder is created for each event class, and a single file in created for each event
-keeping the name (number) of the original audio file.
+This script contains methods for audio features calculation os an audio file.
+The audio features are calculated using essentia library and the default parameters are:
+- samplerate: 24000
+- framesize: 2048
+- hopsize: 1024
+
+compute_audio_features() is used in both train and predict circuits and takes as inputs:
+- audio: event to be classified in audio file .wav
+- options: parameters of feature extraction
+and outputs:
+- audio_features: numpy array with audio feature values
+- column_labels: audio feature descriptors
 
 """
 
-#import essentia
-import essentia.standard as essentia
+# Dependencies
 from essentia.standard import *
-from baseline import parameter
-import os
 import numpy as np
-from baseline.cls_feature_class import create_folder
-from APRI.utils import get_class_name_dict
-from statistics import mean
 
-# Initial Settings
-params = parameter.get_params()
-event_type= get_class_name_dict().values()
-data_folder_path = os.path.join(params['dataset_dir'], 'oracle_mono_signals_beam_all/') # path to audios
-audio_features_output_path= os.path.join(data_folder_path,'audio_features_beam_all_optimized/')
-get_column_labels= True
 
-# Analysis parameters
-options=dict()
-options['sampleRate'] = 24000
-options['frameSize'] = 2048
-options['hopSize'] = 1024
-options['skipSilence']= True
 
+# Auxiliar
 def is_silent_threshold(frame, silence_threshold_dB):
     p = essentia.instantPower( frame )
     silence_threshold = pow(10.0, (silence_threshold_dB / 10.0))
@@ -40,7 +30,6 @@ def is_silent_threshold(frame, silence_threshold_dB):
        return 1.0
     else:
        return 0.0
-
 def spectralContrastPCA(scPool):
     scCoeffs = scPool['lowlevel.sccoeffs']
     scValleys = scPool['lowlevel.scvalleys']
@@ -57,7 +46,24 @@ def spectralContrastPCA(scPool):
     pca = PCA(namespaceIn = 'contrast', namespaceOut = 'contrast')(scPool)
     pca = np.array(pca['contrast'])
     return pca
+def normalize(hpcp):
+    m = max(hpcp)
+    for i in range(len(hpcp)):
+        hpcp[i] = hpcp[i] / m
+    return hpcp
+def compute_statistics(array):
+    array_mean = []
+    array_var = []
+    for i in range(array.shape[1]):
+        aux=np.mean(array[:, i])
+        array_mean.append(aux)
+        aux=np.var(array[:,i])
+        array_var.append(aux)
+    array_mean = np.array(array_mean)
+    array_var = np.array(array_var)
+    return [array_mean, array_var]
 
+# Calculate audio features
 def compute_lowlevel(audio, options):
     namespace = 'lowlevel'
     pool = essentia.Pool()
@@ -274,14 +280,6 @@ def compute_lowlevel(audio, options):
     pool2.add(namespace + '.' + 'sspectral_complexity_var', np.var(pool['lowlevel.spectral_complexity']))
 
     return pool2
-
-def normalize(hpcp):
-    m = max(hpcp)
-    for i in range(len(hpcp)):
-        hpcp[i] = hpcp[i] / m
-    return hpcp
-
-
 def compute_tonal(audio, pool2, options):
     namespace = 'tonal'
     pool = essentia.Pool()
@@ -432,24 +430,10 @@ def compute_tonal(audio, pool2, options):
     pool2.add(namespace + '.' + 'hpcp_var', statistics[1])
     return pool2
 
-
-def compute_statistics(array):
-    array_mean = []
-    array_var = []
-    for i in range(array.shape[1]):
-        aux=np.mean(array[:, i])
-        array_mean.append(aux)
-        aux=np.var(array[:,i])
-        array_var.append(aux)
-    array_mean = np.array(array_mean)
-    array_var = np.array(array_var)
-    return [array_mean, array_var]
-
-
-
+# Method to obtain array with audio features
 def compute_audio_features(audio,options):
-    loader = MonoLoader(filename=audio.path)
-    audio = loader()
+    #loader = MonoLoader(filename=audio,sampleRate=24000)
+    #audio = loader()
     features = compute_lowlevel(audio, options)
     features = compute_tonal(audio, features, options)
     audio_features = []
@@ -469,28 +453,30 @@ def compute_audio_features(audio,options):
     audio_features = np.array(audio_features)
     return audio_features, column_labels
 
-def compute_audio_features_from_audio(audio,options):
-    loader = MonoLoader(filename=audio)
-    audio = loader()
-    features = compute_lowlevel(audio, options)
-    features = compute_tonal(audio, features, options)
-    audio_features = []
-    column_labels = []
-    for feature in features.descriptorNames():
-        x = features[feature]
-        if x.shape == (1,):
-            y = [x[0]]
-        else:
-            y = x[0].tolist()
-        c = 0
-        for i in range(len(y)):
-            c += 1
-            z = feature + str(c)
-            column_labels.append(z)
-        audio_features = audio_features + y
-    audio_features = np.array(audio_features)
-    return audio_features, column_labels
 
+## Data augmentation parameters:
+def get_data_augmentation_parameters():
+    aug_options=dict()
+    ### White noise
+    aug_options['white_noise']=True
+    aug_options['noise_rate']=0.01
+    ### Time stretching
+    aug_options['time_stretching']=True
+    aug_options['rates']=[0.8,1.2]
+    ### Pitch shifting
+    aug_options['pitch_shifting']=True
+    aug_options['steps']=[-1,1]
+    ### Time shifting
+    aug_options['time_shifting']=True
+    return aug_options
+## Audio features parameters
+def get_audio_features_options():
+    options = dict()
+    options['sampleRate'] = 24000
+    options['frameSize'] = 2048
+    options['hopSize'] = 1024
+    options['skipSilence'] = True
+    return options
 
 
 
