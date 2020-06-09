@@ -29,19 +29,20 @@ this_file_path = os.path.dirname(os.path.abspath(__file__))
 # Parameters
 mode='new' # new or modify
 pipeline_modelling='' #if mode is 'modify'
-pipeline_feature_engineering='Datasets_oracle_mono_signals_beam_all_2020-06-06_01-43'
+pipeline_feature_engineering='Datasets_foa_dev_2020-06-08_b_format2'
 
 build_dataframes=True
 data_augmentation=False
 feature_selection=False
 random_forest_model=True
-svc_model=True
-xgb_model=True
+svc_model=False
+xgb_model=False
+gb_model=True
 ensemble=True
 ## Dataframe split:
 mode_split='all'
 split_options_balanced=[100,10,3000] #number of events per class in test, validation and train splits
-split_options_all=[0.1,0.02] #number of events per class in test, validation and train splits
+split_options_all=[0.2,0.01] #number of events per class in test, validation and train splits
 ## Feature selection
 fs_gridsearch=False
 fs_threshold=0.0025
@@ -51,6 +52,8 @@ xgb_gridsearch=False
 rf_gridsearch=False
 ## svc
 svc_gridsearch=False
+## gb
+gb_gridsearch=False
 
 # Create root folder for the execution
 if not os.path.exists(os.path.join(dataset_dir, 'models')):
@@ -74,9 +77,17 @@ if mode_split=='balanced':
     split_options=split_options_balanced
 elif mode_split=='all':
     split_options=split_options_all
+else:
+    split_options=[]
 if build_dataframes:
     print('Step: Building dataframes')
     df_real=pd.read_pickle(os.path.join(params['dataset_dir'],pipeline_feature_engineering,'source_dataframes/dataframe_source_real.pkl'))
+    #print(df_real.shape)
+
+    #df_aux = df_real[df_real.index.str.contains("ov1", regex=False)]
+    #print(df_aux.shape)
+    #df_real=df_aux
+
     if data_augmentation:
         df_aug=pd.read_pickle(os.path.join(params['dataset_dir'],pipeline_feature_engineering,'source_dataframes/dataframe_source_aug.pkl'))
     else:
@@ -95,6 +106,12 @@ if build_dataframes:
         df_test.to_pickle(os.path.join(dataset_path,'df_test.pkl'))
         df_val.to_pickle(os.path.join(dataset_path,'df_val.pkl'))
         df_train.to_pickle(os.path.join(dataset_path,'df_train.pkl'))
+    elif mode_split=='challenge_1':
+        df_test,df_val,df_train=get_dataframe_split_challenge1(df_real, df_aug)
+        dataset_path = os.path.join(root_folder, 'datasets')
+        df_test.to_pickle(os.path.join(dataset_path, 'df_test.pkl'))
+        df_val.to_pickle(os.path.join(dataset_path, 'df_val.pkl'))
+        df_train.to_pickle(os.path.join(dataset_path, 'df_train.pkl'))
 else:
     dataset_path = os.path.join(root_folder, 'datasets')
 
@@ -167,7 +184,12 @@ if svc_model:
     model_svc = train_svc(x_train, y_train, x_test, y_test, x_val, y_val, svc_gridsearch)
     joblib.dump(model_svc, os.path.join(models_path, 'svc/model_svc.bin'))
 
-
+#svc
+if gb_model:
+    if not os.path.exists(os.path.join(models_path, 'gb')):
+        os.makedirs(os.path.join(models_path, 'gb'))
+    model_gb = train_gb(x_train, y_train, x_test, y_test, x_val, y_val, gb_gridsearch)
+    joblib.dump(model_gb, os.path.join(models_path, 'gb/model_gb.bin'))
 
 
 
@@ -198,6 +220,9 @@ settings['svc_model']=svc_model
 settings['xgb_model']=xgb_model
 settings['ensemble']=ensemble
 
+
 w = csv.writer(open(os.path.join(root_folder,'settings.csv'), "w"))
 for key, val in settings.items():
     w.writerow([key, val])
+
+

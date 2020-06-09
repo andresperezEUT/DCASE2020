@@ -12,6 +12,7 @@ Different parameters allow for customize splits
 '''
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 from sklearn.feature_selection import SelectFromModel
@@ -71,6 +72,90 @@ def get_feature_selection(y_train,x_train,y_test,x_test,y_val,x_val,fs_gridsearc
     return x_train,x_test,x_val,columns,cls.get_params()
 
 
+def get_feature_selection_theme(x_train,x_test,x_val,features_dict):
+    remove_variables=dict()
+    remove_variables['lowlevel.barkbands_kurtosis_mean']=True
+    remove_variables['lowlevel.barkbands_kurtosis_var',
+    remove_variables['lowlevel.barkbands_skewness_mean',
+    remove_variables['lowlevel.barkbands_skewness_var',
+    remove_variables['lowlevel.barkbands_spread_mean',
+    remove_variables['lowlevel.barkbands_spread_var', 
+    remove_variables['lowlevel.hfc_mean',
+    remove_variables['lowlevel.hfc_var', 
+    remove_variables['lowlevel.pitch_salience_mean',
+    remove_variables['lowlevel.pitch_salience_var', 
+    remove_variables['lowlevel.silence_rate_20dB_mean1',
+    remove_variables['lowlevel.silence_rate_20dB_var1',
+    remove_variables['lowlevel.silence_rate_30dB_mean1',
+    remove_variables['lowlevel.silence_rate_30dB_var1',
+    remove_variables['lowlevel.silence_rate_60dB_mean1',
+    remove_variables['lowlevel.silence_rate_60dB_var1',
+    remove_variables['lowlevel.spectral_centroid_mean1',
+    remove_variables['lowlevel.spectral_centroid_var1',
+    remove_variables['lowlevel.spectral_complexity_mean1',
+    remove_variables['lowlevel.spectral_crest_mean1', 
+    remove_variables['lowlevel.spectral_crest_var1',
+    remove_variables['lowlevel.spectral_decrease_mean1',
+    remove_variables['lowlevel.spectral_decrease_var1',
+    remove_variables['lowlevel.spectral_energy_mean1',
+    remove_variables['lowlevel.spectral_energy_var1',
+    remove_variables['lowlevel.spectral_energyband_high_mean1',
+    remove_variables['lowlevel.spectral_energyband_high_var1',
+    remove_variables['lowlevel.spectral_energyband_low_mean1',
+    remove_variables['lowlevel.spectral_energyband_low_var1',
+    remove_variables['lowlevel.spectral_energyband_middle_high_mean1',
+    'lowlevel.spectral_energyband_middle_high_var1',
+    'lowlevel.spectral_energyband_middle_low_mean1',
+    'lowlevel.spectral_energyband_middle_low_var1',
+    'lowlevel.spectral_flatness_db_mean1',
+    'lowlevel.spectral_flatness_db_var1',
+    'lowlevel.spectral_rms_mean1', 
+    'lowlevel.spectral_rms_var1',
+    'lowlevel.spectral_rolloff_mean1',
+    'lowlevel.spectral_rolloff_var1',
+    'lowlevel.spectral_strongpeak_mean1',
+    'lowlevel.spectral_strongpeakh_var1',
+    'lowlevel.sspectral_complexity_var1',
+    'lowlevel.zerocrossingrate_mean1',
+    'lowlevel.zerocrossingrate_var1',
+    'tonal.tuning_diatonic_strength1',
+    'tonal.tuning_equal_tempered_deviation1',
+    'tonal.tuning_frequency1',
+    'tonal.tuning_nontempered_energy_ratio1',
+    'tonal.tuning_nontempered_peaks_energy_ratio1'
+    
+    
+    
+    'lowlevel.barkbands_mean1' #27
+    'lowlevel.barkbands_var1' #27
+    'lowlevel.erbbands_mean1' #40
+    'lowlevel.erbbands_var1' #40
+    'lowlevel.gfcc_mean1' #40
+    'lowlevel.gfcc_var1' #40
+    'lowlevel.melbands_mean1', #40
+    'lowlevel.melbands_var1', #40
+    'lowlevel.mfcc_mean1', #13
+    'lowlevel.mfcc_var1'#13
+    'lowlevel.spectral_contrast_mean1' #12
+    'lowlevel.spectral_contrast_var1', #12
+    'lowlevel.temporal_lpc_mean1' #11,
+    'lowlevel.temporal_lpc_var1' #11
+    'tonal.hpcp_mean1', #36
+    'tonal.hpcp_var1', #36
+    'tonal.thpcp1', #36
+
+
+
+
+
+
+
+
+
+
+
+
+
 def train_xgb(x_train,y_train,x_test,y_test,x_val,y_val,xgb_gridsearch):
     print('Training model XGB...')
     dtrain = xgb.DMatrix(x_train, label=y_train)
@@ -79,12 +164,12 @@ def train_xgb(x_train,y_train,x_test,y_test,x_val,y_val,xgb_gridsearch):
 
 #Params
     params = {
-    'max_depth':5,
-    'min_child_weight': 3,
-    'eta':0.05,
+    'max_depth':3,
+    'min_child_weight': 1,
+    'eta':0.03,
     'subsample': 1,
     'num_class':14,
-    'colsample_bytree': 0.1,
+    'colsample_bytree': 0.5,
     'objective':'multi:softmax',
     }
     params['eval_metric'] = "mlogloss"
@@ -94,7 +179,7 @@ def train_xgb(x_train,y_train,x_test,y_test,x_val,y_val,xgb_gridsearch):
         # Parameters max_depth and min_child_weight
         gridsearch_params = [
         (max_depth, min_child_weight)
-        for max_depth in [3,5,7]
+        for max_depth in [3,5]
         for min_child_weight in [1,3]
     ]
         min_metric = float("Inf")
@@ -126,8 +211,8 @@ def train_xgb(x_train,y_train,x_test,y_test,x_val,y_val,xgb_gridsearch):
         # Parameters sumbsample and colsample
         gridsearch_params = [
         (subsample, colsample)
-        for subsample in [0.5,1]
-        for colsample in [0.1,0.2]
+        for subsample in [1]
+        for colsample in [0.1]
     ]
         min_mae = float("Inf")
         best_params = None  # We start by the largest values and go down to the smallest
@@ -157,7 +242,7 @@ def train_xgb(x_train,y_train,x_test,y_test,x_val,y_val,xgb_gridsearch):
             params['colsample_bytree'] = best_params[1]
         # Parameter eta
         min_mae = float("Inf")
-        for eta in [.2, .1, .05]:
+        for eta in [.1, .05]:
             print("CV with eta={}".format(eta))  # We update our parameters
             params['eta'] = eta  # Run and time CV
             cv_results = xgb.cv(
@@ -178,7 +263,7 @@ def train_xgb(x_train,y_train,x_test,y_test,x_val,y_val,xgb_gridsearch):
                 best_params = eta
                 print("Best params: {}, MAE: {}".format(best_params, min_mae))
             params['eta'] = best_params
-    num_boost_round = 1000
+    num_boost_round = 2000
     model = xgb.train(
         params,
         dtrain,
@@ -221,10 +306,11 @@ def train_rf(x_train,y_train,x_test,y_test,x_val,y_val,rf_gridsearch):
         cls.set_params(**gs_fs.best_params_)
         model = cls.fit(x_train, y_train)
     else:
-        grid_params_rf = {'bootstrap': False,
+        params_rf = {'bootstrap': False,
                           'n_estimators': 500,
                           'max_depth': 16,
                           'max_features': "auto"}
+        cls.set_params(**params_rf)
         model=cls.fit(x_train, y_train)
     print(print(cls.get_params()))
     print('Test predictions with trained mode...')
@@ -251,7 +337,7 @@ def train_svc(x_train,y_train,x_test,y_test,x_val,y_val,svc_gridsearch):
         print('Tuning parameters...')
         grid_params_svc = [{'cls__kernel': ['linear','rbf'],
                             'cls__gamma': [0.001],
-                            'cls__C': [100,10000]}]
+                            'cls__C': [1,100,10000]}]
         gs_svc = GridSearchCV(estimator=pipe_svc, param_grid=grid_params_svc, scoring='f1_weighted', cv=5, verbose=10,
                              n_jobs=-1)
         gs_svc.fit(x_train, y_train)
@@ -268,6 +354,57 @@ def train_svc(x_train,y_train,x_test,y_test,x_val,y_val,svc_gridsearch):
         pipe_svc.steps[1][1].set_params(**grid_params_svc)
         model=pipe_svc.fit(x_train, y_train)
     print(model.steps[1][1].get_params())
+    print('Test predictions with trained mode...')
+    y_pred = model.predict(x_test)
+    print('Train predictions with trained mode...')
+    y_pred_t = model.predict(x_train)
+    print('Validation predictions with trained mode...')
+    y_pred_val = model.predict(x_val)
+    print('Confussion matrix test:')
+    print(confusion_matrix(y_test, y_pred))
+    print('Confussion matrix validation:')
+    print(confusion_matrix(y_val, y_pred_val))
+    print('Prediction accuracy for test: %.3f ' % accuracy_score(y_test, y_pred))
+    print('Prediction accuracy for train: %.3f ' % accuracy_score(y_train, y_pred_t))
+    print('Prediction accuracy for validation: %.3f ' % accuracy_score(y_val, y_pred_val))
+    return model
+
+
+def train_gb(x_train,y_train,x_test,y_test,x_val,y_val,gb_gridsearch):
+    print('Training model gradient boosting with sklearn...')
+    cls = GradientBoostingClassifier()
+    if gb_gridsearch:
+        print('Tuning parameters...')
+        grid_params_gb = [{'learning_rate':[0.05,0.1],
+                           'n_estimators': [500],
+                           'max_depth': [3,6],
+                           'subsample': [1],
+                           'min_samples_split': [2,4],
+                           'min_samples_leaf': [1,2],
+                           'max_features':['sqrt', 'log2'],
+                           'verbose':[1]
+                           }]
+        gs_gb = GridSearchCV(estimator=cls, param_grid=grid_params_gb, scoring='f1_weighted', cv=5, verbose=10,
+                             n_jobs=-1)
+        gs_gb.fit(x_train, y_train)
+        # Best params
+        print('Best params: %s' % gs_gb.best_params_)
+        # Best training data r2
+        print('Best training accuracy: %.3f' % gs_gb.best_score_)
+        cls.set_params(**gs_gb.best_params_)
+        model = cls.fit(x_train, y_train)
+    else:
+        params_gb = {'learning_rate':0.05,
+                           'n_estimators': 500,
+                           'max_depth': 3,
+                           'subsample': 1,
+                           'min_samples_split': 2,
+                           'min_samples_leaf': 1,
+                           'max_features':'sqrt',
+                           'verbose':2}
+        cls.set_params(**params_gb)
+        model=cls.fit(x_train, y_train)
+    print(print(cls.get_params()))
     print('Test predictions with trained mode...')
     y_pred = model.predict(x_test)
     print('Train predictions with trained mode...')

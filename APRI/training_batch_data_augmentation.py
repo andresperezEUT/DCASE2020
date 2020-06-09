@@ -27,9 +27,9 @@ def load_audio_file(file_path):
     return data
 
 
-def training_batch_data_augmentation(original_dataset,output_folder,aug_options,params):
+def training_batch_data_augmentation(input_path,output_folder,aug_options,params):
     event_type= get_class_name_dict().values()
-    input_path = os.path.join(params['dataset_dir'],original_dataset)
+    #input_path = os.path.join(params['dataset_dir'],original_dataset)
     output_path= output_folder
 
     # Create modified audio files

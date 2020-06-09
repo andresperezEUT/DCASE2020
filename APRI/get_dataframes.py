@@ -89,14 +89,33 @@ def get_dataframe_split(df_real,df_aug,test_p,val_p):
     df_real=df_real.drop(df_test.index)
     df_val=df_real.groupby('target',group_keys=False).apply(lambda x: x.sample(frac=val_p))
     df_train=df_real.drop(df_val.index)
-    #df_test2 = df_aug.groupby('target',group_keys=False).apply(lambda x: x.sample(frac=test_p))
-    #df_aug=df_aug.drop(df_test2.index)
-    #df_val2=df_aug.groupby('target',group_keys=False).apply(lambda x: x.sample(frac=val_p))
-    #df_aug=df_aug.drop(df_val2.index)
-    index_list=[]
-    #df_train2=df_aug.drop(df_val2.index)
-    #df_test=pd.concat([df_test,df_test2])
-    #df_val=pd.concat([df_val,df_val2])
-    df_train=pd.concat([df_train,df_aug.sample(frac=0.3)])
+    print(df_test.shape)
+    print(df_val.shape)
+    print(df_train.shape)
+    print(df_aug.shape)
+    for ind in df_val.index:
+        df_aux=df_aug[df_aug.index.str.contains(str(ind)+'_',regex=False)]
+        df_aug = df_aug.drop(df_aux.index)
+    print(df_aug.shape)
+    for ind in df_test.index:
+        df_aux=df_aug[df_aug.index.str.contains(str(ind)+'_',regex=False)]
+        df_aug = df_aug.drop(df_aux.index)
+    print(df_aug.shape)
+    df_train = pd.concat([df_train, df_aug.sample(frac=0.5)])
+    print(df_train.shape)
     return df_test,df_val,df_train
 
+def get_dataframe_split_challenge1(df_real,df_aug):
+    print(df_real.shape)
+    df_val=df_real[df_real.index.str.contains("fold2", regex=False)]
+    print(df_val.shape)
+    df_real=df_real.drop(df_val.index)
+    df_train=df_real
+    print(df_train.shape)
+    df_test=df_val
+    for ind in df_val.index:
+        df_aux=df_aug[df_aug.index.str.contains(str(ind)+'_',regex=False)]
+        df_aug = df_aug.drop(df_aux.index)
+    df_train = pd.concat([df_train, df_aug.sample(frac=0.1)])
+    print(df_train.shape)
+    return df_test,df_val,df_train

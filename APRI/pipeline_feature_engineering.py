@@ -15,7 +15,12 @@ from baseline import parameter
 from APRI.training_batch_data_augmentation import *
 from APRI.training_batch_generate_audio_features import *
 from APRI.get_dataframes import *
+from APRI.localization_detection import *
 import pickle
+import soundfile as sf
+from APRI.utils import plot_metadata, get_class_name_dict, get_mono_audio_from_event, Event
+from baseline.cls_feature_class import create_folder
+import time
 
 # Import general parametes
 params = parameter.get_params()
@@ -24,15 +29,15 @@ dataset_dir= os.path.join(params['dataset_dir'])
 # Parameters
 mode='new' # new or modify
 pipeline='Datasets_2020-06-05_22-15' #if mode is 'modify'
-original_event_dataset='oracle_mono_testing'
+#original_event_dataset='oracle_mono_testing'
 
 extra_events=False
-data_augmentation=False
+data_augmentation=True
 audio_parameters_real=True
-audio_parameters_aug=False
+audio_parameters_aug=True
 audio_parameters_extra=False
 creating_dataframe_real=True
-creating_dataframe_aug=False
+creating_dataframe_aug=True
 creating_dataframe_extra=False
 
 ## Data augmentation parameters:
@@ -62,25 +67,75 @@ def get_audio_features_options():
 # Create root folder for the execution
 if mode=='new':
     print("Creating folder for the pipeline")
-    root_folder = os.path.join(dataset_dir, 'Datasets_'+original_event_dataset+'_'+datetime.datetime.now().strftime('%Y-%m-%d_%H-%M'))
+    root_folder = os.path.join(dataset_dir, 'Datasets_'+'foa_dev'+'_'+datetime.datetime.now().strftime('%Y-%m-%d_%H-%M'))
     os.makedirs(root_folder)
 elif mode=='modify':
     root_folder=os.path.join(dataset_dir,pipeline)
     print("Modifying pipeline "+pipeline)
 
+
+
+# Events oracle
+data_folder_path = os.path.join(params['dataset_dir'], 'foa_dev')  # path to audios
+gt_folder_path = os.path.join(params['dataset_dir'], 'metadata_dev')  # path to annotations
+audio_files = [f for f in os.listdir(data_folder_path) if not f.startswith('.')]
+events_folder=os.path.join(root_folder,'mono_events')
+class_name_dict=get_class_name_dict()
+fs = params['fs']
+window = params['window']
+window_size = params['window_size']
+window_overlap = params['window_overlap']
+nfft = params['nfft']
+D = params['D'] # decimate factor
+frame_length = params['label_hop_len_s']
+debug=False
+beamforming_mode='beam'
+occurrences_per_class = np.zeros(params['num_classes'], dtype=int)
+if not os.path.exists(events_folder):
+    os.makedirs(events_folder)
+for class_name in class_name_dict.values():
+    folder = os.path.join(events_folder, class_name)
+    create_folder(folder)
+for audio_file_idx, audio_file_name in enumerate(audio_files):
+    st = datetime.datetime.fromtimestamp(time.time()).strftime('%H:%M:%S')
+    print("{}: {}, {}".format(audio_file_idx, st, audio_file_name))
+    ############################################
+    # Open file
+    audio_file_path = os.path.join(data_folder_path, audio_file_name)
+    b_format, sr = sf.read(audio_file_path)
+    b_format2=b_format
+    b_format2 *= np.array([1, 1 / np.sqrt(3), 1 / np.sqrt(3), 1 / np.sqrt(3)])  # N3D to SN3D
+    # Get spectrogram
+    stft = compute_spectrogram(b_format2, sr, window, window_size, window_overlap, nfft, D)
+    ############################################
+    metadata_file_name = os.path.splitext(audio_file_name)[0] + '.csv'
+    metadata_file_path = os.path.join(gt_folder_path, metadata_file_name)
+    csv = np.loadtxt(open(metadata_file_path, "rb"), delimiter=",")
+    event_list = parse_annotations(csv, debug)
+    num_events = len(event_list)
+    for event_idx in range(num_events):
+        event = event_list[event_idx]
+        mono_event = get_mono_audio_from_event(b_format, event, beamforming_mode, fs, frame_length)
+        event_occurrence_idx = occurrences_per_class[event.get_classID()]
+        mono_file_name = str(event_occurrence_idx) + '.wav'
+        class_name = class_name_dict[event.get_classID()]
+        sf.write(os.path.join(events_folder, class_name, os.path.splitext(audio_file_name)[0] + '_' + mono_file_name), mono_event, sr)
+        occurrences_per_class[event.get_classID()] += 1
 # Data Augmentation
 if data_augmentation:
     print("Step: data augmentation")
     aug_folder=os.path.join(root_folder,'data_augmentation')
     aug_options=get_data_augmentation_parameters()
-    training_batch_data_augmentation(original_event_dataset, aug_folder, aug_options,params)
+    training_batch_data_augmentation(os.path.join(root_folder,'mono_events'), aug_folder, aug_options,params)
+
+
 
 # Audio features
 if audio_parameters_real:
     print("Step: extracting features for real events")
     afr_folder=os.path.join(root_folder,'audio_features_real')
     af_options=get_audio_features_options()
-    training_batch_generate_audio_features(os.path.join(dataset_dir,original_event_dataset),afr_folder,af_options)
+    training_batch_generate_audio_features(os.path.join(root_folder,'mono_events'),afr_folder,af_options)
 if audio_parameters_aug:
     print("Step: extracting features for augmented events")
     afa_folder=os.path.join(root_folder,'audio_features_aug')
@@ -110,7 +165,7 @@ if creating_dataframe_real:
 
 
 if creating_dataframe_aug:
-    print('Step: generating source dataframe ')
+    print('Step: generating source dataframe augmented ')
     input_path=os.path.join(root_folder,'audio_features_aug')
     output_path=os.path.join(root_folder,'source_dataframes')
     if not os.path.exists(output_path):
@@ -118,7 +173,7 @@ if creating_dataframe_aug:
     df_aug=get_source_dataframes(input_path)
     df_aug.to_pickle(os.path.join(output_path,'dataframe_source_aug.pkl'))
 if creating_dataframe_extra:
-    print('Step: generating source dataframe real')
+    print('Step: generating source dataframe extra')
     input_path=os.path.join(root_folder,'audio_features_extra')
     output_path=os.path.join(root_folder,'source_dataframes')
     if not os.path.exists(output_path):
