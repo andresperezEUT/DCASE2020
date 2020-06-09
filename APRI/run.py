@@ -17,7 +17,7 @@ from APRI.postprocessing import *
 import time
 
 # %% Parameters
-preset = 'new_features_xgb'
+preset = 'particle1'
 write = True
 plot = True
 quick = True
@@ -46,12 +46,18 @@ beamforming_mode = params['beamforming_mode']
 
 # Dataset
 all_audio_files = [f for f in os.listdir(data_folder_path) if not f.startswith('.')]
-quick_audio_files = ['fold1_room1_mix008_ov1.wav',
-                     'fold2_room1_mix008_ov1.wav',
-                     'fold3_room1_mix008_ov1.wav',
-                     'fold4_room1_mix008_ov1.wav',
-                     'fold5_room1_mix008_ov1.wav',
-                     'fold6_room1_mix008_ov1.wav']
+# quick_audio_files = ['fold1_room1_mix008_ov1.wav',
+#                      'fold2_room1_mix008_ov1.wav',
+#                      'fold3_room1_mix008_ov1.wav',
+#                      'fold4_room1_mix008_ov1.wav',
+#                      'fold5_room1_mix008_ov1.wav',
+#                      'fold6_room1_mix008_ov1.wav']
+# quick_audio_files = ['fold1_room1_mix050_ov2.wav',
+#                      'fold2_room1_mix050_ov2.wav',
+#                      'fold3_room1_mix050_ov2.wav',
+#                      'fold4_room1_mix050_ov2.wav',
+#                      'fold5_room1_mix050_ov2.wav',]
+quick_audio_files = ['fold1_room1_mix027_ov2.wav']
 
 # %% Analysis
 
@@ -87,7 +93,8 @@ for audio_file_idx, audio_file_name in enumerate(audio_files):
     # Open file
     audio_file_path = os.path.join(data_folder_path, audio_file_name)
     b_format, sr = sf.read(audio_file_path)
-    b_format *= np.array([1, 1 / np.sqrt(3), 1 / np.sqrt(3), 1 / np.sqrt(3)])  # N3D to SN3D
+    # TODO: CHECK PERFORMANCE AFTER THAT. DATA WAS ALREADY IN SN3D!!!!
+    # b_format *= np.array([1, 1 / np.sqrt(3), 1 / np.sqrt(3), 1 / np.sqrt(3)])  # N3D to SN3D
     # Get spectrogram
     stft = compute_spectrogram(b_format, sr, window, window_size, window_overlap, nfft, D)
 

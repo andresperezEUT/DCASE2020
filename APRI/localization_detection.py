@@ -7,6 +7,10 @@ Return results as a list of Events.
 
 
 from APRI.utils import *
+from baseline.cls_feature_class import create_folder
+import tempfile
+import matlab.engine
+from scipy.io import loadmat
 
 
 def parse_annotations(annotation_file, debug=False):
@@ -391,3 +395,108 @@ def ld_basic_dereverb_filter(stft, diff_th=0.3, L=5, event_minimum_length=4):
 
     return event_list_clean
 
+
+def ld_particle(stft, diff_th):
+    """
+    find single-source tf-bins, and then feed them into the particle tracker
+    :param stft:
+    :param diff_th:
+    :return:
+    """
+
+
+    # decimate in frequency
+    M, K, N = stft.shape
+    stft = stft[:, :K // 2, :]
+    M, K, N = stft.shape
+
+    # parametric analysis
+    DOA = doa(stft)  # Direction of arrival
+    diff = diffuseness(stft, dt=2)  # Diffuseness
+    diff_mask = diff <= diff_th
+
+    # create masked doa with nans
+    doa_masked = np.empty((2, K, N))
+    for k in range(K):
+        for n in range(N):
+            if diff_mask[k, n]:
+                doa_masked[:, k, n] = DOA[:, k, n]
+            else:
+                doa_masked[:, k, n] = np.nan
+
+    # decimate DOA in time
+    DOA_decimated = np.empty((2, K, N // 2))  # todo fix number
+    for n in range(N // 2):
+        # todo fix numbers depending on decimation factor
+        DOA_decimated[:, :, n] = np.nanmean([doa_masked[:, :, n * 2], doa_masked[:, :, n * 2 - 1]], axis=0)
+    M, K, N = DOA_decimated.shape
+
+    # Create lists of azis and eles for each output frame size
+    azis = [[] for n in range(N)]
+    eles = [[] for n in range(N)]
+    for n in range(N):
+        a = doa_masked[0,
+            :, n]
+        e = doa_masked[1, :, n]
+        azis[n] = a[~np.isnan(a)]
+        eles[n] = e[~np.isnan(e)]
+
+    # TODO: separate frames with two overlapping sources
+
+
+
+    # Save into temp file
+    fo = tempfile.NamedTemporaryFile()
+    csv_file_path = fo.name + '.csv'
+    output_file_path = (os.path.splitext(csv_file_path)[0]) + '.mat'
+
+    # preset = 'mi_primerito_dia_postfilter_Q!'
+    # this_file_path = os.path.dirname(os.path.abspath(__file__))
+    # result_folder_path = os.path.join(this_file_path, 'filter_input', preset)
+    # create_folder(result_folder_path)
+
+    # audio_file_name = 'fold1_room1_mix027_ov2'
+    # csv_file_name = (os.path.splitext(audio_file_name)[0]) + '.csv'
+    # result_folder_path = os.path.join(this_file_path, 'filter_input', preset)
+    # csv_file_path = os.path.join(result_folder_path, csv_file_name)
+    # # since we always append to the csv file, make a reset on the file
+    # if os.path.exists(csv_file_path):
+    #     os.remove(csv_file_path)
+
+    with open(csv_file_path, 'a') as csvfile:
+        writer = csv.writer(csvfile)
+        for n in range(len(azis)):
+            if len(azis[n]) > 0:  # if not empty, write
+                # time = n * seconds_per_frame
+                time = n * 0.1
+                azi = np.mod(circmedian(azis[n]) * 180 / np.pi, 360)  # csv needs degrees, range 0..360
+                ele = 90 - (np.median(eles[n]) * 180 / np.pi)  # csv needs degrees
+                writer.writerow([time, azi, ele])
+
+
+    # Call Matlab
+    eng = matlab.engine.start_matlab()
+    this_file_path = os.path.dirname(os.path.abspath(__file__))
+    matlab_path = this_file_path + '/../multiple-target-tracking-master'
+    eng.addpath(matlab_path)
+    eng.func_tracking(csv_file_path, nargout=0)
+
+    # Load output matlab file
+    # output = loadmat('filter_output/fold1_room1_mix027_ov2.mat') # todo change path
+    output = loadmat(output_file_path)
+    output_data = output['tracks'][0]
+    num_events = output_data.size
+
+    # each element of output_data is a different event
+    # order of stored data is [time][[azis][eles][std_azis][std_eles]]
+
+    # convert output data into Events
+    event_list = []
+    for n in range(num_events):
+        frames = (output_data[n][0][0] / 0.1).astype(int)  # frame numbers
+        azis = output_data[n][1][0] * np.pi / 180.  # in rads # todo adjust range
+        eles = (90 - output_data[n][1][1]) * np.pi / 180.  # in rads, incl2ele
+        event_list.append(Event(-1, -1, frames, azis, eles))
+
+
+    return event_list

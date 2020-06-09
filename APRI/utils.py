@@ -65,7 +65,7 @@ p0 = 1.1839  # kg/m3
 
 def intensity_vector(stft):
     P = stft[0] # sound pressure
-    U = stft[1:] / (p0 * c) # particle velocity
+    U = stft[1:] / (p0 * c) # particle velocity # TODO: it really should be -U
     return np.real(U * np.conjugate(P))
 
 def doa(stft):
@@ -74,7 +74,7 @@ def doa(stft):
 
 def energy_density(stft):
     P = stft[0]  # sound pressure
-    U = stft[1:] / (p0 * c)  # particle velocity
+    U = stft[1:] / (p0 * c)  # particle velocity # TODO: it really should be -U
     s1 = np.power(np.linalg.norm(U, axis=0), 2)
     s2 = np.power(abs(P), 2)
     return ((p0 / 2.) * s1) + ((1. / (2 * p0 * np.power(c, 2))) * s2)
@@ -309,9 +309,9 @@ class Event:
     def __init__(self, classID, instance, frames, azis, eles):
         self._classID = classID
         self._instance = instance
-        self._frames = frames
-        self._azis = azis
-        self._eles = eles
+        self._frames = frames # frame indices, in target hopsize units (0.1 s/frame)
+        self._azis = azis # in rad
+        self._eles = eles # in rad
 
     def get_classID(self):
         return self._classID

@@ -59,7 +59,10 @@ def get_params(argv='1'):
         nb_epochs=50,               # Train for maximum epochs
         epochs_per_fit=5,           # Number of epochs per fit
         doa_objective='masked_mse',     # supports: mse, masked_mse. mse- original seld approach; masked_mse - dcase 2020 approach
-        
+
+        # USER
+        user = user,
+
         #METRIC PARAMETERS
         lad_doa_thresh=20,
 
@@ -133,7 +136,21 @@ def get_params(argv='1'):
         # classification
         params['class_method'] = 'event_class_prediction'
         params['class_method_args'] = ['event_class_xgb']
+        # postprocessing
+        params['event_filter_activation']= False
         params['preset_descriptor'] = 'loc:metadata; beam:beam; cls:xgb'
+
+    if argv == 'oracle_random':
+        # localization_detection
+        params['ld_method'] = 'ld_oracle'
+        # beamforming
+        params['beamforming_mode'] = 'omni'
+        # classification
+        params['class_method'] = 'event_class_prediction_random'
+        params['class_method_args'] = []
+        # postprocessing
+        params['event_filter_activation']= False
+        params['preset_descriptor'] = 'loc:metadata; beam:omni; cls:random'
 
     if argv == 'alpha_v1':
         # localization_detection
@@ -230,6 +247,28 @@ def get_params(argv='1'):
         params['event_filter_method_args'] = [10]  # [frames_threshold_fp_3]
 
         params['preset_descriptor'] = 'loc:dereverb_filter; beam:beam; cls:xgb2; postfilter'
+
+
+    if argv == 'particle1':
+        # localization_detection
+        params['window'] = 'hann'
+        params['window_size'] = 2400
+        params['window_overlap'] = 1200
+        params['nfft'] = 2400
+        params['D'] = None
+        params['ld_method'] = 'ld_particle'
+        params['ld_method_args'] = [0.05] # diff_th
+        # beamforming
+        params['beamforming_mode'] = 'omni'
+        # classification
+        params['class_method'] = 'event_class_prediction_random'
+        params['class_method_args'] = []
+        # postprocessing
+        params['event_filter_activation'] = False
+        params['preset_descriptor'] = 'loc:particle; beam:omni; cls:random'
+
+
+
 
     else:
         print('ERROR: unknown argument {}'.format(argv))
