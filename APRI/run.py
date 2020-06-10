@@ -17,10 +17,10 @@ from APRI.postprocessing import *
 import time
 
 # %% Parameters
-preset = 'oracle_beam'
+preset = 'particle'
 write = True
-plot =False
-quick = True
+plot = False
+quick = False
 
 params = parameter.get_params(preset)
 data_folder_path = os.path.join(params['dataset_dir'], 'foa_dev') # path to audios
@@ -46,18 +46,20 @@ beamforming_mode = params['beamforming_mode']
 
 # Dataset
 all_audio_files = [f for f in os.listdir(data_folder_path) if not f.startswith('.')]
-quick_audio_files = ['fold1_room1_mix007_ov1.wav',
-                     'fold2_room1_mix007_ov1.wav',
-                     'fold3_room1_mix007_ov1.wav',
-                     'fold4_room1_mix007_ov1.wav',
-                     'fold5_room1_mix007_ov1.wav',
-                     'fold6_room1_mix007_ov1.wav',
-                     'fold2_room1_mix008_ov1.wav',
-                     'fold2_room1_mix009_ov1.wav',
-                     'fold2_room1_mix010_ov1.wav',
-                     'fold2_room1_mix047_ov2.wav',
-                     'fold2_room1_mix048_ov2.wav',
-                     'fold2_room1_mix049_ov2.wav']
+quick_audio_files = ['fold1_room1_mix050_ov2.wav',
+                     # 'fold2_room1_mix007_ov1.wav',
+                     # 'fold3_room1_mix007_ov1.wav',
+                     # 'fold4_room1_mix007_ov1.wav',
+                     # 'fold5_room1_mix007_ov1.wav',
+                     # 'fold6_room1_mix007_ov1.wav',
+                     # 'fold2_room1_mix008_ov1.wav',
+                     # 'fold2_room1_mix009_ov1.wav',
+                     # 'fold2_room1_mix010_ov1.wav',
+                     # 'fold2_room1_mix047_ov2.wav',
+                     # 'fold2_room1_mix048_ov2.wav',
+                     # 'fold2_room1_mix049_ov2.wav'
+                     ]
+# TODO CHECK fold2_room2_mix021_ov1.wav
 
 # %% Analysis
 
@@ -86,7 +88,8 @@ for audio_file_idx, audio_file_name in enumerate(audio_files):
         csv_file_path = os.path.join(result_folder_path, csv_file_name)
         # since we always append to the csv file, make a reset on the file
         if os.path.exists(csv_file_path):
-            os.remove(csv_file_path)
+            # os.remove(csv_file_path)
+            continue # SKIP EXISTING FILES!
 
     ############################################
     # Open file

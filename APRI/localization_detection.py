@@ -426,6 +426,7 @@ def ld_particle(stft, diff_th, K_th, V_azi, V_ele, in_sd, in_sdn, init_birth, in
     DOA_decimated = np.empty((2, K, N // 2))  # todo fix number
     for n in range(N // 2):
         # todo fix numbers depending on decimation factor
+        # todo: nanmean but circular!!!
         DOA_decimated[:, :, n] = np.nanmean([doa_masked[:, :, n * 2], doa_masked[:, :, n * 2 - 1]], axis=0)
     M, K, N = DOA_decimated.shape
 
@@ -477,24 +478,98 @@ def ld_particle(stft, diff_th, K_th, V_azi, V_ele, in_sd, in_sdn, init_birth, in
     # convert output data into Events
     event_list = []
     for n in range(num_events):
-        frames = (output_data[n][0][0] / 0.1).astype(int)  # frame numbers
-        azis = output_data[n][1][0] * np.pi / 180.  # in rads
-        azis = [a - (2*np.pi) if a > np.pi else a for a in azis] # adjust range to [-pi, pi]
-        eles = (90 - output_data[n][1][1]) * np.pi / 180.  # in rads, incl2ele
-        event_list.append(Event(-1, -1, frames, azis, eles))
 
-    # # uncomment for plot doa estimates and particle trajectories
-    plt.figure()
-    # framewise estimates
-    est_csv = np.loadtxt(open(csv_file_path, "rb"), delimiter=",")
-    t = est_csv[:, 0] * 10
-    a = est_csv[:, 1]
-    e = est_csv[:, 2]
-    plt.scatter(t, a, marker='x', edgecolors='b')
-    # particle filter
-    for e_idx, e in enumerate(event_list):
-        azis = np.asarray(e.get_azis()) * 180 / np.pi
-        azis = [a + (360) if a < 0 else a for a in azis] # adjust range to [-pi, pi]
-        plt.plot(e.get_frames(), azis, color='chartreuse')
+        frames = (output_data[n][0][0] / 0.1).astype(int)  # frame numbers
+
+        # sometimes there are repeated frames; clean them
+        diff = frames[1:] - frames[:-1]
+        frames = np.insert(frames[1:][diff != 0], 0, frames[0])
+
+        if len(frames) > 1:
+            # TODO: FILTER OUT SHORT EVENTS HERE
+
+            azis = output_data[n][1][0] * np.pi / 180.  # in rads
+            azis = [a - (2*np.pi) if a > np.pi else a for a in azis] # adjust range to [-pi, pi]
+            eles = (90 - output_data[n][1][1]) * np.pi / 180.  # in rads, incl2ele
+            event_list.append(Event(-1, -1, frames, azis, eles))
+
+    def interpolate_event(e):
+
+        # TODO: IT REMOVES LAST ELEMENT, PROBABLY NEED TO ADD IT MANUALLY
+
+        frames = e.get_frames()
+        azis = e.get_azis()
+        eles = e.get_eles()
+
+        new_frames = []
+        new_azis = []
+        new_eles = []
+
+        frame_dist = frames[1:] - frames[:-1]
+        for fd_idx, fd in enumerate(frame_dist):
+            if fd == 1:
+                # contiguous, set next
+                new_frames.append(frames[fd_idx])
+                new_azis.append(azis[fd_idx])
+                new_eles.append(eles[fd_idx])
+            else:
+                start = frames[fd_idx]
+                end = frames[fd_idx+1]
+                new_frames.extend(np.arange(start, end, 1).tolist())
+                new_azis.extend(np.linspace(azis[fd_idx], azis[fd_idx+1], fd).tolist())
+                new_eles.extend(np.linspace(eles[fd_idx], eles[fd_idx+1], fd).tolist())
+
+        return Event(-1, -1, np.asarray(new_frames), np.asarray(new_azis), np.asarray(new_eles))
+
+    interpolated_event_list = []
+    for e in event_list:
+        interpolated_event_list.append(interpolate_event(e))
+    event_list = interpolated_event_list
+
+
+
+        # start_frame = frames[0]
+        # end_frame = frames[-1]
+        # new_frames = np.arange(start_frame, end_frame+1, 1)
+        # new_azis = np.empty(new_frames.size)
+        # new_eles = np.empty(new_frames.size)
+        #
+        # for nf_idx, nf in enumerate(new_frames):
+        #     # find if present in original
+        #     idx = np.argwhere(frames == nf)
+        #     if idx.size == 0:
+        #         # not found!
+        #     elif idx.size == 1:
+        #         # found!
+        #         idx = idx[0][0]
+        #         # add directly to new position lists
+        #         new_azis[nf_idx] = azis[idx]
+        #         new_eles[nf_idx] = eles[idx]
+        #
+        #
+        #     else:
+        #         warnings.warn('something strange happened!')
+
+
+
+        # for n in range(len(f)-1):
+        #     dist2next = f[n+1] -
+
+
+
+    # # # uncomment for plot doa estimates and particle trajectories
+    # plt.figure()
+    # plt.grid()
+    # # framewise estimates
+    # est_csv = np.loadtxt(open(csv_file_path, "rb"), delimiter=",")
+    # t = est_csv[:, 0] * 10
+    # a = est_csv[:, 1]
+    # e = est_csv[:, 2]
+    # plt.scatter(t, a, marker='x', edgecolors='b')
+    # # particle filter
+    # for e_idx, e in enumerate(event_list):
+    #     azis = np.asarray(e.get_azis()) * 180 / np.pi
+    #     azis = [a + (360) if a < 0 else a for a in azis] # adjust range to [-pi, pi]
+    #     plt.plot(e.get_frames(), azis, marker='.', color='chartreuse')
 
     return event_list
