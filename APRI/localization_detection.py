@@ -395,7 +395,7 @@ def ld_basic_dereverb_filter(stft, diff_th=0.3, L=5, event_minimum_length=4):
 
     return event_list_clean
 
-def ld_particle(stft, diff_th, K_th, V_azi, V_ele, in_sd, in_sdn, init_birth, in_cp, num_particles):
+def ld_particle(stft, diff_th, K_th, V_azi, V_ele, in_sd, in_sdn, init_birth, in_cp, num_particles, debug_plot=False):
     """
     find single-source tf-bins, and then feed them into the particle tracker
     :param stft:
@@ -441,6 +441,37 @@ def ld_particle(stft, diff_th, K_th, V_azi, V_ele, in_sd, in_sdn, init_birth, in
         if len(azis_filtered) > K_th:
             azis[n] = azis_filtered
             eles[n] = e[~np.isnan(e)]
+
+    if debug_plot:
+        plt.figure()
+        # All estimates
+        for n in range(N):
+            if len(azis[n]) > 0:
+                a = np.mod(azis[n] * 180 / np.pi, 360)
+                plt.scatter(np.ones(len(a)) * n, a, marker='x', edgecolors='b')
+        # Circmedian
+        for n in range(N):
+            if len(azis[n]) > 0:
+                a = np.mod(azis[n] * 180 / np.pi, 360)
+                plt.scatter(n, np.mod(circmedian(a, 'deg'), 360), facecolors='none', edgecolors='k')
+
+        # boxplot
+        import seaborn as sns
+        a = []
+        for n in range(N):
+            if len(azis[n]) > 0:
+                a.append(np.mod(azis[n] * 180 / np.pi, 360))
+            else:
+                a.append([])
+        plt.figure()
+        sns.boxplot(data=a)
+
+        # # number of single-source bins in frequency for each n
+        # plt.figure()
+        # plt.grid()
+        # for n in range(N):
+        #     if len(azis[n]) > 0:
+        #         plt.scatter(n, len(azis[n]), marker='x',  edgecolors='b')
 
     # TODO: separate frames with two overlapping sources
 
