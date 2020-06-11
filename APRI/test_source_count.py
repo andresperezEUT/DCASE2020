@@ -67,7 +67,6 @@ plot_diffuseness(diff)
 # HARD THRESHOLD
 diff_th = 0.3
 diff_mask = diff <= diff_th
-plt.figure()
 plt.title('diff hard mask')
 plt.pcolormesh(diff_mask)
 
@@ -126,28 +125,6 @@ for k in range(Jk, K):
         SCM_smooth[k-Jk, n-Jn] = out_mean
         eigen = np.sort(np.real(np.linalg.eig(out_mean)[0]))[::-1]
         eigen_smooth[k-Jk, n-Jn] = eigen
-
-
-
-#####
-Jn = 2
-Jk = 15
-SCM_smooth2 = np.empty((K-Jk, N-Jn, M, M), dtype=complex)
-# eigen_smooth = np.empty((K-Jk, N-Jn, M))
-for k in range(Jk, K):
-    for n in range(Jn, N):
-        stft_local = stft[:,k-Jk:k,n-Jn:n]
-        out = np.empty((M, M, Jk, Jn), dtype=complex)
-
-
-        for jk in range(Jk):
-            for jn in range(Jn):
-                a = stft_local[:,jk,jn]
-                out[:,:,jk,jn] = np.outer(a, np.transpose(np.conjugate(a)))
-        out_mean = np.mean(out, axis=(2,3))
-        SCM_smooth2[k-Jk, n-Jn] = out_mean
-        # eigen = np.sort(np.real(np.linalg.eig(out_mean)[0]))[::-1]
-        # eigen_smooth[k-Jk, n-Jn] = eigen
 
 #####
 

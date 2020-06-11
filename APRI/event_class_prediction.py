@@ -24,14 +24,16 @@ import essentia.standard as essentia
 from essentia.standard import *
 import os
 import csv
-import xgboost as xgb
 
+# import xgboost as xgb
+if os.environ.get('USER') == 'ribanez':
+    user = 'FAIK'
+    import xgboost as xgb
 
 ### FUNCIONES PARA PREDICCIÓN DE EVENT_CLASS ###
 
 def get_key(val):
     classes=get_class_name_dict()
-    print(val)
     for key, value in classes.items():
          if val == value:
               return key

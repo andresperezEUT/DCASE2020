@@ -24,9 +24,14 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.svm import SVC
 import joblib
-import xgboost as xgb
+# import xgboost as xgb
 import numpy as np
 import scipy
+
+if os.environ.get('USER') == 'ribanez':
+    user = 'FAIK'
+    import xgboost as xgb
+
 
 params = parameter.get_params()
 data_input_path = os.path.join(params['dataset_dir'],'models/event_number/input_data' ) # path to folders
