@@ -51,9 +51,17 @@ def compute_data_augmentation(audio,aug_options):
     modified_audios=[]
     modified_audios_names=[]
     if aug_options['white_noise']:
-        data_wn = adding_white_noise(audio,aug_options['noise_rate'])
-        modified_audios.append(data_wn)
-        modified_audios_names.append('_wn')
+        data_wn1 = adding_white_noise(audio,aug_options['noise_rate'][0])
+        modified_audios.append(data_wn1)
+        modified_audios_names.append('_wn1')
+
+        data_wn2 = adding_white_noise(audio,aug_options['noise_rate'][1])
+        modified_audios.append(data_wn2)
+        modified_audios_names.append('_wn2')
+
+        data_wn3 = adding_white_noise(audio,aug_options['noise_rate'][2])
+        modified_audios.append(data_wn3)
+        modified_audios_names.append('_wn3')
     if aug_options['time_stretching']:
         data_sadown = stretch_audio(audio,aug_options['rates'][0])
         data_saup = stretch_audio(audio,aug_options['rates'][1])
