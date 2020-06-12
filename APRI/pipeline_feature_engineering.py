@@ -103,10 +103,10 @@ for audio_file_idx, audio_file_name in enumerate(audio_files):
     # Open file
     audio_file_path = os.path.join(data_folder_path, audio_file_name)
     b_format, sr = sf.read(audio_file_path)
-    b_format2=b_format
-    b_format2 *= np.array([1, 1 / np.sqrt(3), 1 / np.sqrt(3), 1 / np.sqrt(3)])  # N3D to SN3D
+    # b_format2=b_format
+    # b_format2 *= np.array([1, 1 / np.sqrt(3), 1 / np.sqrt(3), 1 / np.sqrt(3)])  # N3D to SN3D
     # Get spectrogram
-    stft = compute_spectrogram(b_format2, sr, window, window_size, window_overlap, nfft, D)
+    # stft = compute_spectrogram(b_format2, sr, window, window_size, window_overlap, nfft, D)
     ############################################
     metadata_file_name = os.path.splitext(audio_file_name)[0] + '.csv'
     metadata_file_path = os.path.join(gt_folder_path, metadata_file_name)
