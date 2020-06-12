@@ -32,7 +32,7 @@ pipeline='Datasets_2020-06-05_22-15' #if mode is 'modify'
 #original_event_dataset='oracle_mono_testing'
 
 extra_events=False
-data_augmentation=True
+data_augmentation=False
 audio_parameters_real=True
 audio_parameters_aug=True
 audio_parameters_extra=False
@@ -45,15 +45,18 @@ def get_data_augmentation_parameters():
     aug_options=dict()
     ### White noise
     aug_options['white_noise']=True
-    aug_options['noise_rate']=[0.01,0.02,0.05]
+    aug_options['noise_rate']=[0.02]
     ### Time stretching
-    aug_options['time_stretching']=False
-    aug_options['rates']=[0.8,1.2]
+    aug_options['time_stretching']=True
+    aug_options['rates']=[0.7,1.3]
     ### Pitch shifting
-    aug_options['pitch_shifting']=False
-    aug_options['steps']=[-1,1]
+    aug_options['pitch_shifting']=True
+    aug_options['steps']=[-2,2]
     ### Time shifting
-    aug_options['time_shifting']=False
+    aug_options['time_shifting']=True
+    ### Ir
+    aug_options['ir_merge']=True
+    aug_options['ir_set']= os.path.dirname(os.path.realpath(__file__)) + '/IR'
     return aug_options
 ## Audio features parameters
 def get_audio_features_options():
@@ -103,8 +106,8 @@ for audio_file_idx, audio_file_name in enumerate(audio_files):
     # Open file
     audio_file_path = os.path.join(data_folder_path, audio_file_name)
     b_format, sr = sf.read(audio_file_path)
-    b_format2=b_format
-    b_format2 *= np.array([1, 1 / np.sqrt(3), 1 / np.sqrt(3), 1 / np.sqrt(3)])  # N3D to SN3D
+    #b_format2=b_format
+    #b_format2 *= np.array([1, 1 / np.sqrt(3), 1 / np.sqrt(3), 1 / np.sqrt(3)])  # N3D to SN3D
     # Get spectrogram
     stft = compute_spectrogram(b_format, sr, window, window_size, window_overlap, nfft, D)
     ############################################
