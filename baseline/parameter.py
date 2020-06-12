@@ -287,9 +287,43 @@ def get_params(argv='1'):
         params['event_filter_activation'] = False
         params['preset_descriptor'] = 'loc:particle; beam:omni; cls:random'
 
+    if argv == 'particle_v2_A': # same as particle, with v2 changes
+        # localization_detection
+        params['window'] = 'hann'
+        params['window_size'] = 2400
+        params['window_overlap'] = 1200
+        params['nfft'] = 2400
+        params['D'] = None
+        params['ld_method'] = 'ld_particle'
+        # [diff_th, K_th, V_azi, V_ele, in_sd, in_sdn, init_birth, in_cp, N]
+        params['ld_method_args'] = [0.05, 5, 20, 10, 10, 10, 0.1, 0.25, 30]
+        # beamforming
+        params['beamforming_mode'] = 'beam'
+        # classification
+        params['class_method'] = 'event_class_prediction'
+        params['class_method_args'] = ['event_class_base']
+        # postprocessing
+        params['event_filter_activation'] = False
+        params['preset_descriptor'] = 'loc:particle; beam:omni; cls:random'
 
-
-
+    if argv == 'particle_v2_B': # same as particle, with v2 changes
+        # localization_detection
+        params['window'] = 'hann'
+        params['window_size'] = 2400
+        params['window_overlap'] = 1200
+        params['nfft'] = 2400
+        params['D'] = None
+        params['ld_method'] = 'ld_particle'
+        # [diff_th, K_th, V_azi, V_ele, in_sd, in_sdn, init_birth, in_cp, N]
+        params['ld_method_args'] = [0.05, 5, 20, 10, 10, 10, 0.1, 0.1, 30]
+        # beamforming
+        params['beamforming_mode'] = 'beam'
+        # classification
+        params['class_method'] = 'event_class_prediction'
+        params['class_method_args'] = ['event_class_base']
+        # postprocessing
+        params['event_filter_activation'] = False
+        params['preset_descriptor'] = 'loc:particle; beam:omni; cls:random'
 
     else:
         print('ERROR: unknown argument {}'.format(argv))

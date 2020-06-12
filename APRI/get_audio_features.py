@@ -641,15 +641,15 @@ def get_audio_features_options():
     return options
 
 
-options = dict()
-options['sampleRate'] = 24000
-options['frameSize'] = 2048
-options['hopSize'] = 1024
-options['skipSilence'] = True
+# options = dict()
+# options['sampleRate'] = 24000
+# options['frameSize'] = 2048
+# options['hopSize'] = 1024
+# options['skipSilence'] = True
 
-loader = MonoLoader(filename='/home/ribanez/movidas/dcase20/dcase20_dataset/anteriores/oracle_mono_signals_beam_all/crying_baby/973.wav', sampleRate=24000)
-audio = loader()
-compute_sfx(audio,options)
-
+# loader = MonoLoader(filename='/home/ribanez/movidas/dcase20/dcase20_dataset/anteriores/oracle_mono_signals_beam_all/crying_baby/973.wav', sampleRate=24000)
+# audio = loader()
+# compute_sfx(audio,options)
+#
 
 

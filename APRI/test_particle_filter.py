@@ -54,12 +54,12 @@ stft = compute_spectrogram(b_format, sr, window, window_size, window_overlap, nf
 # localization
 diff_th = 0.05 #0.05
 K_th = 5 #5
-V_azi = 2 # 20  - Velocity
-V_ele = 1 #10  - Velocity
-in_sd = 5  #5 - standard deviation of measurement noise - [1 50] range is good
-in_sdn = 50 #50 -  noise spectral density / decides how smooth the tracked signal is.
+V_azi = 20 # 20  - Velocity
+V_ele = V_azi/2 #10  - Velocity
+in_sd = 10  #5 - standard deviation of measurement noise - [1 50] range is good
+in_sdn = 10 #50 -  noise spectral density / decides how smooth the tracked signal is.
 init_birth = 0.1 #0.1 - % value between [0 1] - Prior probability of birth
-in_cp = 0.25 #0.25 - Noise prior - estimate of percentage of noise in the measurement data
+in_cp = 0.10 #0.25 - Noise prior - estimate of percentage of noise in the measurement data
 N = 30 # 30
 event_list = ld_particle(stft, diff_th, K_th, V_azi, V_ele, in_sd, in_sdn, init_birth, in_cp, N,
                          debug_plot=plot, metadata_file_path=metadata_file_path)
