@@ -45,15 +45,15 @@ def get_data_augmentation_parameters():
     aug_options=dict()
     ### White noise
     aug_options['white_noise']=True
-    aug_options['noise_rate']=0.01
+    aug_options['noise_rate']=[0.01,0.02,0.05]
     ### Time stretching
-    aug_options['time_stretching']=True
+    aug_options['time_stretching']=False
     aug_options['rates']=[0.8,1.2]
     ### Pitch shifting
-    aug_options['pitch_shifting']=True
+    aug_options['pitch_shifting']=False
     aug_options['steps']=[-1,1]
     ### Time shifting
-    aug_options['time_shifting']=True
+    aug_options['time_shifting']=False
     return aug_options
 ## Audio features parameters
 def get_audio_features_options():

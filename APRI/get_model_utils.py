@@ -7,12 +7,14 @@ Different parameters allow for customize splits
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.ensemble import GradientBoostingClassifier
+from xgboost import XGBClassifier
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 from sklearn.feature_selection import SelectFromModel
 from sklearn.model_selection import GridSearchCV
 from sklearn.metrics import accuracy_score,confusion_matrix, roc_auc_score, f1_score
 import xgboost as xgb
+from sklearn.decomposition import PCA
 from sklearn.pipeline import Pipeline
 
 
@@ -67,9 +69,13 @@ def get_feature_selection(y_train,x_train,y_test,x_test,y_val,x_val,fs_gridsearc
 
 
 def get_feature_selection_manual(x_train,x_test,x_val):
-    keep_variables='barkbands'
-
-    keep_cols = [col for col in x_train.columns if keep_variables in col]
+    keep_variables1='melbands'
+    keep_cols1 = [col for col in x_train.columns if keep_variables1 in col]
+    keep_variables2='spectral'
+    keep_cols2 = [col for col in x_train.columns if keep_variables2 in col]
+    keep_variables3='pitch'
+    keep_cols3 = [col for col in x_train.columns if keep_variables3 in col]
+    keep_cols=keep_cols1+keep_cols2+keep_cols3
     x_train = x_train[keep_cols]
     x_test = x_test[keep_cols]
     x_val = x_val[keep_cols]
@@ -89,22 +95,22 @@ def train_xgb(x_train,y_train,x_test,y_test,x_val,y_val,xgb_gridsearch):
 
 #Params
     params = {
-    'max_depth':3,
-    'min_child_weight': 1,
-    'eta':0.03,
+    'max_depth':6,
+    'min_child_weight': 3,
+    'eta':0.05,
     'subsample': 1,
     'num_class':14,
-    'colsample_bytree': 0.5,
+    'colsample_bytree': 0.1,
     'objective':'multi:softmax',
     }
     params['eval_metric'] = "mlogloss"
-    num_boost_round = 500
+    num_boost_round = 1000
     if xgb_gridsearch:
         print('Gridsearch..')
         # Parameters max_depth and min_child_weight
         gridsearch_params = [
         (max_depth, min_child_weight)
-        for max_depth in [3,5]
+        for max_depth in [3,6]
         for min_child_weight in [1,3]
     ]
         min_metric = float("Inf")
@@ -119,7 +125,7 @@ def train_xgb(x_train,y_train,x_test,y_test,x_val,y_val,xgb_gridsearch):
                 num_boost_round=num_boost_round,
                 seed=42,
                 nfold=2,
-                metrics={'mlogloss'},
+                metrics={'roc_auc'},
                 early_stopping_rounds=2,
                 verbose_eval=5
             )
@@ -136,8 +142,8 @@ def train_xgb(x_train,y_train,x_test,y_test,x_val,y_val,xgb_gridsearch):
         # Parameters sumbsample and colsample
         gridsearch_params = [
         (subsample, colsample)
-        for subsample in [1]
-        for colsample in [0.1]
+        for subsample in [0.5,1]
+        for colsample in [0.1,0.2,0.3]
     ]
         min_mae = float("Inf")
         best_params = None  # We start by the largest values and go down to the smallest
@@ -214,22 +220,28 @@ def train_xgb(x_train,y_train,x_test,y_test,x_val,y_val,xgb_gridsearch):
 
 def train_rf(x_train,y_train,x_test,y_test,x_val,y_val,rf_gridsearch):
     print('Training model random forest...')
+    pca=PCA()
     cls = RandomForestClassifier()
+    pipe_rf = Pipeline([('scl',StandardScaler()),('pca',pca), ('cls', cls)])
     if rf_gridsearch:
+
         print('Tuning parameters...')
-        grid_params_rf = [{'bootstrap':[False],
-                           'n_estimators': [500,1000],
-                           'max_depth': [8,16],
-                           'max_features': ["auto"]}]
-        gs_fs = GridSearchCV(estimator=cls, param_grid=grid_params_rf, scoring='f1_weighted', cv=5, verbose=10,
+        grid_params_rf = [{'pca__n_components':[200],
+                            'cls__bootstrap':[False],
+                           'cls__n_estimators': [100,500],
+                           'cls__max_depth': [8],
+                            'cls__min_samples_leaf':[20],
+                           'cls__max_features': ["auto"]}]
+        gs_fs = GridSearchCV(estimator=pipe_rf, param_grid=grid_params_rf, scoring='accuracy', cv=5, verbose=10,
                              n_jobs=-1)
         gs_fs.fit(x_train, y_train)
         # Best params
         print('Best params: %s' % gs_fs.best_params_)
         # Best training data r2
         print('Best training accuracy: %.3f' % gs_fs.best_score_)
-        cls.set_params(**gs_fs.best_params_)
-        model = cls.fit(x_train, y_train)
+        #cls.set_params(**gs_fs.best_params_)
+        #model = cls.fit(x_train, y_train)
+        model=gs_fs
     else:
         params_rf = {'bootstrap': False,
                           'n_estimators': 500,
@@ -257,7 +269,7 @@ def train_svc(x_train,y_train,x_test,y_test,x_val,y_val,svc_gridsearch):
     print('Training model svc...')
 
 
-    pipe_svc = Pipeline([('scl', StandardScaler()), ('cls', SVC())])
+    pipe_svc = Pipeline([('scl', StandardScaler()), ('cls', SVC(decision_function_shape='ovr'))])
     if svc_gridsearch:
         print('Tuning parameters...')
         grid_params_svc = [{'cls__kernel': ['linear','rbf'],
@@ -300,16 +312,70 @@ def train_gb(x_train,y_train,x_test,y_test,x_val,y_val,gb_gridsearch):
     cls = GradientBoostingClassifier()
     if gb_gridsearch:
         print('Tuning parameters...')
-        grid_params_gb = [{'learning_rate':[0.05],
-                           'n_estimators': [1000],
-                           'max_depth': [6],
+        grid_params_gb = [{'learning_rate':[0.1],
+                           'n_estimators': [100],
+                           'max_depth': [3],
                            'subsample': [1],
-                           'min_samples_split': [2],
+                           'min_samples_split': [10],
                            'min_samples_leaf': [1],
                            'max_features':['sqrt'],
                            'verbose':[1]
                            }]
         gs_gb = GridSearchCV(estimator=cls, param_grid=grid_params_gb, scoring='f1_weighted', cv=10, verbose=10,
+                             n_jobs=-1)
+        gs_gb.fit(x_train, y_train)
+        # Best params
+        print('Best params: %s' % gs_gb.best_params_)
+        # Best training data r2
+        print('Best training accuracy: %.3f' % gs_gb.best_score_)
+        model=gs_gb.best_estimator_
+        #cls.set_params(**gs_gb.best_params_)
+        #model = cls.fit(x_train, y_train)
+    else:
+        params_gb = {'learning_rate':0.05,
+                           'n_estimators': 100,
+                           'max_depth': 6,
+                           'subsample': 1,
+                           'min_samples_split': 2,
+                           'min_samples_leaf': 1,
+                           'max_features':'sqrt',
+                           'verbose':2}
+        cls.set_params(**params_gb)
+        model=cls.fit(x_train, y_train)
+    print(print(cls.get_params()))
+    print('Test predictions with trained mode...')
+    y_pred = model.predict(x_test)
+    print('Train predictions with trained mode...')
+    y_pred_t = model.predict(x_train)
+    print('Validation predictions with trained mode...')
+    y_pred_val = model.predict(x_val)
+    print('Confussion matrix test:')
+    print(confusion_matrix(y_test, y_pred))
+    print('Confussion matrix validation:')
+    print(confusion_matrix(y_val, y_pred_val))
+    print('Prediction accuracy for test: %.3f ' % accuracy_score(y_test, y_pred))
+    print('Prediction accuracy for train: %.3f ' % accuracy_score(y_train, y_pred_t))
+    print('Prediction accuracy for validation: %.3f ' % accuracy_score(y_val, y_pred_val))
+    return model
+
+def train_xgb_sk(x_train,y_train,x_test,y_test,x_val,y_val,gb_gridsearch):
+    print('Training model gradient boosting with sklearn...')
+    cls = XGBClassifier()
+    if gb_gridsearch:
+        eval_set=[(x_test,y_test)]
+        print('Tuning parameters...')
+        grid_params_gb = [{'learning_rate':[0.1],
+                           'n_estimators': [50,100,200,500],
+                           'max_depth': [3,6],
+                           'subsample': [1],
+                           'min_samples_split': [2,4],
+                           'min_samples_leaf': [5,10],
+                           'max_features':['sqrt'],
+                           'eval_set':[eval_set],
+                           'eval_metric':['error','mlogloss'],
+                           'verbose':[1]
+                           }]
+        gs_gb = GridSearchCV(estimator=cls, param_grid=grid_params_gb, scoring='f1_weighted', cv=5, verbose=10,
                              n_jobs=-1)
         gs_gb.fit(x_train, y_train)
         # Best params

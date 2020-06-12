@@ -17,6 +17,7 @@ from baseline import parameter
 import pandas as pd
 from APRI.get_dataframes import *
 from APRI.get_model_utils import *
+from APRI.remove_near_observations import *
 import pickle
 import csv
 import joblib
@@ -36,27 +37,27 @@ data_augmentation=False
 feature_selection=False
 random_forest_model=False
 svc_model=False
-xgb_model=False
-gb_model=True
+xgb_model=True
+gb_model=False
 ensemble=True
 ## Dataframe split:
-mode_split='challenge_1'
+mode_split='all'
 split_options_balanced=[100,10,3000] #number of events per class in test, validation and train splits
-split_options_all=[0.2,0.01] #number of events per class in test, validation and train splits
+split_options_all=[0.1,0.01] #number of events per class in test, validation and train splits
 ## Feature selection
 fs_gridsearch=False
-fs_threshold=0.0025
+fs_threshold=0.005
 ## xgb
 xgb_gridsearch=False
 #rf
-rf_gridsearch=False
+rf_gridsearch=True
 ## svc
-svc_gridsearch=False
+svc_gridsearch=True
 ## gb
 gb_gridsearch=True
 
 #Feature selection
-ft_mode='manual'
+ft_mode='automatic'
 
 
 # Create root folder for the execution
@@ -90,7 +91,7 @@ if build_dataframes:
     print('Step: Building dataframes')
     df_real=pd.read_pickle(os.path.join(params['dataset_dir'],pipeline_feature_engineering,'source_dataframes/dataframe_source_real.pkl'))
     #print(df_real.shape)
-
+    df_real=drop_similar_observations(df_real)
     #df_aux = df_real[df_real.index.str.contains("ov1", regex=False)]
     #print(df_aux.shape)
     #df_real=df_aux
@@ -115,6 +116,12 @@ if build_dataframes:
         df_train.to_pickle(os.path.join(dataset_path,'df_train.pkl'))
     elif mode_split=='challenge_1':
         df_test,df_val,df_train=get_dataframe_split_challenge1(df_real, df_aug)
+        dataset_path = os.path.join(root_folder, 'datasets')
+        df_test.to_pickle(os.path.join(dataset_path, 'df_test.pkl'))
+        df_val.to_pickle(os.path.join(dataset_path, 'df_val.pkl'))
+        df_train.to_pickle(os.path.join(dataset_path, 'df_train.pkl'))
+    elif mode_split=='challenge_2':
+        df_test,df_val,df_train=get_dataframe_split_challenge2(df_real, df_aug)
         dataset_path = os.path.join(root_folder, 'datasets')
         df_test.to_pickle(os.path.join(dataset_path, 'df_test.pkl'))
         df_val.to_pickle(os.path.join(dataset_path, 'df_val.pkl'))
