@@ -9,6 +9,7 @@ import scipy.stats
 import soundfile as sf
 import warnings
 import librosa.display
+import scipy.signal
 
 
 # %% SIGNAL
@@ -121,7 +122,7 @@ def get_ambisonic_gains(azi, ele):
 def mono_extractor(b_format, azis=None, eles=None, mode='beam'):
     """
     
-    :param b_format: (frames, channels)
+    :param b_format: (frames, channels) IN SN3D
     :param mode: 'beamforming' or 'omni'
     :return: 
     """
@@ -131,11 +132,11 @@ def mono_extractor(b_format, azis=None, eles=None, mode='beam'):
 
     if mode == 'beam':
         # MaxRE decoding
-
+        b_format_n3d = b_format * np.asarray([1, np.sqrt(3), np.sqrt(3), np.sqrt(3)]) # N3D
         alpha = np.asarray([0.775, 0.4, 0.4, 0.4]) # MaxRE coefs
-        decoding_gains = get_ambisonic_gains(azis, eles)
+        decoding_gains = get_ambisonic_gains(azis, eles) # N3D
         w = decoding_gains*alpha[:,np.newaxis]
-        x = np.sum(b_format * w.T, axis=1)
+        x = np.sum(b_format_n3d * w.T, axis=1) # N3D BY N3D
 
     elif mode == 'omni':
         # Just take the W channel
@@ -145,6 +146,15 @@ def mono_extractor(b_format, azis=None, eles=None, mode='beam'):
 
 
 def get_mono_audio_from_event(b_format, event, beamforming_mode, fs, frame_length):
+    """
+
+    :param b_format: (frames, channels) IN SN3D
+    :param event:
+    :param beamforming_mode:
+    :param fs:
+    :param frame_length:
+    :return:
+    """
 
     frames = event.get_frames()
     w = frame_length  # frame length of the annotations
@@ -264,6 +274,42 @@ def estimate_MAR_sparse_parallel(y_tf, L, tau, p, i_max, ita, epsilon):
         i += 1
 
     return D.transpose((2, 0, 1)), G, PHI
+
+
+def dereverberate(b_format, sr):
+    """
+    perform full signal2signal dereverberation in one function
+    :param b_format:
+    :param sr:
+    :return:
+    """
+
+    # stft
+    num_samples, _ = b_format.shape
+
+    # Parameters
+    window_type = 'hann'
+    window_size = 128  # samples
+    # window_size = 1024*16  # samples
+    hop = 1 / 2  # in terms of windows
+    window_overlap = int(window_size * (1 - hop))
+    nfft = window_size
+    _, _, y_tf = scipy.signal.stft(b_format.T, sr, window=window_type, nperseg=window_size, noverlap=window_overlap, nfft=nfft)
+
+    # dereverberation
+    p = 0.25
+    i_max = 10
+    ita = 1e-1
+    epsilon = 1e-8
+    L = 1  # number of frames for the IIR filter
+    # tau = int(1 / hop)
+    tau = 1
+    est_s_tf, _, _ = estimate_MAR_sparse_parallel(y_tf, L, tau, p, i_max, ita, epsilon)
+
+    # istft
+    _, est_s_t = scipy.signal.istft(est_s_tf, sr, window=window_type, nperseg=window_size, noverlap=window_overlap, nfft=nfft)
+    return est_s_t[:, :num_samples].T
+
 
 # %% PLOT
 

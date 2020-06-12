@@ -28,7 +28,7 @@ clc
 
 %% I/O
 
-example = 2; % options - [1, 2]
+example = 1; % options - [1, 2]
 if example ==1
     % % % Example 1 - Stationary source
     % NOTE: ideally the stationary source location in the input data will be in
@@ -153,7 +153,7 @@ for k=1:size(Y,2)
     S = kf_nmcda_predict_dp(S,A,Q,[],[],T(k),alpha_death,beta_death);
     [S,E] = kf_nmcda_update_dp(S,Y(:,k),T(k),H,R,cp,cd,init_birth);
 
-    fprintf('%d/%d: %s\n',k,size(Y,2),E{1});
+%     fprintf('%d/%d: %s\n',k,size(Y,2),E{1});
 
     SS(k,:) = S;
 
@@ -169,11 +169,11 @@ for k=1:size(Y,2)
         SS = SS(:,ind);
         W = ones(1,N)/N;
         S = set_weights(S,W);
-        fprintf('Resampling done on time step %d\n',k);
+%         fprintf('Resampling done on time step %d\n',k);
     end
 end
 % [FM,FP,SM,SP,Times] = kf_nmcda_collect(SS,A,Q);
-[FM,FP,SM,SP,Times] = kf_nmcda_collect2(SS,A,Q,T);
+[FM,FP,SM,SP,Times] = kf_nmcda_collect2(SS,A,Q,T,1);
 
 
 %% VISUALIZATON

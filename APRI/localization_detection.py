@@ -395,12 +395,16 @@ def ld_basic_dereverb_filter(stft, diff_th=0.3, L=5, event_minimum_length=4):
 
     return event_list_clean
 
-def ld_particle(stft, diff_th, K_th, V_azi, V_ele, in_sd, in_sdn, init_birth, in_cp, num_particles, debug_plot=False):
+def ld_particle(stft, diff_th, K_th, V_azi, V_ele, in_sd, in_sdn, init_birth, in_cp, num_particles, debug_plot=False, metadata_file_path=None):
     """
     find single-source tf-bins, and then feed them into the particle tracker
     :param stft:
     :param diff_th:
     :return:
+
+    CHANGES V2
+    - DISCARD LOW FREQUENCY ACTIVE BINS IN DIFF MASK
+    - DECIMATION COMPUTED AFTER PARTICLE, JUST DISCARDING ONE OUT OF EACH TWO
     """
 
     # decimate in frequency
@@ -412,6 +416,7 @@ def ld_particle(stft, diff_th, K_th, V_azi, V_ele, in_sd, in_sdn, init_birth, in
     DOA = doa(stft)  # Direction of arrival
     diff = diffuseness(stft, dt=2)  # Diffuseness
     diff_mask = diff <= diff_th
+    diff_mask[0] = False # manually set artifacts of low diffuseness in the low end spectrum
 
     # create masked doa with nans
     doa_masked = np.empty((2, K, N))
@@ -422,13 +427,20 @@ def ld_particle(stft, diff_th, K_th, V_azi, V_ele, in_sd, in_sdn, init_birth, in
             else:
                 doa_masked[:, k, n] = np.nan
 
-    # decimate DOA in time
-    DOA_decimated = np.empty((2, K, N // 2))  # todo fix number
-    for n in range(N // 2):
-        # todo fix numbers depending on decimation factor
-        # todo: nanmean but circular!!!
-        DOA_decimated[:, :, n] = np.nanmean([doa_masked[:, :, n * 2], doa_masked[:, :, n * 2 - 1]], axis=0)
-    M, K, N = DOA_decimated.shape
+    # # decimate DOA in time
+    # DOA_decimated = np.empty((2, K, N // 2))  # todo fix number
+    # for n in range(N // 2):
+    #     # todo fix numbers depending on decimation factor
+    #     # todo: nanmean but circular!!!
+    #     meanvalue = np.nanmean([doa_masked[:, :, n * 2], doa_masked[:, :, n * 2 - 1]], axis=0)
+    #     meanvalue2 = np.mean([doa_masked[:, :, n * 2], doa_masked[:, :, n * 2 - 1]], axis=0)
+    #     # DOA_decimated[:, :, n] = meanvalue
+    #     DOA_decimated[:, :, n] = meanvalue2
+    #     # if np.any(~np.isnan(meanvalue)):
+    #     #     pass
+    # M, K, N = DOA_decimated.shape
+    #
+    DOA_decimated = doa_masked
 
     # Create lists of azis and eles for each output frame size
     # Filter out spureous candidates
@@ -442,36 +454,45 @@ def ld_particle(stft, diff_th, K_th, V_azi, V_ele, in_sd, in_sdn, init_birth, in
             azis[n] = azis_filtered
             eles[n] = e[~np.isnan(e)]
 
-    if debug_plot:
-        plt.figure()
-        # All estimates
-        for n in range(N):
-            if len(azis[n]) > 0:
-                a = np.mod(azis[n] * 180 / np.pi, 360)
-                plt.scatter(np.ones(len(a)) * n, a, marker='x', edgecolors='b')
-        # Circmedian
-        for n in range(N):
-            if len(azis[n]) > 0:
-                a = np.mod(azis[n] * 180 / np.pi, 360)
-                plt.scatter(n, np.mod(circmedian(a, 'deg'), 360), facecolors='none', edgecolors='k')
-
-        # boxplot
-        import seaborn as sns
-        a = []
-        for n in range(N):
-            if len(azis[n]) > 0:
-                a.append(np.mod(azis[n] * 180 / np.pi, 360))
-            else:
-                a.append([])
-        plt.figure()
-        sns.boxplot(data=a)
-
-        # # number of single-source bins in frequency for each n
-        # plt.figure()
-        # plt.grid()
-        # for n in range(N):
-        #     if len(azis[n]) > 0:
-        #         plt.scatter(n, len(azis[n]), marker='x',  edgecolors='b')
+    # if debug_plot:
+    #     plt.figure()
+    #     # All estimates
+    #     for n in range(N):
+    #         if len(azis[n]) > 0:
+    #             a = np.mod(azis[n] * 180 / np.pi, 360)
+    #             plt.scatter(np.ones(len(a)) * n, a, marker='x', edgecolors='b')
+    #     # Circmedian
+    #     for n in range(N):
+    #         if len(azis[n]) > 0:
+    #             a = np.mod(azis[n] * 180 / np.pi, 360)
+    #             plt.scatter(n, np.mod(circmedian(a, 'deg'), 360), facecolors='none', edgecolors='k')
+    #
+    #     # circmean and std
+    #     plt.figure()
+    #     for n in range(N):
+    #         if len(azis[n]) > 0:
+    #             a = np.mod(azis[n] * 180 / np.pi, 360)
+    #             plt.errorbar(n, scipy.stats.circmean(a, high=360, low=0), yerr= scipy.stats.circstd(a, high=360, low=0))
+    #             plt.scatter(n, np.mod(circmedian(a, 'deg'), 360), facecolors='none', edgecolors='k')
+    #
+    #
+    #     # boxplot
+    #     import seaborn as sns
+    #     a = []
+    #     for n in range(N):
+    #         if len(azis[n]) > 0:
+    #             a.append(np.mod(azis[n] * 180 / np.pi, 360))
+    #         else:
+    #             a.append([])
+    #     plt.figure()
+    #     sns.boxplot(data=a)
+    #
+    #     # number of single-source bins in frequency for each n
+    #     plt.figure()
+    #     plt.grid()
+    #     for n in range(N):
+    #         if len(azis[n]) > 0:
+    #             plt.scatter(n, len(azis[n]), marker='x',  edgecolors='b')
 
     # TODO: separate frames with two overlapping sources
 
@@ -526,8 +547,6 @@ def ld_particle(stft, diff_th, K_th, V_azi, V_ele, in_sd, in_sdn, init_birth, in
 
     def interpolate_event(e):
 
-        # TODO: IT REMOVES LAST ELEMENT, PROBABLY NEED TO ADD IT MANUALLY
-
         frames = e.get_frames()
         azis = e.get_azis()
         eles = e.get_eles()
@@ -557,50 +576,78 @@ def ld_particle(stft, diff_th, K_th, V_azi, V_ele, in_sd, in_sdn, init_birth, in
         interpolated_event_list.append(interpolate_event(e))
     event_list = interpolated_event_list
 
+    # TODO PARAMETRIZE
+    def decimate_event(e):
+        frames = e.get_frames()
+        azis = e.get_azis()
+        eles = e.get_eles()
 
+        new_frames = []
+        new_azis = []
+        new_eles = []
 
-        # start_frame = frames[0]
-        # end_frame = frames[-1]
-        # new_frames = np.arange(start_frame, end_frame+1, 1)
-        # new_azis = np.empty(new_frames.size)
-        # new_eles = np.empty(new_frames.size)
-        #
-        # for nf_idx, nf in enumerate(new_frames):
-        #     # find if present in original
-        #     idx = np.argwhere(frames == nf)
-        #     if idx.size == 0:
-        #         # not found!
-        #     elif idx.size == 1:
-        #         # found!
-        #         idx = idx[0][0]
-        #         # add directly to new position lists
-        #         new_azis[nf_idx] = azis[idx]
-        #         new_eles[nf_idx] = eles[idx]
-        #
-        #
-        #     else:
-        #         warnings.warn('something strange happened!')
+        for f_idx, f in enumerate(frames):
+            if f%2==1: # only odd
+                new_frames.append(f//2)
+                new_azis.append(azis[f_idx])
+                new_eles.append(eles[f_idx])
+        return Event(-1, -1, np.asarray(new_frames), np.asarray(new_azis), np.asarray(new_eles))
 
+    # Decimate list
+    decimated_event_list = []
+    for e in event_list:
+        decimated_event_list.append(decimate_event(e))
+    event_list = decimated_event_list
 
+    # Check that all events have data
+    filtered_event_list = []
+    for e in event_list:
+        if len(e.get_frames()) > 0:
+            filtered_event_list.append(e)
+    event_list = filtered_event_list
 
-        # for n in range(len(f)-1):
-        #     dist2next = f[n+1] -
+    if debug_plot:
+        # # plot doa estimates and particle trajectories
+        # plt.figure()
+        # plt.grid()
+        # # framewise estimates
+        # est_csv = np.loadtxt(open(csv_file_path, "rb"), delimiter=",")
+        # t = est_csv[:, 0] * 10
+        # a = est_csv[:, 1]
+        # e = est_csv[:, 2]
+        # plt.scatter(t, a, marker='x', edgecolors='b')
+        # # particle filter
+        # for e_idx, e in enumerate(event_list):
+        #     azis = np.asarray(e.get_azis()) * 180 / np.pi
+        #     azis = [a + (360) if a < 0 else a for a in azis] # adjust range to [-pi, pi]
+        #     plt.plot(e.get_frames(), azis, marker='.', color='chartreuse')
 
+        #  PLOT # todo check elevation/inclination
+        plt.figure()
+        title_string = str(V_azi) + '_' + str(V_ele) + '_' + str(in_sd) + '_' + str(in_sdn) + '_' + str(
+            init_birth) + '_' + str(in_cp) + '_' + str(num_particles)
+        plt.title(title_string)
+        plt.grid()
 
+        # framewise estimates
+        est_csv = np.loadtxt(open(csv_file_path, "rb"), delimiter=",")
+        t = est_csv[:, 0] * 10 / 2 # TODO: ADAPTIVE DECIMATION
+        a = est_csv[:, 1]
+        e = est_csv[:, 2]
+        plt.scatter(t, a, marker='x', edgecolors='b')
 
-    # # # uncomment for plot doa estimates and particle trajectories
-    # plt.figure()
-    # plt.grid()
-    # # framewise estimates
-    # est_csv = np.loadtxt(open(csv_file_path, "rb"), delimiter=",")
-    # t = est_csv[:, 0] * 10
-    # a = est_csv[:, 1]
-    # e = est_csv[:, 2]
-    # plt.scatter(t, a, marker='x', edgecolors='b')
-    # # particle filter
-    # for e_idx, e in enumerate(event_list):
-    #     azis = np.asarray(e.get_azis()) * 180 / np.pi
-    #     azis = [a + (360) if a < 0 else a for a in azis] # adjust range to [-pi, pi]
-    #     plt.plot(e.get_frames(), azis, marker='.', color='chartreuse')
+        # groundtruth
+        gt_csv = np.loadtxt(open(metadata_file_path, "rb"), delimiter=",")
+        t = gt_csv[:, 0]
+        a = np.mod(gt_csv[:, 3], 360)
+        e = gt_csv[:, 4]
+        plt.scatter(t, a, facecolors='none', edgecolors='r')
+
+        # particle filter
+        for e_idx, e in enumerate(event_list):
+            azis = e.get_azis() * 180 / np.pi
+            azis = [a + 360 if a < 0 else a for a in azis]  # adjust range to [-pi, pi]
+
+            plt.plot(e.get_frames(), azis, color='chartreuse')
 
     return event_list

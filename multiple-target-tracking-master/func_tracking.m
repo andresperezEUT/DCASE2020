@@ -13,7 +13,7 @@ function [] = func_tracking(input_file_path, V_azi, V_ele, in_sd, in_sdn, init_b
     Y = csvread(input_file_path)';
     [filepath,name,~] = fileparts(input_file_path);
     output_file = strcat(filepath,'/',name,'.mat');
-%     output_file = '/Users/andres.perez/source/DCASE2020/APRI/filter_output/fold1_room1_mix027_ov2.mat';
+%     otutput_file = '/Users/andres.perez/source/DCASE2020/APRI/filter_output/fold1_room1_mix027_ov2.mat';
 
     spatial_resolution = 1;
     % % Tuned variables
@@ -107,7 +107,7 @@ function [] = func_tracking(input_file_path, V_azi, V_ele, in_sd, in_sdn, init_b
         S = kf_nmcda_predict_dp(S,A,Q,[],[],T(k),alpha_death,beta_death);
         [S,E] = kf_nmcda_update_dp(S,Y(:,k),T(k),H,R,cp,cd,init_birth);
 
-        fprintf('%d/%d: %s\n',k,size(Y,2),E{1});
+%         fprintf('%d/%d: %s\n',k,size(Y,2),E{1});
 
         SS(k,:) = S;
 
@@ -123,11 +123,11 @@ function [] = func_tracking(input_file_path, V_azi, V_ele, in_sd, in_sdn, init_b
             SS = SS(:,ind);
             W = ones(1,N)/N;
             S = set_weights(S,W);
-            fprintf('Resampling done on time step %d\n',k);
+%             fprintf('Resampling done on time step %d\n',k);
         end
     end
     % [FM,FP,SM,SP,Times] = kf_nmcda_collect(SS,A,Q);
-    [FM,FP,SM,SP,Times] = kf_nmcda_collect2(SS,A,Q,T);
+    [FM,FP,SM,SP,Times] = kf_nmcda_collect2(SS,A,Q,T,1);
 
 
     %% VISUALIZATON
