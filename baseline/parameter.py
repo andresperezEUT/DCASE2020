@@ -268,7 +268,7 @@ def get_params(argv='1'):
         params['event_filter_activation'] = False
         params['preset_descriptor'] = 'loc:particle; beam:omni; cls:random'
 
-    if argv == 'particle_v2': # same as particle, with v2 changes
+    if argv == 'particle_D':
         # localization_detection
         params['window'] = 'hann'
         params['window_size'] = 2400
@@ -277,7 +277,7 @@ def get_params(argv='1'):
         params['D'] = None
         params['ld_method'] = 'ld_particle'
         # [diff_th, K_th, V_azi, V_ele, in_sd, in_sdn, init_birth, in_cp, N]
-        params['ld_method_args'] = [0.05, 5, 20, 10, 5, 50, 0.1, 0.25, 30]
+        params['ld_method_args'] = [0.1, 10, 2, 1, 5, 20, 0.25, 0.25, 30]
         # beamforming
         params['beamforming_mode'] = 'beam'
         # classification
