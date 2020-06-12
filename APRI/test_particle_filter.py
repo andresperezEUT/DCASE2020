@@ -17,8 +17,8 @@ data_folder_path = os.path.join(params['dataset_dir'], 'foa_dev/') # path to aud
 
 gt_folder_path = os.path.join(params['dataset_dir'], 'metadata_dev')  # path to annotations
 
-# audio_file_name = 'fold1_room1_mix033_ov2.wav'
-audio_file_name = 'fold1_room1_mix001_ov1.wav'
+audio_file_name = 'fold1_room1_mix033_ov2.wav'
+# audio_file_name = 'fold1_room1_mix001_ov1.wav'
 
 metadata_file_name = os.path.splitext(audio_file_name)[0] + '.csv'
 metadata_file_path = os.path.join(gt_folder_path, metadata_file_name)
@@ -54,6 +54,7 @@ stft = compute_spectrogram(b_format, sr, window, window_size, window_overlap, nf
 # localization
 diff_th = 0.1 #0.05
 K_th = 10 #5
+min_event_length = 10 # 10, but the real value is actually /2
 V_azi = 2 # 20  - Velocity
 V_ele = 1 #10  - Velocity
 in_sd = 5  #5 - standard deviation of measurement noise - [1 50] range is good
@@ -61,7 +62,7 @@ in_sdn = 20 #50 -  noise spectral density / decides how smooth the tracked signa
 init_birth = 0.25 #0.1 - % value between [0 1] - Prior probability of birth
 in_cp = 0.25 #0.25 - Noise prior - estimate of percentage of noise in the measurement data
 N = 30 # 30
-event_list = ld_particle(stft, diff_th, K_th,
+event_list = ld_particle(stft, diff_th, K_th, min_event_length,
                          V_azi, V_ele, in_sd, in_sdn, init_birth, in_cp, N,
                          debug_plot=plot, metadata_file_path=metadata_file_path)
 

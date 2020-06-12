@@ -395,7 +395,7 @@ def ld_basic_dereverb_filter(stft, diff_th=0.3, L=5, event_minimum_length=4):
 
     return event_list_clean
 
-def ld_particle(stft, diff_th, K_th, V_azi, V_ele, in_sd, in_sdn, init_birth, in_cp, num_particles, debug_plot=False, metadata_file_path=None):
+def ld_particle(stft, diff_th, K_th, min_event_length, V_azi, V_ele, in_sd, in_sdn, init_birth, in_cp, num_particles, debug_plot=False, metadata_file_path=None):
     """
     find single-source tf-bins, and then feed them into the particle tracker
     :param stft:
@@ -530,7 +530,7 @@ def ld_particle(stft, diff_th, K_th, V_azi, V_ele, in_sd, in_sdn, init_birth, in
     # order of stored data is [time][[azis][eles][std_azis][std_eles]]
 
     # convert output data into Events
-    min_length = 10 # TODO ACHTUNG: HARDCODED VALUE
+    min_length = min_event_length
     event_list = []
     for n in range(num_events):
 
