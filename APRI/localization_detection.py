@@ -648,6 +648,6 @@ def ld_particle(stft, diff_th, K_th, V_azi, V_ele, in_sd, in_sdn, init_birth, in
             azis = e.get_azis() * 180 / np.pi
             azis = [a + 360 if a < 0 else a for a in azis]  # adjust range to [-pi, pi]
 
-            plt.plot(e.get_frames(), azis, color='chartreuse')
+            plt.plot(e.get_frames(), azis, marker='.',  markersize=1, color='chartreuse')
 
     return event_list
