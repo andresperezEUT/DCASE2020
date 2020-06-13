@@ -18,8 +18,8 @@ data_folder_path = os.path.join(params['dataset_dir'], 'foa_dev/') # path to aud
 
 gt_folder_path = os.path.join(params['dataset_dir'], 'metadata_dev')  # path to annotations
 
-audio_file_name = 'fold1_room1_mix027_ov2.wav'
-# audio_file_name = 'fold1_room1_mix001_ov1.wav'
+# audio_file_name = 'fold1_room1_mix027_ov2.wav'
+audio_file_name = 'fold1_room1_mix001_ov1.wav'
 
 metadata_file_name = os.path.splitext(audio_file_name)[0] + '.csv'
 metadata_file_path = os.path.join(gt_folder_path, metadata_file_name)
@@ -87,8 +87,6 @@ for k in range(K):
         else:
             doa_masked[:, k,n] = np.nan
 
-
-# plot_doa(doa_masked)
 
 
 DOA_decimated = np.empty((2, K, N//2)) # todo fix number
@@ -281,28 +279,54 @@ for n in range(num_events):
 
 
 #  PLOT # todo check elevation/inclination
-plt.figure()
-title_string = str(V_azi) +'_'+ str(V_ele) +'_'+ str(in_sd) +'_'+ str(in_sdn) +'_'+ str(init_birth) +'_'+ str(in_cp) +'_'+ str(num_particles)
-plt.title(title_string)
+# %%
+fig = plt.figure()
+plt.grid()
+ax1 = fig.add_subplot(211)
+ts = np.arange(0,60,0.1)
+fs = np.arange(0,6000,10)
+img = ax1.pcolormesh(ts, fs, doa_masked[0]*180/np.pi, cmap='rainbow', vmin=-180, vmax=180)
+
+ax1.set_ylabel('Frequency (Hz)')
+
+# fig.colorbar(im, orientation="horizontal", pad=-1)
+# plt.show()
+cax = fig.add_axes([0.125, .93, 0.775, 0.03])
+fig.colorbar(img, orientation='horizontal', cax=cax)
+
+# img.set_ylabel('Frequency')
+
+plt.subplot(212)
+# title_string = str(V_azi) +'_'+ str(V_ele) +'_'+ str(in_sd) +'_'+ str(in_sdn) +'_'+ str(init_birth) +'_'+ str(in_cp) +'_'+ str(num_particles)
+# plt.title(title_string)
 plt.grid()
 
 # framewise estimates
 est_csv = np.loadtxt(open(csv_file_path, "rb"), delimiter=",")
-t = est_csv[:,0] * 10
+t = est_csv[:,0]
 a = est_csv[:,1]
-e = est_csv[:,2]
+
+a = [az - 360 if az > 180 else az for az in a ]
+
 plt.scatter(t, a, marker='x',  edgecolors='b')
+plt.xlim(0,60)
 
 
-# groundtruth
-gt_csv = np.loadtxt(open(metadata_file_path, "rb"), delimiter=",")
-t = gt_csv[:,0]
-a = np.mod(gt_csv[:,3], 360)
-e = gt_csv[:,4]
-plt.scatter(t, a, facecolors='none', edgecolors='r')
+# # groundtruth
+# gt_csv = np.loadtxt(open(metadata_file_path, "rb"), delimiter=",")
+# t = gt_csv[:,0]
+# a = np.mod(gt_csv[:,3], 360)
+# e = gt_csv[:,4]
+# plt.scatter(t, a, facecolors='none', edgecolors='r')
 
 
 # particle filter
 for e_idx, e in enumerate(event_list):
     a = e.get_azis() * 180 / np.pi
-    plt.plot(e.get_frames(), a, color='chartreuse')
+
+    a = [az - 360 if az > 180 else az for az in a]
+
+    plt.plot(e.get_frames()/10, a, color='chartreuse')
+
+plt.xlabel('Time (seconds)')
+plt.ylabel('Azimuth (degree)')
