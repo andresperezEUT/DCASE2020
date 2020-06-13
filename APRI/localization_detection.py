@@ -395,7 +395,7 @@ def ld_basic_dereverb_filter(stft, diff_th=0.3, L=5, event_minimum_length=4):
 
     return event_list_clean
 
-def ld_particle(stft, diff_th, K_th, V_azi, V_ele, in_sd, in_sdn, init_birth, in_cp, num_particles, debug_plot=False, metadata_file_path=None):
+def ld_particle(stft, diff_th, K_th, min_event_length, V_azi, V_ele, in_sd, in_sdn, init_birth, in_cp, num_particles, debug_plot=False, metadata_file_path=None):
     """
     find single-source tf-bins, and then feed them into the particle tracker
     :param stft:
@@ -507,6 +507,8 @@ def ld_particle(stft, diff_th, K_th, V_azi, V_ele, in_sd, in_sdn, init_birth, in
             if len(azis[n]) > 0:  # if not empty, write
                 # time = n * seconds_per_frame
                 time = n * 0.1
+
+                # TODO: IQR TEST
                 azi = np.mod(circmedian(azis[n]) * 180 / np.pi, 360)  # csv needs degrees, range 0..360
                 ele = 90 - (np.median(eles[n]) * 180 / np.pi)  # csv needs degrees
                 writer.writerow([time, azi, ele])
@@ -528,6 +530,7 @@ def ld_particle(stft, diff_th, K_th, V_azi, V_ele, in_sd, in_sdn, init_birth, in
     # order of stored data is [time][[azis][eles][std_azis][std_eles]]
 
     # convert output data into Events
+    min_length = min_event_length
     event_list = []
     for n in range(num_events):
 
@@ -537,13 +540,40 @@ def ld_particle(stft, diff_th, K_th, V_azi, V_ele, in_sd, in_sdn, init_birth, in
         diff = frames[1:] - frames[:-1]
         frames = np.insert(frames[1:][diff != 0], 0, frames[0])
 
-        if len(frames) > 1:
-            # TODO: FILTER OUT SHORT EVENTS HERE
-
+        if len(frames) > min_length:
             azis = output_data[n][1][0] * np.pi / 180.  # in rads
             azis = [a - (2*np.pi) if a > np.pi else a for a in azis] # adjust range to [-pi, pi]
             eles = (90 - output_data[n][1][1]) * np.pi / 180.  # in rads, incl2ele
             event_list.append(Event(-1, -1, frames, azis, eles))
+
+
+    def trim_event(e):
+
+        frames = e.get_frames()
+        azis = e.get_azis()
+        eles = e.get_eles()
+
+        diff = frames[1:] - frames[:-1]
+        # large diffs tend to be at the end, so just discard everything after the peak
+        peak = np.argwhere(diff>40) # TODO ACHTUNG: HARDCODED VALUE
+        if peak.size>0:
+            # until the peak
+            peak_idx = peak[0][0]
+            new_frames = frames[:peak_idx+1]
+            new_azis = azis[:peak_idx+1]
+            new_eles = eles[:peak_idx+1]
+        else:
+            # just copy
+            new_frames = frames
+            new_azis = azis
+            new_eles = eles
+
+        return Event(-1, -1, np.asarray(new_frames), np.asarray(new_azis), np.asarray(new_eles))
+
+    trimmed_event_list = []
+    for e in event_list:
+        trimmed_event_list.append(trim_event(e))
+    event_list = trimmed_event_list
 
     def interpolate_event(e):
 
@@ -648,6 +678,6 @@ def ld_particle(stft, diff_th, K_th, V_azi, V_ele, in_sd, in_sdn, init_birth, in
             azis = e.get_azis() * 180 / np.pi
             azis = [a + 360 if a < 0 else a for a in azis]  # adjust range to [-pi, pi]
 
-            plt.plot(e.get_frames(), azis, marker='.',  markersize=1, color='chartreuse')
+            plt.plot(e.get_frames(), azis, marker='.', markersize=1, color='chartreuse')
 
     return event_list
