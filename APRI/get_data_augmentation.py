@@ -19,8 +19,10 @@ and outputs:
 # Dependencies
 import librosa
 import numpy as np
-
-
+import random
+import soundfile as sf
+import scipy
+import os
 
 # Compute data augmentation
 ## Add white noise
@@ -45,7 +47,12 @@ def time_shifting(data,shift):
     else:
         data[shift:] = 0
     return data
-
+def ir_merge(data,ir_path):
+    file_name=str(random.randint(0, 9))+'.wav'
+    h, sr_h = sf.read(os.path.join(ir_path,file_name))
+    assert sr_h == 24000  # sample rates should match
+    data = scipy.signal.fftconvolve(data, h)
+    return data
 
 def compute_data_augmentation(audio,aug_options):
     modified_audios=[]
@@ -54,7 +61,7 @@ def compute_data_augmentation(audio,aug_options):
         data_wn1 = adding_white_noise(audio,aug_options['noise_rate'][0])
         modified_audios.append(data_wn1)
         modified_audios_names.append('_wn1')
-
+        '''
         data_wn2 = adding_white_noise(audio,aug_options['noise_rate'][1])
         modified_audios.append(data_wn2)
         modified_audios_names.append('_wn2')
@@ -62,6 +69,7 @@ def compute_data_augmentation(audio,aug_options):
         data_wn3 = adding_white_noise(audio,aug_options['noise_rate'][2])
         modified_audios.append(data_wn3)
         modified_audios_names.append('_wn3')
+        '''
     if aug_options['time_stretching']:
         data_sadown = stretch_audio(audio,aug_options['rates'][0])
         data_saup = stretch_audio(audio,aug_options['rates'][1])
@@ -80,5 +88,9 @@ def compute_data_augmentation(audio,aug_options):
         data_ts = time_shifting(audio,round(len(audio) / 2))
         modified_audios.append(data_ts)
         modified_audios_names.append('_ts')
+    if aug_options['ir_merge']:
+        data_ir = ir_merge(audio,aug_options['ir_set'])
+        modified_audios.append(data_ir)
+        modified_audios_names.append('_ir')
     return modified_audios,modified_audios_names
 

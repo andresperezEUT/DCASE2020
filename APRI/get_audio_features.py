@@ -101,7 +101,6 @@ def compute_sfx(audio,pool2,options):
 
     # used for a nice progress display
     total_frames = frames.num_frames()
-    print(total_frames)
     n_frames = 0
     start_of_frame = -frameSize*0.5
     pitch=[]
@@ -115,17 +114,13 @@ def compute_sfx(audio,pool2,options):
 
         frame_windowed = window(frame)
         frame_spectrum = spectrum(frame_windowed)
-        print(frame_spectrum)
         # pitch descriptors
         frame_pitch, frame_pitch_confidence = pitch_detection(frame_spectrum)
         pitch.append(frame_pitch)
-        print(frame_pitch)
-        print(frame_pitch_confidence)
         # spectral peaks based descriptors
         (frame_frequencies, frame_magnitudes) = spectral_peaks(frame_spectrum)
         if frame_frequencies[0]==0:
             frame_frequencies[0]=0.000001
-        print(frame_frequencies)
         (frame_harmonic_frequencies, frame_harmonic_magnitudes) = harmonic_peaks(frame_frequencies, frame_magnitudes, frame_pitch)
         if len(frame_harmonic_frequencies) > 1:
             frame_inharmonicity = inharmonicity(frame_harmonic_frequencies, frame_harmonic_magnitudes)
@@ -164,7 +159,6 @@ def compute_sfx(audio,pool2,options):
     # effective duration
     duration = Duration(sampleRate=sampleRate)
     pool2.add(namespace + '.' + 'duration', duration(file_envelope))  # , pool.GlobalScope)
-    print(duration(file_envelope))
     # effective duration
     effectiveduration = EffectiveDuration()
     pool2.add(namespace + '.' + 'effective_duration', effectiveduration(file_envelope))  # , pool.GlobalScope)
@@ -640,7 +634,7 @@ def get_audio_features_options():
     options['skipSilence'] = True
     return options
 
-
+'''
 options = dict()
 options['sampleRate'] = 24000
 options['frameSize'] = 2048
@@ -650,6 +644,6 @@ options['skipSilence'] = True
 loader = MonoLoader(filename='/home/ribanez/movidas/dcase20/dcase20_dataset/anteriores/oracle_mono_signals_beam_all/crying_baby/973.wav', sampleRate=24000)
 audio = loader()
 compute_sfx(audio,options)
-
+'''
 
 

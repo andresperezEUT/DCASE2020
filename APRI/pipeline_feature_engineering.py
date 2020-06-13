@@ -32,7 +32,7 @@ pipeline='Datasets_2020-06-05_22-15' #if mode is 'modify'
 #original_event_dataset='oracle_mono_testing'
 
 extra_events=False
-data_augmentation=False
+data_augmentation=True
 audio_parameters_real=True
 audio_parameters_aug=True
 audio_parameters_extra=False
@@ -92,7 +92,7 @@ nfft = params['nfft']
 D = params['D'] # decimate factor
 frame_length = params['label_hop_len_s']
 debug=False
-beamforming_mode='beam'
+beamforming_mode='omni'
 occurrences_per_class = np.zeros(params['num_classes'], dtype=int)
 if not os.path.exists(events_folder):
     os.makedirs(events_folder)
@@ -106,8 +106,6 @@ for audio_file_idx, audio_file_name in enumerate(audio_files):
     # Open file
     audio_file_path = os.path.join(data_folder_path, audio_file_name)
     b_format, sr = sf.read(audio_file_path)
-    #b_format2=b_format
-    #b_format2 *= np.array([1, 1 / np.sqrt(3), 1 / np.sqrt(3), 1 / np.sqrt(3)])  # N3D to SN3D
     # Get spectrogram
     stft = compute_spectrogram(b_format, sr, window, window_size, window_overlap, nfft, D)
     ############################################

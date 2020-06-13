@@ -55,10 +55,15 @@ def get_dataframe_balanced_split(df_real,df_aug,test_n,val_n,train_n):
     #   2. train takes the rest of the real events  and augmented data until reach train_n per class
     #   3. remove augmented data obtained from those audios included in test and validation.
     
-    df_test=df_real[df_real.index.str.contains("fold5", regex=False)]
+    df_test=df_real[df_real.index.str.contains("fold2", regex=False)]
     df_real=df_real.drop(df_test.index)
-    df_val=df_test
+    df_val=df_real[df_real.index.str.contains("fold1", regex=False)]
+    df_real=df_real.drop(df_val.index)
     for ind in df_test.index:
+        df_aux = df_aug[df_aug.index.str.contains(str(ind)+"_", regex=False)]
+        df_aug =df_aug.drop(df_aux.index)
+    event_type = get_class_name_dict().values()
+    for ind in df_val.index:
         df_aux = df_aug[df_aug.index.str.contains(str(ind)+"_", regex=False)]
         df_aug =df_aug.drop(df_aux.index)
     event_type = get_class_name_dict().values()
@@ -67,7 +72,9 @@ def get_dataframe_balanced_split(df_real,df_aug,test_n,val_n,train_n):
     for event in event_type:
         key=get_key(event)
         if df_real[df_real['target'] == key].shape[0]>nmax:
-           nmax=df_real[df_real['target'] == key].shape[0] 
+           nmax=df_real[df_real['target'] == key].shape[0]
+    print(nmax)
+    #nmax=nmax*2
     for event in event_type:
         key=get_key(event)
         if i==0:
@@ -78,14 +85,12 @@ def get_dataframe_balanced_split(df_real,df_aug,test_n,val_n,train_n):
         n=df_real[df_real['target'] == key].shape[0]
         if n<nmax:
             cont=nmax-n
-            print(cont)
+            if cont>len(df_aug[df_aug['target']==key]):
+                cont=len(df_aug[df_aug['target']==key])
             df_aux2=df_aug[df_aug['target']==key].sample(cont)
             df_aug = df_aug.drop(df_aux2.index)
             df_train = pd.concat([df_train, df_aux2])
         i+=1
-        print(df_train[df_train['target']==key])
-    print(df_train.shape)
-
     return df_test,df_val,df_train
 
 def get_dataframe_split(df_real,df_aug,test_p,val_p):
@@ -133,6 +138,7 @@ def get_dataframe_split_challenge2(df_real,df_aug):
     for ind in df_test.index:
         df_aux=df_aug[df_aug.index.str.contains(str(ind)+'_',regex=False)]
         df_aug = df_aug.drop(df_aux.index)
-    df_train = pd.concat([df_train, df_aug.sample(frac=0.2)])
+    #df_aug=df_aug[df_aug.index.str.contains("wn", regex=False)]
+    df_train = pd.concat([df_train, df_aug.sample(frac=1)])
     return df_test,df_val,df_train
 
