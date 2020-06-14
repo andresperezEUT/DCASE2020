@@ -76,3 +76,5 @@ CRNN_SELDT_DCASE2020.png
 4_1_foa_dev_split1.png
 4_1_foa_dev_split1_model.h5
 baseline/results
+
+APRI/results/4report/*
