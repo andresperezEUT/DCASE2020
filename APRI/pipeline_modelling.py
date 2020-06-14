@@ -17,11 +17,12 @@ from baseline import parameter
 import pandas as pd
 from APRI.get_dataframes import *
 from APRI.get_model_utils import *
+from APRI.remove_near_observations import *
 import pickle
 import csv
 import joblib
 
-# Import general parametes
+# Import general parameters
 params = parameter.get_params()
 dataset_dir= os.path.join(params['dataset_dir'])
 this_file_path = os.path.dirname(os.path.abspath(__file__))
@@ -29,29 +30,31 @@ this_file_path = os.path.dirname(os.path.abspath(__file__))
 # Parameters
 mode='new' # new or modify
 pipeline_modelling='' #if mode is 'modify'
-pipeline_feature_engineering='Datasets_foa_dev_2020-06-09'
+pipeline_feature_engineering='Datasets_foa_dev_2020-06-12_beam'
 
 build_dataframes=True
-data_augmentation=False
-feature_selection=False
+data_augmentation=True
+remove_similar_events=False
+quite_overlapped=False
+feature_selection= True
 random_forest_model=False
 svc_model=False
 xgb_model=False
 gb_model=True
-ensemble=True
+ensemble=False
 ## Dataframe split:
-mode_split='challenge_1'
+mode_split='all'
 split_options_balanced=[100,10,3000] #number of events per class in test, validation and train splits
-split_options_all=[0.2,0.01] #number of events per class in test, validation and train splits
+split_options_all=[0.10,0.10] #number of events per class in test, validation and train splits
 ## Feature selection
 fs_gridsearch=False
-fs_threshold=0.0025
+fs_threshold=0.002
 ## xgb
 xgb_gridsearch=False
 #rf
 rf_gridsearch=False
 ## svc
-svc_gridsearch=False
+svc_gridsearch=True
 ## gb
 gb_gridsearch=True
 
@@ -89,32 +92,46 @@ else:
 if build_dataframes:
     print('Step: Building dataframes')
     df_real=pd.read_pickle(os.path.join(params['dataset_dir'],pipeline_feature_engineering,'source_dataframes/dataframe_source_real.pkl'))
-    #print(df_real.shape)
-
-    #df_aux = df_real[df_real.index.str.contains("ov1", regex=False)]
-    #print(df_aux.shape)
-    #df_real=df_aux
-
     if data_augmentation:
+        print('Reading data augmentation')
         df_aug=pd.read_pickle(os.path.join(params['dataset_dir'],pipeline_feature_engineering,'source_dataframes/dataframe_source_aug.pkl'))
     else:
         df_aug=df_real.iloc[0:0]
+
+    if quite_overlapped:
+        print('Only ov1')
+        df_real=df_real[df_real.index.str.contains("ov1", regex=False)]
+        df_aug=df_aug[df_aug.index.str.contains("ov1", regex=False)]
+
+    if remove_similar_events:
+        print('Removing similar events')
+        df_real, df_aug = drop_similar_observations(df_real, df_aug)
     if not os.path.exists(os.path.join(root_folder, 'datasets')):
         os.makedirs(os.path.join(root_folder, 'datasets'))
     if mode_split=='balanced':
+        print('Split = balanced')
         dataset_path = os.path.join(root_folder, 'datasets')
         df_test,df_val,df_train=get_dataframe_balanced_split(df_real, df_aug, split_options[0], split_options[1], split_options[2])
         df_test.to_pickle(os.path.join(dataset_path,'df_test.pkl'))
         df_val.to_pickle(os.path.join(dataset_path,'df_val.pkl'))
         df_train.to_pickle(os.path.join(dataset_path,'df_train.pkl'))
     elif mode_split=='all':
+        print('Split = random')
         df_test,df_val,df_train=get_dataframe_split(df_real, df_aug, split_options[0], split_options[1])
         dataset_path = os.path.join(root_folder, 'datasets')
         df_test.to_pickle(os.path.join(dataset_path,'df_test.pkl'))
         df_val.to_pickle(os.path.join(dataset_path,'df_val.pkl'))
         df_train.to_pickle(os.path.join(dataset_path,'df_train.pkl'))
     elif mode_split=='challenge_1':
+        print('Split = challenge 1')
         df_test,df_val,df_train=get_dataframe_split_challenge1(df_real, df_aug)
+        dataset_path = os.path.join(root_folder, 'datasets')
+        df_test.to_pickle(os.path.join(dataset_path, 'df_test.pkl'))
+        df_val.to_pickle(os.path.join(dataset_path, 'df_val.pkl'))
+        df_train.to_pickle(os.path.join(dataset_path, 'df_train.pkl'))
+    elif mode_split=='challenge_2':
+        print('Split = challenge 2')
+        df_test,df_val,df_train=get_dataframe_split_challenge2(df_real, df_aug)
         dataset_path = os.path.join(root_folder, 'datasets')
         df_test.to_pickle(os.path.join(dataset_path, 'df_test.pkl'))
         df_val.to_pickle(os.path.join(dataset_path, 'df_val.pkl'))
@@ -134,8 +151,6 @@ y_test=df_test['target']
 x_test=df_test.drop(['target'],axis=1)
 y_val=df_val['target']
 x_val=df_val.drop(['target'],axis=1)
-print(df_train.columns)
-print(df_train.shape)
 '''
 #testing
 df=pd.read_pickle(os.path.join('/home/ribanez/movidas/dcase20/dcase20_dataset/Datasets_oracle_mono_testing_2020-06-07_18-02/source_dataframes/dataframe_source_real.pkl'))
@@ -199,10 +214,15 @@ if svc_model:
 if gb_model:
     if not os.path.exists(os.path.join(models_path, 'gb')):
         os.makedirs(os.path.join(models_path, 'gb'))
-    model_gb = train_gb(x_train, y_train, x_test, y_test, x_val, y_val, gb_gridsearch)
+    model_gb = train_xgb_sk(x_train, y_train, x_test, y_test, x_val, y_val, gb_gridsearch)
     joblib.dump(model_gb, os.path.join(models_path, 'gb/model_gb.bin'))
 
-
+#ensemble
+if ensemble:
+    if not os.path.exists(os.path.join(models_path, 'ensemble')):
+        os.makedirs(os.path.join(models_path, 'ensemble'))
+    model_ens = train_ensemble(x_train, y_train, x_test, y_test, x_val, y_val)
+    joblib.dump(model_ens, os.path.join(models_path, 'ensemble/model_ens.bin'))
 
 
 

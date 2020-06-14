@@ -288,8 +288,81 @@ def get_params(argv='1'):
         params['preset_descriptor'] = 'loc:particle; beam:beam; cls:base'
 
 
+    if argv == 'particle_filter_D_beam':
+        # localization_detection
+        params['window'] = 'hann'
+        params['window_size'] = 2400
+        params['window_overlap'] = 1200
+        params['nfft'] = 2400
+        params['D'] = None
+        params['ld_method'] = 'ld_particle'
+        # [diff_th, K_th, min_lenx2, V_azi, V_ele, in_sd, in_sdn, init_birth, in_cp, N]
+        params['ld_method_args'] = [0.1, 10, 10, 2, 1, 5, 20, 0.25, 0.25, 30]
+        # beamforming
+        params['beamforming_mode'] = 'beam'
+        # classification
+        params['class_method'] = 'event_class_prediction'
+        params['class_method_args'] = ['event_class_beam']
+        # postprocessing
+        params['event_filter_activation'] = False
+        params['preset_descriptor'] = 'loc:particle; beam:beam; cls:base'
 
+    if argv == 'particle_filter_D_beam2':
+        # localization_detection
+        params['window'] = 'hann'
+        params['window_size'] = 2400
+        params['window_overlap'] = 1200
+        params['nfft'] = 2400
+        params['D'] = None
+        params['ld_method'] = 'ld_particle'
+        # [diff_th, K_th, min_lenx2, V_azi, V_ele, in_sd, in_sdn, init_birth, in_cp, N]
+        params['ld_method_args'] = [0.1, 10, 10, 2, 1, 5, 20, 0.25, 0.25, 30]
+        # beamforming
+        params['beamforming_mode'] = 'beam'
+        # classification
+        params['class_method'] = 'event_class_prediction'
+        params['class_method_args'] = ['event_class_beam2']
+        # postprocessing
+        params['event_filter_activation'] = False
+        params['preset_descriptor'] = 'loc:particle; beam:beam; cls:base'
 
+    if argv == 'particle_filter_D_omni1':
+        # localization_detection
+        params['window'] = 'hann'
+        params['window_size'] = 2400
+        params['window_overlap'] = 1200
+        params['nfft'] = 2400
+        params['D'] = None
+        params['ld_method'] = 'ld_particle'
+        # [diff_th, K_th, min_lenx2, V_azi, V_ele, in_sd, in_sdn, init_birth, in_cp, N]
+        params['ld_method_args'] = [0.1, 10, 10, 2, 1, 5, 20, 0.25, 0.25, 30]
+        # beamforming
+        params['beamforming_mode'] = 'beam'
+        # classification
+        params['class_method'] = 'event_class_prediction'
+        params['class_method_args'] = ['event_class_omni1']
+        # postprocessing
+        params['event_filter_activation'] = False
+        params['preset_descriptor'] = 'loc:particle; beam:beam; cls:base'
+
+    if argv == 'particle_filter_D_omni2':
+        # localization_detection
+        params['window'] = 'hann'
+        params['window_size'] = 2400
+        params['window_overlap'] = 1200
+        params['nfft'] = 2400
+        params['D'] = None
+        params['ld_method'] = 'ld_particle'
+        # [diff_th, K_th, min_lenx2, V_azi, V_ele, in_sd, in_sdn, init_birth, in_cp, N]
+        params['ld_method_args'] = [0.1, 10, 10, 2, 1, 5, 20, 0.25, 0.25, 30]
+        # beamforming
+        params['beamforming_mode'] = 'beam'
+        # classification
+        params['class_method'] = 'event_class_prediction'
+        params['class_method_args'] = ['event_class_omni2']
+        # postprocessing
+        params['event_filter_activation'] = False
+        params['preset_descriptor'] = 'loc:particle; beam:beam; cls:base'
 
     else:
         print('ERROR: unknown argument {}'.format(argv))

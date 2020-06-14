@@ -54,18 +54,27 @@ def get_dataframe_balanced_split(df_real,df_aug,test_n,val_n,train_n):
     #   1. test and validation take rows from real events (test_n and val_n per class)
     #   2. train takes the rest of the real events  and augmented data until reach train_n per class
     #   3. remove augmented data obtained from those audios included in test and validation.
-    df_test=df_real.groupby('target',group_keys=False).apply(lambda x: x.sample(test_n))
+    
+    df_test=df_real[df_real.index.str.contains("fold2", regex=False)]
     df_real=df_real.drop(df_test.index)
+    df_val=df_real[df_real.index.str.contains("fold1", regex=False)]
+    df_real=df_real.drop(df_val.index)
     for ind in df_test.index:
         df_aux = df_aug[df_aug.index.str.contains(str(ind)+"_", regex=False)]
         df_aug =df_aug.drop(df_aux.index)
-    df_val=df_real.groupby('target',group_keys=False).apply(lambda x: x.sample(val_n))
-    df_real=df_real.drop(df_val.index)
+    event_type = get_class_name_dict().values()
     for ind in df_val.index:
         df_aux = df_aug[df_aug.index.str.contains(str(ind)+"_", regex=False)]
         df_aug =df_aug.drop(df_aux.index)
     event_type = get_class_name_dict().values()
     i=0
+    nmax=0
+    for event in event_type:
+        key=get_key(event)
+        if df_real[df_real['target'] == key].shape[0]>nmax:
+           nmax=df_real[df_real['target'] == key].shape[0]
+    print(nmax)
+    #nmax=nmax*2
     for event in event_type:
         key=get_key(event)
         if i==0:
@@ -74,13 +83,13 @@ def get_dataframe_balanced_split(df_real,df_aug,test_n,val_n,train_n):
             df_aux=df_real[df_real['target']==key]
             df_train=pd.concat([df_train,df_aux])
         n=df_real[df_real['target'] == key].shape[0]
-        if train_n-n>df_aug[df_aug['target']==key].shape[0]:
-            cont=df_aug[df_aug['target']==key].shape[0]
-        else:
-            cont=train_n-n
-        df_aux2=df_aug[df_aug['target']==key].sample(cont)
-        df_aug = df_aug.drop(df_aux2.index)
-        df_train = pd.concat([df_train, df_aux2])
+        if n<nmax:
+            cont=nmax-n
+            if cont>len(df_aug[df_aug['target']==key]):
+                cont=len(df_aug[df_aug['target']==key])
+            df_aux2=df_aug[df_aug['target']==key].sample(cont)
+            df_aug = df_aug.drop(df_aux2.index)
+            df_train = pd.concat([df_train, df_aux2])
         i+=1
     return df_test,df_val,df_train
 
@@ -89,20 +98,13 @@ def get_dataframe_split(df_real,df_aug,test_p,val_p):
     df_real=df_real.drop(df_test.index)
     df_val=df_real.groupby('target',group_keys=False).apply(lambda x: x.sample(frac=val_p))
     df_train=df_real.drop(df_val.index)
-    print(df_test.shape)
-    print(df_val.shape)
-    print(df_train.shape)
-    print(df_aug.shape)
     for ind in df_val.index:
         df_aux=df_aug[df_aug.index.str.contains(str(ind)+'_',regex=False)]
         df_aug = df_aug.drop(df_aux.index)
-    print(df_aug.shape)
     for ind in df_test.index:
         df_aux=df_aug[df_aug.index.str.contains(str(ind)+'_',regex=False)]
         df_aug = df_aug.drop(df_aux.index)
-    print(df_aug.shape)
     df_train = pd.concat([df_train, df_aug.sample(frac=0.5)])
-    print(df_train.shape)
     return df_test,df_val,df_train
 
 def get_dataframe_split_challenge1(df_real,df_aug):
@@ -116,6 +118,27 @@ def get_dataframe_split_challenge1(df_real,df_aug):
     for ind in df_val.index:
         df_aux=df_aug[df_aug.index.str.contains(str(ind)+'_',regex=False)]
         df_aug = df_aug.drop(df_aux.index)
-    df_train = pd.concat([df_train, df_aug.sample(frac=0.1)])
+    df_train = pd.concat([df_train, df_aug.sample(frac=0.0)])
     print(df_train.shape)
     return df_test,df_val,df_train
+
+def get_dataframe_split_challenge2(df_real,df_aug):
+    print(df_real.shape)
+    df_val=df_real[df_real.index.str.contains("fold1", regex=False)]
+    df_real=df_real.drop(df_val.index)
+    print(df_val.shape)
+    df_test=df_real[df_real.index.str.contains("fold2", regex=False)]
+    df_real=df_real.drop(df_test.index)
+    print(df_test.shape)
+    df_train=df_real
+    print(df_train.shape)
+    for ind in df_val.index:
+        df_aux=df_aug[df_aug.index.str.contains(str(ind)+'_',regex=False)]
+        df_aug = df_aug.drop(df_aux.index)
+    for ind in df_test.index:
+        df_aux=df_aug[df_aug.index.str.contains(str(ind)+'_',regex=False)]
+        df_aug = df_aug.drop(df_aux.index)
+    #df_aug=df_aug[df_aug.index.str.contains("wn", regex=False)]
+    df_train = pd.concat([df_train, df_aug.sample(frac=1)])
+    return df_test,df_val,df_train
+

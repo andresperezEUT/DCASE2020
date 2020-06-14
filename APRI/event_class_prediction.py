@@ -78,14 +78,14 @@ def event_class_prediction(audio,model_name):
     if 'xgb' in model_name:
         variables=get_features_music_extractor(audio)
         if feat_sel:
-            print(variables.shape)
-            variables=variables[columns]
-            print(variables.shape)
+            variables=variables[[columns]]
         variables=xgb.DMatrix(variables)
         event_class = model.predict(variables)
         class_idx=int(event_class)
     else:
         variables=get_features_music_extractor(audio)
+        if feat_sel:
+            variables=variables[[columns]]
         event_class = model.predict(variables)
         class_idx=int(event_class)
     return class_idx

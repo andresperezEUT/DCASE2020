@@ -19,7 +19,7 @@ and outputs:
 # Dependencies
 from essentia.standard import *
 import numpy as np
-
+import soundfile as sf
 
 
 # Auxiliar
@@ -63,7 +63,161 @@ def compute_statistics(array):
     array_var = np.array(array_var)
     return [array_mean, array_var]
 
+
+
+
+
+
+
+
+
+
+
+
 # Calculate audio features
+def compute_sfx(audio,pool2,options):
+    namespace = 'sfx'
+    pool = essentia.Pool()
+
+    # analysis parameters
+    sampleRate = options['sampleRate']
+    frameSize  = options['frameSize']
+    hopSize    = options['hopSize']
+
+    # frame algorithms
+    frames = FrameGenerator(audio = audio, frameSize = frameSize, hopSize = hopSize)
+    window = Windowing(size = frameSize, zeroPadding = 0)
+    spectrum = Spectrum(size = frameSize)
+
+    # pitch algorithm
+    pitch_detection = PitchYinFFT(frameSize = frameSize, sampleRate = sampleRate)
+
+    # sfx descriptors
+    spectral_peaks = SpectralPeaks(sampleRate = sampleRate, orderBy = 'frequency')
+    harmonic_peaks = HarmonicPeaks()
+    inharmonicity = Inharmonicity()
+    odd2evenharmonicenergyratio = OddToEvenHarmonicEnergyRatio()
+    tristimulus = Tristimulus()
+
+    # used for a nice progress display
+    total_frames = frames.num_frames()
+    n_frames = 0
+    start_of_frame = -frameSize*0.5
+    pitch=[]
+    for frame in frames:
+        frameScope = [ start_of_frame / sampleRate, (start_of_frame + frameSize) / sampleRate ]
+        #pool.setCurrentScope(frameScope)
+        if options['skipSilence'] and essentia.isSilent(frame):
+            total_frames -= 1
+            start_of_frame += hopSize
+            continue
+
+        frame_windowed = window(frame)
+        frame_spectrum = spectrum(frame_windowed)
+        # pitch descriptors
+        frame_pitch, frame_pitch_confidence = pitch_detection(frame_spectrum)
+        pitch.append(frame_pitch)
+        # spectral peaks based descriptors
+        (frame_frequencies, frame_magnitudes) = spectral_peaks(frame_spectrum)
+        if frame_frequencies[0]==0:
+            frame_frequencies[0]=0.000001
+        (frame_harmonic_frequencies, frame_harmonic_magnitudes) = harmonic_peaks(frame_frequencies, frame_magnitudes, frame_pitch)
+        if len(frame_harmonic_frequencies) > 1:
+            frame_inharmonicity = inharmonicity(frame_harmonic_frequencies, frame_harmonic_magnitudes)
+            pool.add(namespace + '.' + 'inharmonicity', frame_inharmonicity)
+            frame_tristimulus = tristimulus(frame_harmonic_frequencies, frame_harmonic_magnitudes)
+            pool.add(namespace + '.' + 'tristimulus', frame_tristimulus)
+            frame_odd2evenharmonicenergyratio = odd2evenharmonicenergyratio(frame_harmonic_frequencies, frame_harmonic_magnitudes)
+            pool.add(namespace + '.' + 'odd2evenharmonicenergyratio', frame_odd2evenharmonicenergyratio)
+
+    pool2.add(namespace + '.' + 'inharmonicity_mean', np.mean(pool['sfx.inharmonicity']))
+    pool2.add(namespace + '.' + 'inharmonicity_var', np.var(pool['sfx.inharmonicity']))
+    pool2.add(namespace + '.' + 'tristimulus_mean', np.mean(pool['sfx.tristimulus']))
+    pool2.add(namespace + '.' + 'tristimulus_var', np.var(pool['sfx.tristimulus']))
+    pool2.add(namespace + '.' + 'odd2evenharmonicenergyratio_mean', np.mean(pool['sfx.odd2evenharmonicenergyratio']))
+    pool2.add(namespace + '.' + 'odd2evenharmonicenergyratio_var', np.var(pool['sfx.odd2evenharmonicenergyratio']))
+
+    envelope = Envelope(sampleRate=sampleRate)
+    file_envelope = envelope(audio)
+
+    # temporal statistics
+    decrease = Decrease()
+    pool2.add(namespace + '.' + 'temporal_decrease', decrease(file_envelope))  # , pool.GlobalScope)
+
+    centralmoments = CentralMoments()
+    file_centralmoments = centralmoments(file_envelope)
+
+    distributionshape = DistributionShape()
+    (file_spread, file_skewness, file_kurtosis) = distributionshape(file_centralmoments)
+    pool2.add(namespace + '.' + 'temporal_spread', file_spread)  # , pool.GlobalScope)
+    pool2.add(namespace + '.' + 'temporal_skewness', file_skewness)  # , pool.GlobalScope)
+    pool2.add(namespace + '.' + 'temporal_kurtosis', file_kurtosis)  # , pool.GlobalScope)
+
+    centroid = Centroid()
+    pool2.add(namespace + '.' + 'temporal_centroid', centroid(file_envelope))  # , pool.GlobalScope)
+
+    # effective duration
+    duration = Duration(sampleRate=sampleRate)
+    pool2.add(namespace + '.' + 'duration', duration(file_envelope))  # , pool.GlobalScope)
+    # effective duration
+    effectiveduration = EffectiveDuration()
+    pool2.add(namespace + '.' + 'effective_duration', effectiveduration(file_envelope))  # , pool.GlobalScope)
+
+    # log attack time
+    #logattacktime = LogAttackTime(sampleRate=sampleRate)
+    #pool.add(namespace + '.' + 'logattacktime', logattacktime(file_envelope))  # , pool.GlobalScope)
+
+    # strong decay
+    strongdecay = StrongDecay()
+    pool2.add(namespace + '.' + 'strongdecay', strongdecay(file_envelope))  # , pool.GlobalScope)
+
+    # dynamic profile
+    flatness = FlatnessSFX()
+    pool2.add(namespace + '.' + 'flatness', flatness(file_envelope))  # , pool.GlobalScope)
+
+
+    # morphological descriptors
+    max_to_total = MaxToTotal()
+    pool2.add(namespace + '.' + 'max_to_total', max_to_total(file_envelope))  # , pool.GlobalScope)
+
+    tc_to_total = TCToTotal()
+    pool2.add(namespace + '.' + 'tc_to_total', tc_to_total(file_envelope))  # , pool.GlobalScope)
+
+    derivativeSFX = DerivativeSFX()
+    (der_av_after_max, max_der_before_max) = derivativeSFX(file_envelope)
+    pool2.add(namespace + '.' + 'der_av_after_max', der_av_after_max)  # , pool.GlobalScope)
+    pool2.add(namespace + '.' + 'max_der_before_max', max_der_before_max)  # , pool.GlobalScope)
+
+    # pitch profile
+
+    if len(pitch) > 1:
+        pool2.add(namespace + '.' + 'pitch_max_to_total', max_to_total(pitch))  # , pool.GlobalScope)
+
+        min_to_total = MinToTotal()
+        pool2.add(namespace + '.' + 'pitch_min_to_total', min_to_total(pitch))  # , pool.GlobalScope)
+
+        pitch_centroid = Centroid(range=len(pitch) - 1)
+        pool2.add(namespace + '.' + 'pitch_centroid', pitch_centroid(pitch))  # , pool.GlobalScope)
+
+        pitch_after_max_to_before_max_energy_ratio = AfterMaxToBeforeMaxEnergyRatio()
+        pool2.add(namespace + '.' + 'pitch_after_max_to_before_max_energy_ratio',
+                 pitch_after_max_to_before_max_energy_ratio(pitch))  # , pool.GlobalScope)
+
+    else:
+        pool2.add(namespace + '.' + 'pitch_max_to_total', 0.0)  # , pool.GlobalScope)
+        pool2.add(namespace + '.' + 'pitch_min_to_total', 0.0)  # , pool.GlobalScope)
+        pool2.add(namespace + '.' + 'pitch_centroid', 0.0)  # , pool.GlobalScope)
+        pool2.add(namespace + '.' + 'pitch_after_max_to_before_max_energy_ratio', 0.0)  # , pool.GlobalScope)
+
+    return pool2
+
+
+
+
+
+
+
+
 def compute_lowlevel(audio, options):
     namespace = 'lowlevel'
     pool = essentia.Pool()
@@ -436,6 +590,7 @@ def compute_audio_features(audio,options):
     #audio = loader()
     features = compute_lowlevel(audio, options)
     features = compute_tonal(audio, features, options)
+    features = compute_sfx(audio,features,options)
     audio_features = []
     column_labels = []
     for feature in features.descriptorNames():
@@ -469,6 +624,7 @@ def get_data_augmentation_parameters():
     ### Time shifting
     aug_options['time_shifting']=True
     return aug_options
+
 ## Audio features parameters
 def get_audio_features_options():
     options = dict()
@@ -478,7 +634,16 @@ def get_audio_features_options():
     options['skipSilence'] = True
     return options
 
+'''
+options = dict()
+options['sampleRate'] = 24000
+options['frameSize'] = 2048
+options['hopSize'] = 1024
+options['skipSilence'] = True
 
-
+loader = MonoLoader(filename='/home/ribanez/movidas/dcase20/dcase20_dataset/anteriores/oracle_mono_signals_beam_all/crying_baby/973.wav', sampleRate=24000)
+audio = loader()
+compute_sfx(audio,options)
+'''
 
 
