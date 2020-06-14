@@ -42,3 +42,6 @@ See
 Otherwise: [Do What the Fuck You Want To Public License](LICENSE.md)
 
 
+## TODO:
+
+- ask about how to compute 2019 metrics easily
