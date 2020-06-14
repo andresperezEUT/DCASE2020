@@ -18,10 +18,10 @@ import time
 
 # %% Parameters
 # preset = 'particle'
-preset = 'particle_filter_D_omni2'
+preset = '4REPORT'
 write = True
 plot = False
-quick = True
+quick = False
 
 params = parameter.get_params(preset)
 data_folder_path = os.path.join(params['dataset_dir'], 'foa_dev') # path to audios
