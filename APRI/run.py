@@ -18,7 +18,7 @@ import time
 
 # %% Parameters
 # preset = 'particle'
-preset = 'particle_D'
+preset = 'particle_filter_D_omni2'
 write = True
 plot = False
 quick = True
