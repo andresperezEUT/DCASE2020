@@ -18,14 +18,16 @@ import time
 
 # %% Parameters
 # preset = 'particle'
-preset = '4REPORT'
+# preset = '4REPORT'
+preset = '4EVALUATION_eval'
 write = True
 plot = False
 quick = False
 
 params = parameter.get_params(preset)
-data_folder_path = os.path.join(params['dataset_dir'], 'foa_dev') # path to audios
-gt_folder_path = os.path.join(params['dataset_dir'], 'metadata_dev') # path to annotations
+mode = params['mode']
+data_folder_path = os.path.join(params['dataset_dir'], 'foa_'+mode) # path to audios
+gt_folder_path = os.path.join(params['dataset_dir'], 'metadata_'+mode) # path to annotations
 this_file_path = os.path.dirname(os.path.abspath(__file__))
 result_folder_path = os.path.join(this_file_path, params['results_dir'], preset)
 if quick:
@@ -59,7 +61,7 @@ quick_audio_files = ['fold1_room1_mix007_ov1.wav',
                      'fold4_room1_mix037_ov2.wav',
                      'fold5_room1_mix037_ov2.wav',
                      ]
-# TODO CHECK fold2_room2_mix021_ov1.wav
+
 
 # %% Analysis
 
@@ -165,7 +167,7 @@ print('                                                 ')
 
 # %% OPTIONAL EVAL
 
-if params['mode'] == 'dev':
+if mode == 'dev':
     print('-------------- COMPUTE DOA METRICS --------------')
     compute_metrics(gt_folder_path, result_folder_path, params)
 
