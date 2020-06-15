@@ -441,6 +441,7 @@ def get_params(argv='1'):
         params['ld_method_args'] = [0.1, 10, 10, 2, 1, 5, 20, 0.25, 0.25, 30]
         # beamforming
         params['beamforming_mode'] = 'beam'
+        # ACTUALLY, CLASSIFICATION PARAMS WERE NOT RELEVANT HERE WHEN COMPUTING 4EVALUATION2_ORACLE_CLASS
         # classification
         params['class_method'] = 'event_class_prediction'
         params['class_method_args'] = ['event_class_beam_for_evaluation']
