@@ -19,7 +19,7 @@ import time
 # %% Parameters
 # preset = 'particle'
 # preset = '4REPORT'
-preset = '4EVALUATION_eval'
+preset = '4EVALUATION_PARTICLE'
 write = True
 plot = False
 quick = False

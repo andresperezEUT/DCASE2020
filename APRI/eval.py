@@ -12,7 +12,7 @@ from APRI.utils import plot_results
 
 # %% PARAMS
 
-preset = '4EVALUATION'
+preset = '4EVALUATION_Q!'
 params = parameter.get_params(preset)
 gt_folder = os.path.join(params['dataset_dir'], 'metadata_dev')  # path to annotations
 this_file_path = os.path.dirname(os.path.abspath(__file__))

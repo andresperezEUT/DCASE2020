@@ -367,6 +367,9 @@ def get_params(argv='1'):
     ########################################################################################
     ########################################################################################
 
+    # 4EVALUATION refers to PAPAFIL_1
+    # 4REPORT is PAPAFIL_1 trained without split 1 (in order to provide comparative results)
+
     if argv == '4REPORT':
         # localization_detection
         params['window'] = 'hann'
@@ -429,6 +432,7 @@ def get_params(argv='1'):
 
 
     ############################################
+    # this was used to compute the manual annotations for extracting the dataset
     if argv == '4EVALUATION2':
         # localization_detection
         params['window'] = 'hann'
@@ -449,6 +453,53 @@ def get_params(argv='1'):
         params['event_filter_activation'] = False
         params['preset_descriptor'] = 'loc:particle; beam:beam; cls:beam4evaluation'
 
+    ############################################
+
+    # 4EVALUATION_PARTICLE refers to PAPAFIL_2
+    # 4REPORT_PARTICLE is PAPAFIL_2 trained without split 1 (in order to provide comparative results)
+
+    # this is actually used for the evaluation on development
+    if argv == '4EVALUATION_PARTICLE':
+        # localization_detection
+        params['window'] = 'hann'
+        params['window_size'] = 2400
+        params['window_overlap'] = 1200
+        params['nfft'] = 2400
+        params['D'] = None
+        params['ld_method'] = 'ld_particle'
+        # [diff_th, K_th, min_lenx2, V_azi, V_ele, in_sd, in_sdn, init_birth, in_cp, N]
+        params['ld_method_args'] = [0.1, 10, 10, 2, 1, 5, 20, 0.25, 0.25, 30]
+        # beamforming
+        params['beamforming_mode'] = 'beam'
+        # ACTUALLY, CLASSIFICATION PARAMS WERE NOT RELEVANT HERE WHEN COMPUTING 4EVALUATION2_ORACLE_CLASS
+        # classification
+        params['class_method'] = 'event_class_prediction'
+        params['class_method_args'] = ['event_class_beam_for_evaluation_particle']
+        # postprocessing
+        params['event_filter_activation'] = False
+        params['preset_descriptor'] = 'loc:particle; beam:beam; cls:beam4evaluation'
+
+    # and this is the eval version
+    if argv == '4EVALUATION_PARTICLE_eval':
+        params['mode'] = 'eval'
+        # localization_detection
+        params['window'] = 'hann'
+        params['window_size'] = 2400
+        params['window_overlap'] = 1200
+        params['nfft'] = 2400
+        params['D'] = None
+        params['ld_method'] = 'ld_particle'
+        # [diff_th, K_th, min_lenx2, V_azi, V_ele, in_sd, in_sdn, init_birth, in_cp, N]
+        params['ld_method_args'] = [0.1, 10, 10, 2, 1, 5, 20, 0.25, 0.25, 30]
+        # beamforming
+        params['beamforming_mode'] = 'beam'
+        # ACTUALLY, CLASSIFICATION PARAMS WERE NOT RELEVANT HERE WHEN COMPUTING 4EVALUATION2_ORACLE_CLASS
+        # classification
+        params['class_method'] = 'event_class_prediction'
+        params['class_method_args'] = ['event_class_beam_for_evaluation_particle']
+        # postprocessing
+        params['event_filter_activation'] = False
+        params['preset_descriptor'] = 'loc:particle; beam:beam; cls:beam4evaluation'
 
     ########################################################################################
     ########################################################################################
