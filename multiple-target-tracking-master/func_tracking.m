@@ -1,19 +1,13 @@
 function [] = func_tracking(input_file_path, V_azi, V_ele, in_sd, in_sdn, init_birth, in_cp, N)
-%FUNC_TRACKING Summary of this function goes here
-%   Detailed explanation goes here
 
+    % TODO set path automaticly
     addpath('/Users/andres.perez/source/DCASE2020/multiple-target-tracking-master/matlab_packages/rbmcda/')
     addpath('/Users/andres.perez/source/DCASE2020/multiple-target-tracking-master/matlab_packages/ekfukf/')
 
     %% I/O
-
-%     Y_gt = csvread('/Users/andres.perez/source/DCASE2020/APRI/filter_input_gt/mi_primerito_dia_postfilter_Q!/fold1_room1_mix027_ov2.csv')';
-%     Y = csvread('/Users/andres.perez/source/DCASE2020/APRI/filter_input/mi_primerito_dia_postfilter_Q!/fold1_room1_mix027_ov2.csv')';
-
     Y = csvread(input_file_path)';
     [filepath,name,~] = fileparts(input_file_path);
     output_file = strcat(filepath,'/',name,'.mat');
-%     otutput_file = '/Users/andres.perez/source/DCASE2020/APRI/filter_output/fold1_room1_mix027_ov2.mat';
 
     spatial_resolution = 1;
     % % Tuned variables

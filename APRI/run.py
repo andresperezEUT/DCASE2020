@@ -6,17 +6,13 @@ Execute the full analysis, from audio to output file.
 In dev mode, compute evaluation metrics too.
 '''
 import datetime
-import tempfile
-import soundfile as sf
-import matplotlib.pyplot as plt
-from baseline.cls_feature_class import create_folder
 from APRI.localization_detection import *
 from APRI.compute_metrics import compute_metrics
 from APRI.event_class_prediction import *
-from APRI.postprocessing import *
 import time
 
 # %% Parameters
+
 # preset = 'particle'
 # preset = '4REPORT'
 preset = '4EVALUATION_PARTICLE'
@@ -97,8 +93,7 @@ for audio_file_idx, audio_file_name in enumerate(audio_files):
     # Open file
     audio_file_path = os.path.join(data_folder_path, audio_file_name)
     b_format, sr = sf.read(audio_file_path)
-    # TODO: CHECK PERFORMANCE AFTER THAT. DATA WAS ALREADY IN SN3D!!!!
-    # b_format *= np.array([1, 1 / np.sqrt(3), 1 / np.sqrt(3), 1 / np.sqrt(3)])  # N3D to SN3D
+
     # Get spectrogram
     stft = compute_spectrogram(b_format, sr, window, window_size, window_overlap, nfft, D)
 
@@ -114,15 +109,11 @@ for audio_file_idx, audio_file_name in enumerate(audio_files):
 
     ############################################
     # Get monophonic estimates of the event, and predict the classes
-    # TODO: modify so file writting is not needed
     num_events = len(event_list)
     for event_idx in range(num_events):
         event = event_list[event_idx]
         mono_event = get_mono_audio_from_event(b_format, event, beamforming_mode, fs, frame_length)
-        # Save into temp file
-        #fo = tempfile.NamedTemporaryFile()
-        #temp_file_name = fo.name+'.wav'
-        #sf.write(temp_file_name, mono_event, fs)
+
         # Predict
         class_method_string = params['class_method']
         class_method = locals()[class_method_string]
@@ -143,9 +134,6 @@ for audio_file_idx, audio_file_name in enumerate(audio_files):
             event_filters_method_args = params['event_filter_method_args']
             process_event = event_filter_method(event, *event_filters_method_args)
 
-        # Close (delete) file
-        #fo.close()
-
         ############################################
         # Generate metadata file from event
         if write and process_event:
@@ -156,9 +144,6 @@ for audio_file_idx, audio_file_name in enumerate(audio_files):
     # Plot results
     if plot:
         plot_results(csv_file_path, params)
-
-
-
 
 
 print('-------------- PROCESSING FINISHED --------------')
