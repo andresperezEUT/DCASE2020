@@ -2,6 +2,7 @@
 # DCASE 2020 - TASK 3 - APRI
 
 This is our contribution to [DCASE2020 Task 3 Challenge]((http://dcase.community/challenge2020/task-sound-event-localization-and-detection)).
+
 (C) 2020 Andrés Pérez-López and Rafael Ibañez-Usach.
 
 This repository holds the implementation of the *Parametric Particle Filter (PAPAFIL)* method, as described in [1].

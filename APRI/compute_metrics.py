@@ -9,7 +9,6 @@ from baseline.metrics import SELD_evaluation_metrics
 import baseline.cls_feature_class
 import baseline.parameter
 import numpy as np
-from baseline import parameter
 
 def get_nb_files(_pred_file_list, _group='split'):
     _group_ind = {'ir': 4, 'ov': 21}

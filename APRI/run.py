@@ -1,10 +1,11 @@
 '''
 run.py
 
-Main SELDT loop
+Main SELD loop
 Execute the full analysis, from audio to output file.
 In dev mode, compute evaluation metrics too.
 '''
+
 import datetime
 from APRI.localization_detection import *
 from APRI.compute_metrics import compute_metrics

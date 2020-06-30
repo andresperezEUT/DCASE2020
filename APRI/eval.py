@@ -7,7 +7,6 @@ evaluate precomputed output files
 from baseline import parameter
 import os
 from APRI.compute_metrics import compute_metrics
-from APRI.utils import plot_results
 
 
 # %% PARAMS

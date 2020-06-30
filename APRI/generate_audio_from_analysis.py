@@ -3,14 +3,9 @@ generate_audio_from_analysis.py
 
 '''
 import datetime
-import tempfile
-import soundfile as sf
-import matplotlib.pyplot as plt
-from baseline.cls_feature_class import create_folder
 from APRI.localization_detection import *
 from APRI.compute_metrics import compute_metrics
 from APRI.event_class_prediction import *
-from APRI.postprocessing import *
 import time
 
 # %% Parameters

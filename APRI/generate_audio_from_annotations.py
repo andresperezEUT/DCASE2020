@@ -19,6 +19,7 @@ Options:
 All files will be created in an output folder located in `params['dataset_dir']`.
 The output folder will have a name according to the structure: 'oracle_mono_signals_[beamforming_mode]_[overlap_mode]
 '''
+
 from APRI.localization_detection import parse_annotations
 from baseline import parameter
 import os
@@ -27,7 +28,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from baseline.cls_feature_class import create_folder
 from APRI.utils import plot_metadata, get_class_name_dict, get_mono_audio_from_event, Event
-import warnings
 
 # %% CONFIG
 
