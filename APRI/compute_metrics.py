@@ -1,7 +1,8 @@
 """
-TODO COMPLETE
+compute_metrics.py
 
-from calculate_dev_results_from_dcase_output.py
+This script implements a minor-modified version of the `compute_metrics` method,
+taken from `calculate_dev_results_from_dcase_output.py`.
 """
 
 import os

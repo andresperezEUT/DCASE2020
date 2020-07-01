@@ -1,7 +1,8 @@
 """
-TODO COMPLETE
+eval.py
 
-evaluate precomputed output files
+Given a target preset, the script computes and displays the evaluation metrics
+for all csv files computed with this preset.
 """
 
 from baseline import parameter

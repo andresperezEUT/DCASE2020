@@ -1,9 +1,12 @@
-'''
+"""
+get_model_utils.py
+
 This script contains methods to compute several modelling steps:
 get_features_selection(): trains a random_forest classifier and select the features that contribute significantly to the model outputs
 get_dataframe_split(): to split source dataframe into train, test and validation.
 Different parameters allow for customize splits
-'''
+"""
+
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier, VotingClassifier
 from sklearn.ensemble import GradientBoostingClassifier

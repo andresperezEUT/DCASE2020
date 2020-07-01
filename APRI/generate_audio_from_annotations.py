@@ -16,7 +16,7 @@ Options:
 -- 'ov2' extracts only the audio files with ov2
 -- 'all' extracts all files regardless of the overlap amount
 
-All files will be created in an output folder located in `params['dataset_dir']`.
+All files will be created in an output folder located in `params['dataset_dir']`, in a folder for each sound class.
 The output folder will have a name according to the structure: 'oracle_mono_signals_[beamforming_mode]_[overlap_mode]
 '''
 

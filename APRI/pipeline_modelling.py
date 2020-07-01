@@ -1,4 +1,6 @@
-'''
+"""
+pipeline_modelling.py
+
 This script executes the pipeline from dataframes (pandas) to trained models.
 The steps defined in the pipeline are the following:
 - Parameters
@@ -8,8 +10,7 @@ The steps defined in the pipeline are the following:
 - modelling
 - results
 - dump
-
-'''
+"""
 
 # Dependencies
 import os, datetime

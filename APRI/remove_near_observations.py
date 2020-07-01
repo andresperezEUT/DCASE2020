@@ -1,3 +1,8 @@
+"""
+remove_near_observations.py
+
+"""
+
 from scipy.spatial.distance import pdist
 from scipy.spatial.distance import squareform
 import pandas as pd

@@ -1,9 +1,20 @@
-'''
-TODO COMPLETE
-
+"""
 utils.py
 
-'''
+This file includes many convenience methods used accross the algorithm:
+- SIGNAl: compute_spectrogram
+- STATS: circmedian
+- PARAMETRIC AUDIO CODING: TF domain Intensity vector, Diffuseness, etc
+- BEAMFORMING: first order cardioid beamforming
+- DEREVEBERATION: estimate_MAR_sparse_parallel, dereverberate: implement the method described in [1]
+- PLOT: several convenience plot functions, including plot_results as a more complete method
+- DATA MANAGEMENT: describes the Event class
+
+[1] "Blind reverberation time estimation from ambisonic recordings".
+    A. Perez-Lopez , A. Politis and E. Gomez.
+    Submitted to IEEE 22nd International Workshop on Multimedia Signal Processing, 2020
+
+"""
 
 
 import csv
@@ -38,6 +49,13 @@ def compute_spectrogram(data, sr, window, window_size, window_overlap, nfft, D=N
 # %% STATS
 
 def circmedian(angs, unit='rad'):
+    """
+    circular median!
+
+    :param angs:
+    :param unit:
+    :return:
+    """
     # from https://github.com/scipy/scipy/issues/6644
     # Radians!
     pdists = angs[np.newaxis, :] - angs[:, np.newaxis]
@@ -356,98 +374,6 @@ def plot_diffuseness(stft):
     plt.colorbar()
 
 
-# %% DATA MANAGEMENT
-
-class Event:
-    def __init__(self, classID, instance, frames, azis, eles):
-        self._classID = classID
-        self._instance = instance
-        self._frames = frames # frame indices, in target hopsize units (0.1 s/frame)
-        self._azis = azis # in rad, range: [-pi, pi]
-        self._eles = eles # in rad, range: [-pi/2, pi/2]
-
-    def get_classID(self):
-        return self._classID
-
-    def set_classID(self, classID):
-        self._classID = classID
-
-    def get_instance(self):
-        return self._instance
-
-    def get_frames(self):
-        return self._frames
-
-    def get_azis(self):
-        return self._azis
-
-    def get_eles(self):
-        return self._eles
-
-    def add_frame(self, frame):
-        self._frames.append(frame)
-
-    def add_azi(self, azi):
-        self._azis.append(azi)
-
-    def add_ele(self, ele):
-        self._eles.append(ele)
-
-    def print(self):
-        print(self._classID)
-        print(self._instance)
-        print(self._frames)
-        print(self._azis)
-        print(self._eles)
-
-    def export_csv(self, csv_file):
-        with open(csv_file, 'a') as csvfile:
-            writer = csv.writer(csvfile)
-            for idx in range(len(self._frames)):
-                writer.writerow([self._frames[idx],
-                                 self._classID,
-                                 self._instance,
-                                 self._azis[idx]*180/np.pi,     # csv needs degrees
-                                 self._eles[idx]*180/np.pi])    # csv needs degrees
-
-
-def get_class_name_dict():
-    return {
-        0: 'alarm',
-        1: 'crying_baby',
-        2: 'crash',
-        3: 'barking_dog',
-        4: 'running_engine',
-        5: 'female_scream',
-        6: 'female_speech',
-        7: 'burning_fire',
-        8: 'footsteps',
-        9: 'knocking_on_door',
-        10:'male_scream',
-        11:'male_speech',
-        12:'ringing_phone',
-        13:'piano'
-    }
-
-def get_class_name_dict_extra():
-    return {
-        0: 'alarm',
-        1: 'crying_baby',
-        2: 'crash',
-        3: 'barking_dog',
-        4: 'running_engine',
-        5: 'female_scream',
-        6: 'female_speech',
-        7: 'burning_fire',
-        8: 'footsteps',
-        9: 'knocking_on_door',
-        10:'male_scream',
-        11:'male_speech',
-        12:'ringing_phone',
-        13:'piano',
-        14:'falsepositive'
-    }
-
 def plot_metadata(metadata_file_name):
     # Based on visualize_SELD_output.py
 
@@ -580,5 +506,97 @@ def plot_results(file_name, params):
     ax_lst = [ax0, ax1, ax2, ax3, ax4, ax5, ax6]
     # plt.savefig(os.path.join(params['dcase_dir'] , ref_filename.replace('.wav', '.jpg')), dpi=300, bbox_inches = "tight")
     plt.show()
-# %%
 
+
+
+# %% DATA MANAGEMENT
+
+class Event:
+    def __init__(self, classID, instance, frames, azis, eles):
+        self._classID = classID
+        self._instance = instance
+        self._frames = frames # frame indices, in target hopsize units (0.1 s/frame)
+        self._azis = azis # in rad, range: [-pi, pi]
+        self._eles = eles # in rad, range: [-pi/2, pi/2]
+
+    def get_classID(self):
+        return self._classID
+
+    def set_classID(self, classID):
+        self._classID = classID
+
+    def get_instance(self):
+        return self._instance
+
+    def get_frames(self):
+        return self._frames
+
+    def get_azis(self):
+        return self._azis
+
+    def get_eles(self):
+        return self._eles
+
+    def add_frame(self, frame):
+        self._frames.append(frame)
+
+    def add_azi(self, azi):
+        self._azis.append(azi)
+
+    def add_ele(self, ele):
+        self._eles.append(ele)
+
+    def print(self):
+        print(self._classID)
+        print(self._instance)
+        print(self._frames)
+        print(self._azis)
+        print(self._eles)
+
+    def export_csv(self, csv_file):
+        with open(csv_file, 'a') as csvfile:
+            writer = csv.writer(csvfile)
+            for idx in range(len(self._frames)):
+                writer.writerow([self._frames[idx],
+                                 self._classID,
+                                 self._instance,
+                                 self._azis[idx]*180/np.pi,     # csv needs degrees
+                                 self._eles[idx]*180/np.pi])    # csv needs degrees
+
+
+def get_class_name_dict():
+    return {
+        0: 'alarm',
+        1: 'crying_baby',
+        2: 'crash',
+        3: 'barking_dog',
+        4: 'running_engine',
+        5: 'female_scream',
+        6: 'female_speech',
+        7: 'burning_fire',
+        8: 'footsteps',
+        9: 'knocking_on_door',
+        10:'male_scream',
+        11:'male_speech',
+        12:'ringing_phone',
+        13:'piano'
+    }
+
+def get_class_name_dict_extra():
+    return {
+        0: 'alarm',
+        1: 'crying_baby',
+        2: 'crash',
+        3: 'barking_dog',
+        4: 'running_engine',
+        5: 'female_scream',
+        6: 'female_speech',
+        7: 'burning_fire',
+        8: 'footsteps',
+        9: 'knocking_on_door',
+        10:'male_scream',
+        11:'male_speech',
+        12:'ringing_phone',
+        13:'piano',
+        14:'falsepositive'
+    }

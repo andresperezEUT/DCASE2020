@@ -1,9 +1,16 @@
-'''
+"""
 localization_detection.py
 
-Estimate DOAs and onsets/offsets from the given audio files.
-Return results as a list of Events.
-'''
+This script contains all methods used for localization and detection.
+- parse_annotations: groundtruth localization, based on metadata annotation parsing
+- ld_oracle: wrapper for parse_annotations methor
+- ld_basic: diffuseness mask and simple event grouping by temporal continuity
+- ld_basic_dereverb_filter: same as above, but previous preprocessing usir MAR dereverberation,
+    and postfiltering of the results for removing spureous data
+- ld_particle: diffuseness mask, particle filtering and postprocessing, as used in the PAPAFIL method
+
+All wrapper methods return lists of Events.
+"""
 
 
 from APRI.utils import *

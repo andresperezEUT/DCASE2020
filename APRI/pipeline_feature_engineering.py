@@ -1,4 +1,6 @@
-'''
+"""
+pipeline_feature_engineering.py
+
 This script executes the pipeline from mono events to dataframes for modelling.
 The pipeline can be tuned by modifying the parameters in the top of the script.
 Steps:
@@ -7,8 +9,7 @@ Steps:
 - (Optional) Extra events: events obtained from previous executions
 - Audio features extraction from each event dataset (real, augmented, extra)
 - Creation of dataframes (real, augmented, extra)
-
-'''
+"""
 
 import os, datetime
 from baseline import parameter

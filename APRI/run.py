@@ -1,10 +1,15 @@
-'''
+"""
 run.py
 
 Main SELD loop
-Execute the full analysis, from audio to output file.
+Execute the full analysis, from audio files to result csv files, for a given preset configuration.
 In dev mode, compute evaluation metrics too.
-'''
+
+Options:
+- write_file (bool): Actually generate output files and folders
+- plot (bool): Plot the annotations for each file (not recommended on the whole dataset)
+- quick (bool): Perform analysis only on a manually given subset, useful for fast iterative development
+"""
 
 import datetime
 from APRI.localization_detection import *

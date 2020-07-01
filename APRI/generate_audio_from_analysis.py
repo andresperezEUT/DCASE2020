@@ -1,7 +1,21 @@
-'''
+"""
 generate_audio_from_analysis.py
 
-'''
+This file will iterate over the development dataset and estimate localization and times of all events through the analysis.
+performed with the selected preset.
+Furthermore, the event class will be assigned to each event based on some ad-hoc statistical heuristics.
+
+Options:
+- write_file (bool): Actually generate output files and folders
+- plot (bool): Plot the annotations for each file (not recommended on the whole dataset)
+- debug (bool): Print complementary information on the extraction step (again, not recommended on the whole dataset)
+
+Other options will be given by the selected preset.
+
+All files will be created in an output folder located in `params['dataset_dir']`, in a folder for each sound class.
+The output folder will be called 'extracted_events'.
+"""
+
 import datetime
 from APRI.localization_detection import *
 from APRI.compute_metrics import compute_metrics
@@ -88,13 +102,8 @@ occurrences_per_class = np.zeros(params['num_classes'], dtype=int)
 # create forlders
 ############################################
 # Prepare folders
-# import shutil
+
 if write:
-#     # delete output path if exists
-#     if os.path.exists(output_path):
-#         shutil.rmtree(output_path)
-#     # now create it
-#     create_folder(output_path)
     for class_name in class_name_dict.values():
         folder = os.path.join(output_path, class_name)
         create_folder(folder)
@@ -132,8 +141,7 @@ for audio_file_idx, audio_file_name in enumerate(audio_files):
     # Open file
     audio_file_path = os.path.join(data_folder_path, audio_file_name)
     b_format, sr = sf.read(audio_file_path)
-    # TODO: CHECK PERFORMANCE AFTER THAT. DATA WAS ALREADY IN SN3D!!!!
-    # b_format *= np.array([1, 1 / np.sqrt(3), 1 / np.sqrt(3), 1 / np.sqrt(3)])  # N3D to SN3D
+
     # Get spectrogram
     stft = compute_spectrogram(b_format, sr, window, window_size, window_overlap, nfft, D)
 
@@ -156,28 +164,6 @@ for audio_file_idx, audio_file_name in enumerate(audio_files):
     csv = np.loadtxt(open(metadata_file_path, "rb"), delimiter=",")
     gt_event_list = parse_annotations(csv, debug=False)
 
-
-    #### ASSOCIATION
-
-    # # Associate each event estimation to a class
-    # gt_event_occurence_all = []
-    # for e in event_list:
-    #     frames = e.get_frames()
-    #
-    #     gt_event_occurence = []
-    #     for frame in frames:
-    #         # find all other events with same frame
-    #         for gt_e_idx, gt_e in enumerate(gt_event_list):
-    #             gt_frames = gt_e.get_frames()
-    #             if frame in gt_frames:
-    #                 gt_event_occurence.append(gt_e.get_classID())
-    #     gt_event_occurence_all.append(gt_event_occurence)
-
-    # association by most repeated
-    # associated_class = []
-    # for occ_list in gt_event_occurence_all:
-    #     ass_class = most_frequent(occ_list)
-    #     associated_class.append(ass_class)
 
     # BY AZIMUTH
     # Associate each event estimation to a class
@@ -270,7 +256,7 @@ for audio_file_idx, audio_file_name in enumerate(audio_files):
 
     ############################################
     # Get monophonic estimates of the event, and predict the classes
-    # TODO: modify so file writting is not needed
+
     num_events = len(event_list)
     for event_idx in range(num_events):
         event = event_list[event_idx]
@@ -296,13 +282,13 @@ for audio_file_idx, audio_file_name in enumerate(audio_files):
         # write csv
         # csv_file_name = file_name + '.csv'
         # csv_file_path = os.path.join(result_folder_path, csv_file_name)
-        event.export_csv(csv_file_path)
+        if write:
+            event.export_csv(csv_file_path)
 
 
 
 print('-------------- PROCESSING FINISHED --------------')
 print('                                                 ')
-
 
 if mode == 'dev':
     print('-------------- COMPUTE DOA METRICS --------------')

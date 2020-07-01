@@ -1,7 +1,8 @@
 """
-TODO COMPLETE
+plot.py
 
-evaluate precomputed output files
+Plots results and annotations for the result files of the given preset.
+It is possible to manually specify a subset of the output files (recommended for large collections...)
 """
 
 from baseline import parameter

@@ -1,9 +1,8 @@
-'''
+"""
+postprocessing.py
+
 Postprocessing methods aimed to clean model outputs
-
-
-'''
-
+"""
 
 def event_filter_v1(event,frame_th_8=50):
      process=True

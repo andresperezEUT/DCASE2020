@@ -1,4 +1,4 @@
-'''
+"""
 This script contains methods to obtain different dataframes (pandas).
 
 get_source_dataframes(): to build dataframes from arrays. It is used to consolidate audio feature arrays obtained in feature engineering pipeline.
@@ -7,8 +7,7 @@ It creates a different dataframe for each source: real, augmented and extra
 get_dataframe_split(): to split source dataframe into train, test and validation.
 Different parameters allow for customize splits
 
-
-'''
+"""
 
 from APRI.utils import get_class_name_dict
 import pandas as pd
