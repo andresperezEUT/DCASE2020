@@ -19,6 +19,8 @@ and outputs:
 # Dependencies
 from essentia.standard import *
 import numpy as np
+import warnings
+warnings.simplefilter("ignore")
 import soundfile as sf
 
 
@@ -30,6 +32,7 @@ def is_silent_threshold(frame, silence_threshold_dB):
        return 1.0
     else:
        return 0.0
+
 def spectralContrastPCA(scPool):
     scCoeffs = scPool['lowlevel.sccoeffs']
     scValleys = scPool['lowlevel.scvalleys']
@@ -46,11 +49,13 @@ def spectralContrastPCA(scPool):
     pca = PCA(namespaceIn = 'contrast', namespaceOut = 'contrast')(scPool)
     pca = np.array(pca['contrast'])
     return pca
+
 def normalize(hpcp):
     m = max(hpcp)
     for i in range(len(hpcp)):
         hpcp[i] = hpcp[i] / m
     return hpcp
+
 def compute_statistics(array):
     array_mean = []
     array_var = []
@@ -63,18 +68,8 @@ def compute_statistics(array):
     array_var = np.array(array_var)
     return [array_mean, array_var]
 
-
-
-
-
-
-
-
-
-
-
-
 # Calculate audio features
+
 def compute_sfx(audio,pool2,options):
     namespace = 'sfx'
     pool = essentia.Pool()
@@ -101,7 +96,6 @@ def compute_sfx(audio,pool2,options):
 
     # used for a nice progress display
     total_frames = frames.num_frames()
-    n_frames = 0
     start_of_frame = -frameSize*0.5
     pitch=[]
     for frame in frames:
@@ -111,7 +105,6 @@ def compute_sfx(audio,pool2,options):
             total_frames -= 1
             start_of_frame += hopSize
             continue
-
         frame_windowed = window(frame)
         frame_spectrum = spectrum(frame_windowed)
         # pitch descriptors
@@ -129,7 +122,6 @@ def compute_sfx(audio,pool2,options):
             pool.add(namespace + '.' + 'tristimulus', frame_tristimulus)
             frame_odd2evenharmonicenergyratio = odd2evenharmonicenergyratio(frame_harmonic_frequencies, frame_harmonic_magnitudes)
             pool.add(namespace + '.' + 'odd2evenharmonicenergyratio', frame_odd2evenharmonicenergyratio)
-
     pool2.add(namespace + '.' + 'inharmonicity_mean', np.mean(pool['sfx.inharmonicity']))
     pool2.add(namespace + '.' + 'inharmonicity_var', np.var(pool['sfx.inharmonicity']))
     pool2.add(namespace + '.' + 'tristimulus_mean', np.mean(pool['sfx.tristimulus']))
@@ -159,13 +151,10 @@ def compute_sfx(audio,pool2,options):
     # effective duration
     duration = Duration(sampleRate=sampleRate)
     pool2.add(namespace + '.' + 'duration', duration(file_envelope))  # , pool.GlobalScope)
+
     # effective duration
     effectiveduration = EffectiveDuration()
     pool2.add(namespace + '.' + 'effective_duration', effectiveduration(file_envelope))  # , pool.GlobalScope)
-
-    # log attack time
-    #logattacktime = LogAttackTime(sampleRate=sampleRate)
-    #pool.add(namespace + '.' + 'logattacktime', logattacktime(file_envelope))  # , pool.GlobalScope)
 
     # strong decay
     strongdecay = StrongDecay()
@@ -174,7 +163,6 @@ def compute_sfx(audio,pool2,options):
     # dynamic profile
     flatness = FlatnessSFX()
     pool2.add(namespace + '.' + 'flatness', flatness(file_envelope))  # , pool.GlobalScope)
-
 
     # morphological descriptors
     max_to_total = MaxToTotal()
@@ -189,7 +177,6 @@ def compute_sfx(audio,pool2,options):
     pool2.add(namespace + '.' + 'max_der_before_max', max_der_before_max)  # , pool.GlobalScope)
 
     # pitch profile
-
     if len(pitch) > 1:
         pool2.add(namespace + '.' + 'pitch_max_to_total', max_to_total(pitch))  # , pool.GlobalScope)
 
@@ -202,33 +189,24 @@ def compute_sfx(audio,pool2,options):
         pitch_after_max_to_before_max_energy_ratio = AfterMaxToBeforeMaxEnergyRatio()
         pool2.add(namespace + '.' + 'pitch_after_max_to_before_max_energy_ratio',
                  pitch_after_max_to_before_max_energy_ratio(pitch))  # , pool.GlobalScope)
-
     else:
         pool2.add(namespace + '.' + 'pitch_max_to_total', 0.0)  # , pool.GlobalScope)
         pool2.add(namespace + '.' + 'pitch_min_to_total', 0.0)  # , pool.GlobalScope)
         pool2.add(namespace + '.' + 'pitch_centroid', 0.0)  # , pool.GlobalScope)
         pool2.add(namespace + '.' + 'pitch_after_max_to_before_max_energy_ratio', 0.0)  # , pool.GlobalScope)
-
     return pool2
-
-
-
-
-
-
-
 
 def compute_lowlevel(audio, options):
     namespace = 'lowlevel'
     pool = essentia.Pool()
     pool2 = essentia.Pool()
+
     # analysis parameters
     sampleRate = options['sampleRate']
     frameSize  = options['frameSize']
     hopSize    = options['hopSize']
 
     # temporal descriptors
-
     zerocrossingrate = ZeroCrossingRate()
 
     # frame algorithms
@@ -275,10 +253,6 @@ def compute_lowlevel(audio, options):
 
 
     scPool = essentia.Pool()  # pool for spectral contrast
-
-
-
-
     for frame in frames:
         #frameScope = [start_of_frame / sampleRate, (start_of_frame + frameSize) / sampleRate]
         # silence rate
@@ -296,10 +270,12 @@ def compute_lowlevel(audio, options):
 
         frame_windowed = window(frame)
         frame_spectrum = spectrum(frame_windowed)
+
         #barkbands
         frame_barkbands = barkbands(frame_spectrum)
         pool.add(namespace + '.' + 'barkbands', frame_barkbands)
-        # barkbands-based descriptors
+
+        #barkbands-based descriptors
         pool.add(namespace + '.' + 'spectral_crest', crest(frame_barkbands))
         pool.add(namespace + '.' + 'spectral_flatness_db', flatnessdb(frame_barkbands))
         barkbands_centralmoments = CentralMoments(range = len(frame_barkbands) - 1)
@@ -410,14 +386,12 @@ def compute_lowlevel(audio, options):
     pool2.add(namespace + '.' + 'melbands_var', statistics[1])
 
     #erbbands
-
     statistics = compute_statistics(pool['lowlevel.erbbands'])
     pool2.add(namespace + '.' + 'erbbands_mean', statistics[0])
     pool2.add(namespace + '.' + 'erbbands_var', statistics[1])
     statistics = compute_statistics(pool['lowlevel.gfcc'])
     pool2.add(namespace + '.' + 'gfcc_mean', statistics[0])
     pool2.add(namespace + '.' + 'gfcc_var', statistics[1])
-
 
     #spectralcontrast
     spectral_contrast=np.array(spectralContrastPCA(scPool))
@@ -426,17 +400,17 @@ def compute_lowlevel(audio, options):
     pool2.add(namespace + '.' + 'spectral_contrast_mean', statistics[0])
     pool2.add(namespace + '.' + 'spectral_contrast_var', statistics[1])
 
-
     # pitch descriptors
     pool2.add(namespace + '.' + 'pitch_salience_mean', np.mean(pool['lowlevel.pitch_salience']))
     pool2.add(namespace + '.' + 'pitch_salience_var', np.var(pool['lowlevel.pitch_salience']))
     pool2.add(namespace + '.' + 'spectral_complexity_mean', np.mean(pool['lowlevel.spectral_complexity']))
     pool2.add(namespace + '.' + 'sspectral_complexity_var', np.var(pool['lowlevel.spectral_complexity']))
-
     return pool2
+
 def compute_tonal(audio, pool2, options):
     namespace = 'tonal'
     pool = essentia.Pool()
+
     # analysis parameters
     sampleRate = options['sampleRate']
     frameSize  = options['frameSize']
@@ -450,14 +424,10 @@ def compute_tonal(audio, pool2, options):
 
     # computing the tuning frequency
     tuning_frequency = 440.0
-
     for frame in frames:
-
         frame_windowed = window(frame)
         frame_spectrum = spectrum(frame_windowed)
-
         (frame_frequencies, frame_magnitudes) = spectral_peaks(frame_spectrum)
-
         #if len(frame_frequencies) > 0:
         (tuning_frequency, tuning_cents) = tuning(frame_frequencies, frame_magnitudes)
 
@@ -608,7 +578,6 @@ def compute_audio_features(audio,options):
     audio_features = np.array(audio_features)
     return audio_features, column_labels
 
-
 ## Data augmentation parameters:
 def get_data_augmentation_parameters():
     aug_options=dict()
@@ -633,17 +602,4 @@ def get_audio_features_options():
     options['hopSize'] = 1024
     options['skipSilence'] = True
     return options
-
-'''
-options = dict()
-options['sampleRate'] = 24000
-options['frameSize'] = 2048
-options['hopSize'] = 1024
-options['skipSilence'] = True
-
-loader = MonoLoader(filename='/home/ribanez/movidas/dcase20/dcase20_dataset/anteriores/oracle_mono_signals_beam_all/crying_baby/973.wav', sampleRate=24000)
-audio = loader()
-compute_sfx(audio,options)
-'''
-
 
