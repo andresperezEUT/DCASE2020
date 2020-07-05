@@ -113,6 +113,7 @@ There are three main boolean options available:
 * `event_number_model_training.py` TODO RAFA
 * `generate_audio_from_analysis.py`: create the *PAPAFIL2* training set.
 * `generate_audio_from_annotations.py`: create the *PAPAFIL1* training set.
+* `generate_irs.py`: generate a set of IRs for data augmentation purposes.
 * `get_audio_features.py`: TODO RAFA
 * `get_data_augmentation.py`TODO RAFA
 * `get_dataframes.py`TODO RAFA
