@@ -79,7 +79,7 @@ complexity = [
     2*1e6,
     2*1e6,
     517*1e3,
-    1*1e6 # TODO CHECK
+    116*1e3,
 ]
 
 
@@ -94,7 +94,7 @@ print('==============================')
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-# sns.set()
+sns.set()
 
 data = pd.DataFrame(list(zip(names, rank, seld_eval_scores, np.log10(complexity))), columns =['Name', 'Rank', 'SELD', 'log_complexity'])
 print(data)
@@ -107,10 +107,26 @@ print(data)
 plt.figure()
 
 ax  = sns.regplot(x="log_complexity", y="SELD", data=data,
-                  truncate=False, scatter_kws={"s": 40})
-# plt.plot(x, reg_line)
-# ax.set(xscale="log")
+                  truncate=False, scatter_kws={"s": 40},
+                  x_ci='ci', ci=95)
+ax.set_xlabel('Complexity (number of parameters)')
+g.xticks(np.arange(4,9), [r'$10^4$', r'$10^5$', r'$10^6$', r'$10^7$', r'$10^8$'])
 
+
+# g  = sns.jointplot(x="log_complexity", y="SELD", data=data,kind="kde")
+
+g = sns.JointGrid(x="log_complexity", y="SELD", data=data)
+g = g.plot(sns.regplot, sns.distplot)
+
+g.ax_marg_x.set_xlim(4,8.5)
+# g.plot_joint(plt.scatter, c="w", s=30, linewidth=1, marker="+")
+# g.ax_joint.collections[0].set_alpha(0)
+
+g.ticklabel_format(axis='x', style='sci')
+
+ax.set_ylabel('SELD score')
+# ax.set(xscale="log")
+# plt.grid()
 
 def label_point(x, y, val, ax):
     a = pd.concat({'x': x, 'y': y, 'val': val}, axis=1)
