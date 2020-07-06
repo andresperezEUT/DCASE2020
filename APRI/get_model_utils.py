@@ -1,10 +1,9 @@
 """
 get_model_utils.py
 
-This script contains methods to compute several modelling steps:
-get_features_selection(): trains a random_forest classifier and select the features that contribute significantly to the model outputs
-get_dataframe_split(): to split source dataframe into train, test and validation.
-Different parameters allow for customize splits
+This script contains methods for model training purposes:
+- feature selection: using PCA ot manual selection
+- training: using different algorithms: XGB, GB, RF, SVC
 """
 
 import pandas as pd
@@ -79,7 +78,7 @@ def get_feature_selection(y_train,x_train,y_test,x_test,y_val,x_val,fs_gridsearc
 
 def get_feature_selection_manual(x_train,x_test,x_val):
     keep_cols=[]
-    keep_variables='erbbands'
+    keep_variables='melbands'
     keep_cols1 = [col for col in x_train.columns if keep_variables in col]
     keep_cols=keep_cols+keep_cols1
     keep_variables='mfcc'
@@ -94,28 +93,22 @@ def get_feature_selection_manual(x_train,x_test,x_val):
     keep_variables='sfx'
     keep_cols1 = [col for col in x_train.columns if keep_variables in col]
     keep_cols=keep_cols+keep_cols1
-    print(len(keep_cols))
     x_train = x_train[keep_cols]
     x_test = x_test[keep_cols]
     x_val = x_val[keep_cols]
-
-    print(x_train.shape)
-    print(x_test.shape)
-    print(x_val.shape)
     return x_train,x_test,x_val,keep_cols
 
 
-
+# Train using XGB framework. Gridsearch is optional
 def train_xgb(x_train,y_train,x_test,y_test,x_val,y_val,xgb_gridsearch):
     print('Training model XGB...')
     dtrain = xgb.DMatrix(x_train, label=y_train)
     dtest = xgb.DMatrix(x_test, label=y_test)
     dval = xgb.DMatrix(x_val, label=y_val)
-
 #Params
     params = {
-    'max_depth':6,
-    'min_child_weight': 3,
+    'max_depth':4,
+    'min_child_weight': 10,
     'eta':0.05,
     'subsample': 1,
     'num_class':14,
@@ -123,7 +116,7 @@ def train_xgb(x_train,y_train,x_test,y_test,x_val,y_val,xgb_gridsearch):
     'objective':'multi:softprob',
     }
     params['eval_metric'] = "mlogloss"
-    num_boost_round = 1000
+    num_boost_round = 3000
     if xgb_gridsearch:
         print('Gridsearch..')
         # Parameters max_depth and min_child_weight
@@ -213,7 +206,7 @@ def train_xgb(x_train,y_train,x_test,y_test,x_val,y_val,xgb_gridsearch):
                 best_params = eta
                 print("Best params: {}, MAE: {}".format(best_params, min_mae))
             params['eta'] = best_params
-    num_boost_round = 2000
+    num_boost_round = 5000
     model = xgb.train(
         params,
         dtrain,
@@ -266,6 +259,7 @@ def train_xgb(x_train,y_train,x_test,y_test,x_val,y_val,xgb_gridsearch):
     print('Prediction accuracy for validation: %.3f ' % accuracy_score(y_val, y_pred_val))
     return model
 
+# Train using Random Forest. Gridsearch as an option
 def train_rf(x_train,y_train,x_test,y_test,x_val,y_val,rf_gridsearch):
     print('Training model random forest...')
     pca=PCA()
@@ -274,15 +268,13 @@ def train_rf(x_train,y_train,x_test,y_test,x_val,y_val,rf_gridsearch):
     #pipe_rf =Pipeline([('cls',cls)])
     if rf_gridsearch:
         x_train2=np.concatenate((x_train,x_test))
-        print(x_train2.shape)
         y_train2=np.concatenate((y_train,y_test))
-        print(y_train2.shape)
         print('Tuning parameters...')
-        grid_params_rf = [{'pca__n_components':[25,50,x_train2.shape[1]],
-                            'cls__bootstrap':[False],
-                           'cls__n_estimators': [100,500],
+        grid_params_rf = [{'pca__n_components':[25,50,100,x_train2.shape[1]],
+                            'cls__bootstrap':[False,True],
+                           'cls__n_estimators': [100,500,1000,2000],
                            'cls__max_depth': [8,16],
-                            'cls__min_samples_leaf':[5,20],
+                            'cls__min_samples_leaf':[5,10,20],
                            'cls__max_features': ["auto"]}]
         gs_fs = GridSearchCV(estimator=pipe_rf, param_grid=grid_params_rf, scoring='f1_weighted', cv=5, verbose=10,
                              n_jobs=-1)
@@ -290,7 +282,7 @@ def train_rf(x_train,y_train,x_test,y_test,x_val,y_val,rf_gridsearch):
         # Best params
         print('Best params: %s' % gs_fs.best_params_)
         # Best training data r2
-        print('Best training accuracy: %.3f' % gs_fs.best_score_)
+        print('Best training metric: %.3f' % gs_fs.best_score_)
         model=gs_fs
     else:
         params_rf = {'bootstrap': False,
@@ -300,7 +292,6 @@ def train_rf(x_train,y_train,x_test,y_test,x_val,y_val,rf_gridsearch):
                           'min_samples_leaf': 5}
         cls.set_params(**params_rf)
         model=cls.fit(x_train, y_train)
-    print(print(cls.get_params()))
     print('Test predictions with trained mode...')
     y_pred = model.predict(x_test)
     print('Train predictions with trained mode...')
@@ -316,6 +307,7 @@ def train_rf(x_train,y_train,x_test,y_test,x_val,y_val,rf_gridsearch):
     print('Prediction accuracy for validation: %.3f ' % accuracy_score(y_val, y_pred_val))
     return model
 
+# Train using SVC. Gridsearch as an option
 def train_svc(x_train,y_train,x_test,y_test,x_val,y_val,svc_gridsearch):
     print('Training model svc...')
     pipe_svc = Pipeline([('scl', StandardScaler()), ('cls', SVC(decision_function_shape='ovr'))])
@@ -330,7 +322,7 @@ def train_svc(x_train,y_train,x_test,y_test,x_val,y_val,svc_gridsearch):
         # Best params
         print('Best params: %s' % gs_svc.best_params_)
         # Best training data r2
-        print('Best training accuracy: %.3f' % gs_svc.best_score_)
+        print('Best training metric: %.3f' % gs_svc.best_score_)
         #pipe_svc.steps[1][1].set_params(**gs_svc.best_params_)
         model=gs_svc.best_estimator_
     else:
@@ -339,7 +331,6 @@ def train_svc(x_train,y_train,x_test,y_test,x_val,y_val,svc_gridsearch):
                             'C': 1}
         pipe_svc.steps[1][1].set_params(**grid_params_svc)
         model=pipe_svc.fit(x_train, y_train)
-    print(model.steps[1][1].get_params())
     print('Test predictions with trained mode...')
     y_pred = model.predict(x_test)
     print('Train predictions with trained mode...')
@@ -355,43 +346,49 @@ def train_svc(x_train,y_train,x_test,y_test,x_val,y_val,svc_gridsearch):
     print('Prediction accuracy for validation: %.3f ' % accuracy_score(y_val, y_pred_val))
     return model
 
-
+# Train using Gradient Boosting (sklearn). Gridsearch as an option
 def train_gb(x_train,y_train,x_test,y_test,x_val,y_val,gb_gridsearch):
     print('Training model gradient boosting with sklearn...')
     cls = GradientBoostingClassifier()
     if gb_gridsearch:
+        x_train2=np.concatenate((x_train,x_test))
+        print(x_train2.shape)
+        y_train2=np.concatenate((y_train,y_test))
+        print(y_train2.shape)
         print('Tuning parameters...')
-        grid_params_gb = [{'learning_rate':[0.1],
-                           'n_estimators': [100],
-                           'max_depth': [3],
+        grid_params_gb = [{'learning_rate':[0.02,0.05,0.1],
+                           'n_estimators': [100,1000,2000],
+                           'max_depth': [16,8,4],
                            'subsample': [1],
-                           'min_samples_split': [10],
-                           'min_samples_leaf': [1],
+                           'min_samples_split': [2],
+                           'min_samples_leaf': [5,10],
                            'max_features':['sqrt'],
+                           'n_iter_no_change':[20],
+                           'validation_fraction'
+                           :[0.15],
                            'verbose':[1]
                            }]
-        gs_gb = GridSearchCV(estimator=cls, param_grid=grid_params_gb, scoring='f1_weighted', cv=10, verbose=10,
+        gs_gb = GridSearchCV(estimator=cls, param_grid=grid_params_gb, scoring='f1_weighted', cv=5, verbose=10,
                              n_jobs=-1)
-        gs_gb.fit(x_train, y_train)
+        gs_gb.fit(x_train2, y_train2)
         # Best params
         print('Best params: %s' % gs_gb.best_params_)
         # Best training data r2
-        print('Best training accuracy: %.3f' % gs_gb.best_score_)
+        print('Best training metric: %.3f' % gs_gb.best_score_)
         model=gs_gb.best_estimator_
-        #cls.set_params(**gs_gb.best_params_)
-        #model = cls.fit(x_train, y_train)
     else:
         params_gb = {'learning_rate':0.05,
-                           'n_estimators': 100,
-                           'max_depth': 6,
+                           'n_estimators': 1000,
+                           'max_depth': 4,
                            'subsample': 1,
                            'min_samples_split': 2,
-                           'min_samples_leaf': 1,
+                           'min_samples_leaf': 10,
+                           'n_iter_no_change':20,
+                           'validation_fraction':0.2,
                            'max_features':'sqrt',
                            'verbose':2}
         cls.set_params(**params_gb)
         model=cls.fit(x_train, y_train)
-    print(print(cls.get_params()))
     print('Test predictions with trained mode...')
     y_pred = model.predict(x_test)
     print('Train predictions with trained mode...')
@@ -407,11 +404,12 @@ def train_gb(x_train,y_train,x_test,y_test,x_val,y_val,gb_gridsearch):
     print('Prediction accuracy for validation: %.3f ' % accuracy_score(y_val, y_pred_val))
     return model
 
+# Train using XGBoost (sklearn). Gridsearch as an option
 def train_xgb_sk(x_train,y_train,x_test,y_test,x_val,y_val,gb_gridsearch):
     print('Training model gradient boosting with sklearn...')
     cls = XGBClassifier()
+    eval_set = [(x_test, y_test)]
     if gb_gridsearch:
-        eval_set=[(x_test,y_test)]
         print('Tuning parameters...')
         grid_params_gb = [{'learning_rate':[0.05],
                            'n_estimators': [200,500],
@@ -431,22 +429,22 @@ def train_xgb_sk(x_train,y_train,x_test,y_test,x_val,y_val,gb_gridsearch):
         # Best params
         print('Best params: %s' % gs_gb.best_params_)
         # Best training data r2
-        print('Best training accuracy: %.3f' % gs_gb.best_score_)
+        print('Best training metric: %.3f' % gs_gb.best_score_)
         model=gs_gb.best_estimator_
-        #cls.set_params(**gs_gb.best_params_)
-        #model = cls.fit(x_train, y_train)
     else:
         params_gb = {'learning_rate':0.05,
-                           'n_estimators': 500,
-                           'max_depth': 3,
+                           'n_estimators': 1500,
+                           'max_depth': 4,
                            'subsample': 1,
                            'min_samples_split': 2,
-                           'min_samples_leaf': 1,
+                           'min_samples_leaf': 10,
+                           'n_iter_no_change':20,
+                           'eval_set':eval_set,
+                           #'validation_fraction':0.2,
                            'max_features':'sqrt',
                            'verbose':2}
         cls.set_params(**params_gb)
         model=cls.fit(x_train, y_train)
-    print(print(cls.get_params()))
     print('Test predictions with trained mode...')
     y_pred = model.predict(x_test)
     print('Train predictions with trained mode...')
@@ -462,13 +460,14 @@ def train_xgb_sk(x_train,y_train,x_test,y_test,x_val,y_val,gb_gridsearch):
     print('Prediction accuracy for validation: %.3f ' % accuracy_score(y_val, y_pred_val))
     return model
 
+#Train using ensemble of algorithms
 def train_ensemble(x_train,y_train,x_test,y_test,x_val,y_val):
-    #clf1 = Pipeline([('scl',StandardScaler()),('cls',LogisticRegression(multi_class='ovr', max_iter=500, random_state=1,verbose=1))])
+    clf1 = Pipeline([('scl',StandardScaler()),('cls',LogisticRegression(multi_class='ovr', max_iter=500, random_state=1,verbose=1))])
     clf2 = Pipeline([('scl',StandardScaler()),('cls',SVC(decision_function_shape='ovr', kernel='rbf', C=1,gamma=0.001,verbose=1,probability=True))])
     clf3 = RandomForestClassifier(n_estimators=200, max_depth=32, min_samples_leaf=5,random_state=1,verbose=1)
     clf4= XGBClassifier(learning_rate=.05, n_estimators=200,max_depth=6, verbose=1,objective='multi:softprob')
 
-    eclf1 = VotingClassifier(estimators=[('svc', clf2), ('rf', clf3),('xgb',clf4)], voting='soft')
+    eclf1 = VotingClassifier(estimators=[('logr', clf2), ('svc', clf2), ('rf', clf3),('xgb',clf4)], voting='soft')
     model = eclf1.fit(x_train, y_train)
     print('Test predictions with trained mode...')
     y_pred = model.predict(x_test)

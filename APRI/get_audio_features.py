@@ -1,7 +1,7 @@
 """
 get_audio_features.py
 
-This script contains methods for audio features calculation os an audio file.
+This script contains methods for audio features calculation of an audio file.
 The audio features are calculated using essentia library and the default parameters are:
 - samplerate: 24000
 - framesize: 2048
@@ -14,6 +14,9 @@ and outputs:
 - audio_features: numpy array with audio feature values
 - column_labels: audio feature descriptors
 
+There are different method to calculate features related to tonal, sfx and low_level domains.
+
+
 """
 
 # Dependencies
@@ -21,10 +24,9 @@ from essentia.standard import *
 import numpy as np
 import warnings
 warnings.simplefilter("ignore")
-import soundfile as sf
 
 
-# Auxiliar
+# Auxiliar methods
 def is_silent_threshold(frame, silence_threshold_dB):
     p = essentia.instantPower( frame )
     silence_threshold = pow(10.0, (silence_threshold_dB / 10.0))
@@ -70,6 +72,7 @@ def compute_statistics(array):
 
 # Calculate audio features
 
+#Calculate sfx features
 def compute_sfx(audio,pool2,options):
     namespace = 'sfx'
     pool = essentia.Pool()
@@ -196,6 +199,7 @@ def compute_sfx(audio,pool2,options):
         pool2.add(namespace + '.' + 'pitch_after_max_to_before_max_energy_ratio', 0.0)  # , pool.GlobalScope)
     return pool2
 
+#Calculate low_level features
 def compute_lowlevel(audio, options):
     namespace = 'lowlevel'
     pool = essentia.Pool()
@@ -407,6 +411,7 @@ def compute_lowlevel(audio, options):
     pool2.add(namespace + '.' + 'sspectral_complexity_var', np.var(pool['lowlevel.spectral_complexity']))
     return pool2
 
+#Calculate low_level features
 def compute_tonal(audio, pool2, options):
     namespace = 'tonal'
     pool = essentia.Pool()
@@ -578,21 +583,6 @@ def compute_audio_features(audio,options):
     audio_features = np.array(audio_features)
     return audio_features, column_labels
 
-## Data augmentation parameters:
-def get_data_augmentation_parameters():
-    aug_options=dict()
-    ### White noise
-    aug_options['white_noise']=True
-    aug_options['noise_rate']=0.01
-    ### Time stretching
-    aug_options['time_stretching']=True
-    aug_options['rates']=[0.8,1.2]
-    ### Pitch shifting
-    aug_options['pitch_shifting']=True
-    aug_options['steps']=[-1,1]
-    ### Time shifting
-    aug_options['time_shifting']=True
-    return aug_options
 
 ## Audio features parameters
 def get_audio_features_options():

@@ -1,9 +1,10 @@
 """
 training_batch_data_augmentation.py
 
-Given a event dataset, this script generates augmented data.
+Given a audio event dataset, this script generates augmented data.
 The number and parameters of the transformed files can be modified by using the parameters on the top of this script.
-Output files are stored for model training purpose in a folder (input) and are ordered by event class.
+Output files are stored for model training purpose in a folder (input) and are sorted by event class.
+
 """
 
 

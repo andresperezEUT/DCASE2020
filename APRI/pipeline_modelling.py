@@ -2,24 +2,20 @@
 pipeline_modelling.py
 
 This script executes the pipeline from dataframes (pandas) to trained models.
-The steps defined in the pipeline are the following:
+Steps defined in the pipeline are the following:
 - Parameters
 - Dataframe splits
 - (optional) Feature selection
-- optional (gridsearch)
+- (optional) Gridsearch
 - modelling
 - results
 - dump
 """
 
 # Dependencies
-import os, datetime
-from baseline import parameter
-import pandas as pd
+import datetime
 from APRI.get_dataframes import *
 from APRI.get_model_utils import *
-from APRI.remove_near_observations import *
-import pickle
 import csv
 import joblib
 
@@ -31,13 +27,13 @@ this_file_path = os.path.dirname(os.path.abspath(__file__))
 # Parameters
 mode='new' # new or modify
 pipeline_modelling='' #if mode is 'modify'
-pipeline_feature_engineering='Datasets_foa_dev_2020-06-12_beam'
-
+pipeline_feature_engineering=''
 build_dataframes=True
-data_augmentation=True
+data_augmentation=False
 remove_similar_events=False
 quite_overlapped=False
 feature_selection= True
+extra_data=True
 random_forest_model=False
 svc_model=False
 xgb_model=False
@@ -53,11 +49,11 @@ fs_threshold=0.002
 ## xgb
 xgb_gridsearch=False
 #rf
-rf_gridsearch=False
+rf_gridsearch=True
 ## svc
 svc_gridsearch=True
 ## gb
-gb_gridsearch=True
+gb_gridsearch=False
 
 #Feature selection
 ft_mode='manual'
@@ -93,6 +89,13 @@ else:
 if build_dataframes:
     print('Step: Building dataframes')
     df_real=pd.read_pickle(os.path.join(params['dataset_dir'],pipeline_feature_engineering,'source_dataframes/dataframe_source_real.pkl'))
+    print('df_real shape',df_real.shape)
+    df_extra=pd.read_pickle(os.path.join(params['dataset_dir'],pipeline_feature_engineering,'source_dataframes/dataframe_source_extra.pkl'))
+    print('df_extra shape',df_extra.shape)
+    df_real=pd.concat([df_real,df_extra],axis=0)
+
+    df_real=df_extra
+    print('df_real shape',df_real.shape)
     if data_augmentation:
         print('Reading data augmentation')
         df_aug=pd.read_pickle(os.path.join(params['dataset_dir'],pipeline_feature_engineering,'source_dataframes/dataframe_source_aug.pkl'))
@@ -140,8 +143,6 @@ if build_dataframes:
 else:
     dataset_path = os.path.join(root_folder, 'datasets')
 
-
-
 #load datasets:
 df_test=pd.read_pickle(os.path.join(dataset_path, 'df_test.pkl'))
 df_val=pd.read_pickle(os.path.join(dataset_path, 'df_val.pkl'))
@@ -152,21 +153,7 @@ y_test=df_test['target']
 x_test=df_test.drop(['target'],axis=1)
 y_val=df_val['target']
 x_val=df_val.drop(['target'],axis=1)
-'''
-#testing
-df=pd.read_pickle(os.path.join('/home/ribanez/movidas/dcase20/dcase20_dataset/Datasets_oracle_mono_testing_2020-06-07_18-02/source_dataframes/dataframe_source_real.pkl'))
-df_test = df.groupby('target', group_keys=False).apply(lambda x: x.sample(frac=0.1))
-df_train = df.drop(df_test.index)
-y_test=df_test['target']
-x_test=df_test.drop(['target'],axis=1)
-y_train=df_train['target']
-x_train=df_train.drop(['target'],axis=1)
-y_val=y_test
-x_val=x_test
 
-print(df.columns)
-print(df.shape)
-'''
 # Feature selection
 if feature_selection:
     if not os.path.exists(os.path.join(root_folder, 'features_selection')):
@@ -215,7 +202,7 @@ if svc_model:
 if gb_model:
     if not os.path.exists(os.path.join(models_path, 'gb')):
         os.makedirs(os.path.join(models_path, 'gb'))
-    model_gb = train_xgb_sk(x_train, y_train, x_test, y_test, x_val, y_val, gb_gridsearch)
+    model_gb = train_gb(x_train, y_train, x_test, y_test, x_val, y_val, gb_gridsearch)
     joblib.dump(model_gb, os.path.join(models_path, 'gb/model_gb.bin'))
 
 #ensemble
@@ -224,14 +211,6 @@ if ensemble:
         os.makedirs(os.path.join(models_path, 'ensemble'))
     model_ens = train_ensemble(x_train, y_train, x_test, y_test, x_val, y_val)
     joblib.dump(model_ens, os.path.join(models_path, 'ensemble/model_ens.bin'))
-
-
-
-
-
-
-
-
 
 # Save settings:
 settings=dict()
@@ -251,7 +230,6 @@ settings['random_forest_model']=random_forest_model
 settings['svc_model']=svc_model
 settings['xgb_model']=xgb_model
 settings['ensemble']=ensemble
-
 
 w = csv.writer(open(os.path.join(root_folder,'settings.csv'), "w"))
 for key, val in settings.items():

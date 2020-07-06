@@ -1,8 +1,8 @@
 """
 get_audio_features.py
 
-This script contains methods for data augmentatione.
-The modified audios are generated aplying different transformations. Default parameters:
+This script contains methods for data augmentation. Thus, this script is used just for training purpose.
+The modified audios are generated applying different transformations. Default parameters:
 aug_options:
     'white_noise'=True    'noise_rate'=0.01
     'time_stretching'=True    'rates'=[0.8,1.2]
@@ -47,6 +47,7 @@ def time_shifting(data,shift):
     else:
         data[shift:] = 0
     return data
+## ir merging
 def ir_merge(data,ir_path):
     file_name=str(random.randint(0, 9))+'.wav'
     h, sr_h = sf.read(os.path.join(ir_path,file_name))
@@ -54,6 +55,7 @@ def ir_merge(data,ir_path):
     data = scipy.signal.fftconvolve(data, h)
     return data
 
+# get augmented audios
 def compute_data_augmentation(audio,aug_options):
     modified_audios=[]
     modified_audios_names=[]
@@ -61,15 +63,6 @@ def compute_data_augmentation(audio,aug_options):
         data_wn1 = adding_white_noise(audio,aug_options['noise_rate'][0])
         modified_audios.append(data_wn1)
         modified_audios_names.append('_wn1')
-        '''
-        data_wn2 = adding_white_noise(audio,aug_options['noise_rate'][1])
-        modified_audios.append(data_wn2)
-        modified_audios_names.append('_wn2')
-
-        data_wn3 = adding_white_noise(audio,aug_options['noise_rate'][2])
-        modified_audios.append(data_wn3)
-        modified_audios_names.append('_wn3')
-        '''
     if aug_options['time_stretching']:
         data_sadown = stretch_audio(audio,aug_options['rates'][0])
         data_saup = stretch_audio(audio,aug_options['rates'][1])

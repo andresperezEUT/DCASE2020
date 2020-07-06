@@ -4,8 +4,9 @@ This script contains methods to obtain different dataframes (pandas).
 get_source_dataframes(): to build dataframes from arrays. It is used to consolidate audio feature arrays obtained in feature engineering pipeline.
 It creates a different dataframe for each source: real, augmented and extra
 
-get_dataframe_split(): to split source dataframe into train, test and validation.
-Different parameters allow for customize splits
+get_dataframe_balanced_split(): to split source dataframe into train, test and validation. Using specific criteria
+get_dataframe_split(): single random split into test, validation and test dataframes
+get_dataframe_challenge2(): split following challenge folds
 
 """
 
@@ -23,7 +24,7 @@ def get_key(val):
 def get_source_dataframes(input_path,extra=False):
     rows=[]
     if extra:
-        event_type = get_class_name_dict_extra().values()
+        event_type = get_class_name_dict().values()
     else:
         event_type = get_class_name_dict().values()
     for event in event_type:
@@ -72,8 +73,6 @@ def get_dataframe_balanced_split(df_real,df_aug,test_n,val_n,train_n):
         key=get_key(event)
         if df_real[df_real['target'] == key].shape[0]>nmax:
            nmax=df_real[df_real['target'] == key].shape[0]
-    print(nmax)
-    #nmax=nmax*2
     for event in event_type:
         key=get_key(event)
         if i==0:
@@ -103,41 +102,21 @@ def get_dataframe_split(df_real,df_aug,test_p,val_p):
     for ind in df_test.index:
         df_aux=df_aug[df_aug.index.str.contains(str(ind)+'_',regex=False)]
         df_aug = df_aug.drop(df_aux.index)
-    df_train = pd.concat([df_train, df_aug.sample(frac=0.5)])
+    df_train = pd.concat([df_train, df_aug.sample(frac=1)])
     return df_test,df_val,df_train
 
-def get_dataframe_split_challenge1(df_real,df_aug):
-    print(df_real.shape)
-    df_val=df_real[df_real.index.str.contains("fold2", regex=False)]
-    print(df_val.shape)
-    df_real=df_real.drop(df_val.index)
-    df_train=df_real
-    print(df_train.shape)
-    df_test=df_val
-    for ind in df_val.index:
-        df_aux=df_aug[df_aug.index.str.contains(str(ind)+'_',regex=False)]
-        df_aug = df_aug.drop(df_aux.index)
-    df_train = pd.concat([df_train, df_aug.sample(frac=0.0)])
-    print(df_train.shape)
-    return df_test,df_val,df_train
 
 def get_dataframe_split_challenge2(df_real,df_aug):
-    print(df_real.shape)
     df_val=df_real[df_real.index.str.contains("fold1", regex=False)]
     df_real=df_real.drop(df_val.index)
-    print(df_val.shape)
     df_test=df_real[df_real.index.str.contains("fold2", regex=False)]
-    df_real=df_real.drop(df_test.index)
-    print(df_test.shape)
     df_train=df_real
-    print(df_train.shape)
     for ind in df_val.index:
         df_aux=df_aug[df_aug.index.str.contains(str(ind)+'_',regex=False)]
         df_aug = df_aug.drop(df_aux.index)
     for ind in df_test.index:
         df_aux=df_aug[df_aug.index.str.contains(str(ind)+'_',regex=False)]
         df_aug = df_aug.drop(df_aux.index)
-    #df_aug=df_aug[df_aug.index.str.contains("wn", regex=False)]
     df_train = pd.concat([df_train, df_aug.sample(frac=1)])
     return df_test,df_val,df_train
 

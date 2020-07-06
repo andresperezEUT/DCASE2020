@@ -2,42 +2,30 @@
 This file contains methods to get a prediction for event_class according to the model trained in event_class_model_training.py
 and stored in 'params['dataset_dir']/models/...'
 The input is an audio file  extracted from original dataset
-The function:
+The method get_features music_extractor:
 - calculates the audio features for the audio file that are used as input in the model framework
-- executed the model and return the event class
+The method event_class_prediction:
+- executes the model and return the event class for a given audio file
 
 '''
 
-import numpy as np
 import joblib
-import os
-import essentia as es
-import essentia.standard as ess
 import random
-from essentia.standard import MusicExtractor as ms
 from APRI.utils import get_class_name_dict
 from APRI.get_audio_features import *
-import sys
 import pandas as pd
-import soundfile as sf
-import essentia.standard as essentia
-from essentia.standard import *
 import os
-import csv
 
-# import xgboost as xgb
-if os.environ.get('USER') == 'ribanez':
-    user = 'FAIK'
-    import xgboost as xgb
 
-### FUNCIONES PARA PREDICCIÓN DE EVENT_CLASS ###
 
+# get event key from event descriptor
 def get_key(val):
     classes=get_class_name_dict()
     for key, value in classes.items():
          if val == value:
               return key
 
+# get audio features for a given audio file
 def get_features_music_extractor(audio):
     options = dict()
     options['sampleRate'] = 24000
@@ -50,6 +38,7 @@ def get_features_music_extractor(audio):
     audio_features=pd.DataFrame(data=audio_features.T,index=['pred'],columns=[column_labels])
     return audio_features
 
+# load trained model and features used by the model
 def get_event_class_model(model_name):
     if 'xgb' in model_name:
         model_input_path = os.path.dirname(os.path.realpath(__file__)) + '/models/' + model_name + '/model.bin'
@@ -72,7 +61,7 @@ def get_event_class_model(model_name):
             feat_sel=False
     return model,columns,feat_sel
 
-
+# returns event class key for a given audio file
 def event_class_prediction(audio,model_name):
     model,columns,feat_sel = get_event_class_model(model_name)
     if 'xgb' in model_name:
@@ -90,6 +79,7 @@ def event_class_prediction(audio,model_name):
         class_idx=int(event_class)
     return class_idx
 
+# random prediction of event class
 def event_class_prediction_random(audio_path):
     return random.randint(0,13)
 

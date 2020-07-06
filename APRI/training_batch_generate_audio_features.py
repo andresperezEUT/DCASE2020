@@ -1,14 +1,13 @@
 """
 training_batch_generate_audio_features.py
 
-Given a event dataset (audio clips extracted from foa_dev through generate audio from annotations.py), this script calculates the audio features
+Given a event dataset (audio clips extracted from foa_dev through generate_audio_from_annotations.py), this script calculates the audio features
 according to the methods defined in get_audio_features.py.
 The output files are saved in a folder audio_features in the input event dataset directory. A .npy file containing a numpy array with the audio features is created for each event
 It is possible to run the script in test mode which involves to save outputs in the folder audio_features_test in the same directory
 
 The parameters needed to properly run the script are:
     - events_dataset: name of the folder containing the input event dataset
-    - test: boolean
 
 There are other parameters in the dictionary "options" that could change the output
 """
@@ -19,14 +18,11 @@ import os
 from APRI.utils import get_class_name_dict
 
 #Script parameters
-events_dataset='oracle_mono_signals_beam_all_aug' # we are working with 3 events_datasets: oracle_mono_signals (ov1), oracle_mono_signals_beam_all (beam), oracle mono signals_beam_all_aug (data augmentation beam)
+events_dataset='' # we are working with 3 events_datasets: oracle_mono_signals (ov1), oracle_mono_signals_beam_all (beam), oracle mono signals_beam_all_aug (data augmentation beam)
 test=False
 def training_batch_generate_audio_features(input_folder,output_folder,options,extra=False):
     #Import general parametes
-    if extra:
-        event_type = get_class_name_dict().values()
-    else:
-        event_type= get_class_name_dict().values()
+    event_type= get_class_name_dict().values()
     #I/O paths
     input_path = input_folder
     output_path= output_folder
@@ -41,7 +37,10 @@ def training_batch_generate_audio_features(input_folder,output_folder,options,ex
             loader = MonoLoader(filename=audio_p, sampleRate=24000)
             audio_f = loader()
             audio_features, column_labels = compute_audio_features(audio_f, options)
-            file_name = os.path.splitext(audio.name)[0]
+            if extra:
+                file_name = os.path.splitext(audio.name)[0]+'_extra'
+            else:
+                file_name = os.path.splitext(audio.name)[0]
             if i==0:
                 np.save(os.path.join(output_path, 'column_labels.npy'), column_labels)
                 i+=1
