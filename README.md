@@ -45,8 +45,8 @@ Please check the baseline method repository for their specific requierements.
 * matplotlib
 * soundfile (pysoundfile)
 * librosa
-* keras (I'm using v2.3.1)
-* tensorflow (I'm currently using v2.0.0, since newest 2.1+ collides with that keras version)
+* keras (v2.3.1 - just for baseline)
+* tensorflow (v2.0.0 - just for baseline)
 * essentia (check https://essentia.upf.edu/installing.html)
 * pandas
 * matlab(*)
@@ -57,9 +57,11 @@ A python port of the library is not planned for the near future, although it wou
 
 ## Getting started
 
-##### Configuration
+#### Configuration
 1. Download the dataset, and place it in a suitable path in your computer
 2. Go to `baseline/parameter.py` and set your user name (l. 11), the dataset paths (l. 104-118) and the matplotlib backend (l. 121-124).
+
+#### Training circuit
 
 ##### Dataset generation
 There are two different ways to generate the monophonic event dataset with which to train the models, which correspond to *PAPAFIL1* and *PAPAFIL2* methods [REF TODO]:
@@ -68,21 +70,28 @@ This is the purpose of the `generate_audio_from_annotations.py` script.
    2. Conversely, *PAPAFIL2* dataset is created by actually using the parametric particle filter system, and it is implemented in `generate_audio_from_analysis.py`.
 In both cases, the resulting datasets will be created in the same folder where the FOA dataset lays.  
 
+##### Feature engineering (feature extraction and data augmentation for training purpose)
 
-##### Feature Extraction and Model Training
+Acoustic features extraction can be carried out by executing `pipeline_feature_engineering.py`. Several parameters can be tunned to setting up the pipeline (for example, whether using augmented data or not).
+As a result, up to three dataframes are created (depending on the input parameters):
+* df_real: acoustic features for events obtained using metadata (event generation using: `generate_audio_from_annotations.py`).
+* df_augmented: acoustic features for events obtained from augmented data (event generation using: `generate_audio_from_annotations.py`+`training_batch_data_augmentation.py`).
+* df_extra: acoustic features for events obtained using particle filtering framework (event generation using: `generate_audio_from_analysis.py`). This dataframe is just used in *PAPAFIL2*
 
-TODO RAFA
+##### Model training
 
-
+Event class prediction model can be trained by executing `pipeline_modelling.py`. It is possible to use several ML algorithms implementations (see `get_model_utils.py`). The pipeline allows for multiple user choices: features selection, algorithm, gridseach, etc.
+As a result, trained model is stored in a specific folder. Execution settings are also stored in a text file in order to improve traceability.
+Due to the developer is very scatterbrained some paremeters could be hardcoded... 
 ##### Localization and detection
-
 As mentioned above, the particle filtering is implemented in Matlab.
 The code, contained in `multple-target-tracking-master/func_tracking.m` is called from python.
 The DOA estimates are passed as a temporary csv file, and the result events are retrieved as a .mat file with the same name im the same folder.
 
 The paths in the matlab file are hardcoded; sorry for that. You will have to set them to point your actual paths. 
 
-##### SELD
+
+#### Execution circuit. SELD
 
 1. Different parameter configurations, organized as *presets*, can be described in `baseline/parameter.py`.
 Each *preset* specifies different sub-systems to be used in the analysis, along with the selected parameter values: 
@@ -106,27 +115,23 @@ There are three main boolean options available:
 ##### APRI
 ###### scripts
 * `compute_metrics.py`: mainly adapted from `baseline/metrics`, provides the evaluation metrics implementation.
-* `data_preparation_event_number_mode.py` TODO RAFA
 * `eval.py`: quick evaluation of an output annotation set.
-* `event_class_model_training.py` TODO RAFA
-* `event_class_prediction.py` TODO RAFA
-* `event_number_model_training.py` TODO RAFA
+* `event_class_prediction.py`: applies trained model for event classification
 * `generate_audio_from_analysis.py`: create the *PAPAFIL2* training set.
 * `generate_audio_from_annotations.py`: create the *PAPAFIL1* training set.
 * `generate_irs.py`: generate a set of IRs for data augmentation purposes.
-* `get_audio_features.py`: TODO RAFA
-* `get_data_augmentation.py`TODO RAFA
-* `get_dataframes.py`TODO RAFA
-* `get_model_utils.py`TODO RAFA
+* `get_audio_features.py`: computes the extraction of acoustic features by using essentia library. 
+* `get_data_augmentation.py`: generates augmented data by applying different transformation to original audio files
+* `get_dataframes.py`: utils related with Pandas dataframes
+* `get_model_utils.py`: ML algorithms implementations. Also contains feature selection methods.
 * `localization_detection.py`: implements the methods used for DOA estimation and particle filtering.
-* `pipeline_feature_engineering.py`: TODO RAFA
-* `pipeline_modelling.py` TODO RAFA
+* `pipeline_feature_engineering.py`: pipeline aimed to extract features and configure training dataframes.
+* `pipeline_modelling.py` pipeline aimed to train classifier for event classification.
 * `plot.py`: convenience script for result visualization
-* `postprocessing.py` TODO RAFA
-* `remove_near_observations.py` TODO RAFA
+* `postprocessing.py`: utils for postprocessing filters used in some presets.
 * `run.py`: main SELD script
-* `training_batch_data_augmentation.py` TODO RAFA
-* `training_batch_generate_audio_features.py` TODO RAFA
+* `training_batch_data_augmentation.py`: get augmented data from multiple input audios 
+* `training_batch_generate_audio_features.py`: get acoustic features from multiple input audios
 * `utils.py`: contains many useful methods for data handling, parametric analysis, plotting, etc.
 ###### folders
 * `IR/`: the folder containing the IRs used for reverberant data augmentation, generated by [5].
