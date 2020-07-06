@@ -1,5 +1,5 @@
 '''
-This file contains methods to get a prediction for event_class according to the model trained in event_class_model_training.py
+This file contains methods to get a prediction for event_class according to the model trained in pipeline_modelling.py
 and stored in 'params['dataset_dir']/models/...'
 The input is an audio file  extracted from original dataset
 The method get_features music_extractor:
