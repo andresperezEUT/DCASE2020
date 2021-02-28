@@ -39,15 +39,16 @@ More information on the method, including the evaluation metric results on the c
 ## Dependencies
 The following list enumerates the dependencies of the proposed method. 
 Please check the baseline method repository for their specific requierements.  
+* python 3.6.9
 * numpy
 * scipy
 * sklearn v0.23.0
 * matplotlib
 * soundfile (pysoundfile)
-* librosa
+* librosa 0.7.2
 * keras (v2.3.1 - just for baseline)
 * tensorflow (v2.0.0 - just for baseline)
-* essentia (check https://essentia.upf.edu/installing.html)
+* essentia 2.1b6.dev234 (check https://essentia.upf.edu/installing.html)
 * pandas
 * matlab(*)
 
